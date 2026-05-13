@@ -1,0 +1,92 @@
+[gd_scene format=3 uid="uid://de1o2q2hhkso3"]
+
+[ext_resource type="Script" uid="uid://lmvi8usxt05i" path="res://scripts/debug/solo_test_bootstrap.gd" id="1_337wo"]
+[ext_resource type="PackedScene" uid="uid://db7hs4bcs45ro" path="res://scenes/characters/player/player.tscn" id="2_8ny4u"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_337wo"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_337wo"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8ny4u"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8ny4u"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gdbb7"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gdbb7"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_01ylx"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_01ylx"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1uium"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1uium"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wmw3k"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="TestPlayer" type="Node3D" unique_id=799225544]
+
+[node name="SoloBootstrap" type="Node" parent="." unique_id=1234383372]
+script = ExtResource("1_337wo")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2024071733]
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=437417596]
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="." unique_id=263333057]
+
+[node name="Shape" type="CollisionShape3D" parent="Floor" unique_id=1158663659]
+shape = SubResource("BoxShape3D_337wo")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor" unique_id=1413433807]
+mesh = SubResource("BoxMesh_337wo")
+
+[node name="WallNorth" type="StaticBody3D" parent="." unique_id=438752948]
+
+[node name="Shape" type="CollisionShape3D" parent="WallNorth" unique_id=286553275]
+shape = SubResource("BoxShape3D_8ny4u")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallNorth" unique_id=390007439]
+mesh = SubResource("BoxMesh_8ny4u")
+
+[node name="WallSouth" type="StaticBody3D" parent="." unique_id=841190875]
+
+[node name="Shape" type="CollisionShape3D" parent="WallSouth" unique_id=163132258]
+shape = SubResource("BoxShape3D_gdbb7")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallSouth" unique_id=1689440419]
+mesh = SubResource("BoxMesh_gdbb7")
+
+[node name="WallEast" type="StaticBody3D" parent="." unique_id=1609126182]
+
+[node name="Shape" type="CollisionShape3D" parent="WallEast" unique_id=178416073]
+shape = SubResource("BoxShape3D_01ylx")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallEast" unique_id=329664840]
+mesh = SubResource("BoxMesh_01ylx")
+
+[node name="WallWest" type="StaticBody3D" parent="." unique_id=609298419]
+
+[node name="Shape" type="CollisionShape3D" parent="WallWest" unique_id=540582279]
+shape = SubResource("BoxShape3D_1uium")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallWest" unique_id=1354088637]
+mesh = SubResource("BoxMesh_1uium")
+
+[node name="Marker" type="MeshInstance3D" parent="." unique_id=72557635]
+mesh = SubResource("BoxMesh_wmw3k")
+
+[node name="Player" parent="." unique_id=452855176 instance=ExtResource("2_8ny4u")]
