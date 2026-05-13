@@ -1,9 +1,9 @@
 {
-  "_comment": "Configuration MCP du repo. tomyud1/godot-mcp doit etre installe et le plugin Godot active. Voir docs/tech/godot_mcp_setup.md pour le setup detaille. Le nom du package npm peut varier selon la release — verifier le README amont avant install.",
+  "_comment": "Serveur MCP godot-mcp-server (tomyud1/godot-mcp, npm). Au demarrage de Claude Code, npx telechargera et lancera le serveur. Le plugin Godot correspondant est dans godot/addons/godot_mcp/, a activer dans Project Settings > Plugins.",
   "mcpServers": {
     "godot": {
       "command": "npx",
-      "args": ["-y", "godot-mcp"]
+      "args": ["-y", "godot-mcp-server"]
     }
   }
 }

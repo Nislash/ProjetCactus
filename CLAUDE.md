@@ -10,7 +10,7 @@ Pure roguelike : rien ne persiste entre runs. Chaque run démarre par l'ouvertur
 
 ## Stack
 
-- **Godot 4.5 stable**, renderer `Forward+` (fallback `Mobile` si perf 4-split insuffisante)
+- **Godot 4.6 stable**, renderer `Forward+` (fallback `Mobile` si perf 4-split insuffisante)
 - **GDScript** par défaut
 - **Rust via [gdext](https://github.com/godot-rust/gdext)** pour les hotspots : moteur de combos, IA boss, proc-gen (phase 2)
 - **Godot MCP : [`tomyud1/godot-mcp`](https://github.com/tomyud1/godot-mcp)** v0.5.0+ — 42 tools (édition scènes/scripts, debug, visualization). Plugin embarqué dans `godot/addons/`, serveur Node.js via `.mcp.json` du repo
