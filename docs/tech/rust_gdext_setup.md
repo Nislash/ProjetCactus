@@ -18,7 +18,7 @@ Le fichier `godot/addons/cactus_native/cactus_native.gdextension` pointe sur `..
 
 ## Hot reload
 
-`reloadable = true` dans `cactus_native.gdextension` permet à Godot 4.5 de recharger la lib sans relancer l'éditeur. Workflow :
+`reloadable = true` dans `cactus_native.gdextension` permet à Godot 4.6 de recharger la lib sans relancer l'éditeur. Workflow :
 
 1. Modifier code Rust
 2. `cargo build`

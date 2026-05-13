@@ -1,6 +1,6 @@
 # ProjetCactus
 
-FPS roguelike / puzzle coop local 1-4 joueurs en split-screen, manettes USB uniquement. Godot 4.5 + Rust (gdext).
+FPS roguelike / puzzle coop local 1-4 joueurs en split-screen, manettes USB uniquement. Godot 4.6 + Rust (gdext).
 
 ## Pitch
 
@@ -12,7 +12,7 @@ FPS roguelike / puzzle coop local 1-4 joueurs en split-screen, manettes USB uniq
 
 ## Stack
 
-- **Godot 4.5** (renderer Forward+) — GDScript par défaut
+- **Godot 4.6** (renderer Forward+) — GDScript par défaut
 - **Rust via [gdext](https://github.com/godot-rust/gdext)** sur les hotspots : moteur de combos, IA boss, proc-gen
 - **MCP [`tomyud1/godot-mcp`](https://github.com/tomyud1/godot-mcp)** pour piloter l'éditeur Godot via Claude
 - **Git LFS** pour binaires (modèles, textures, audio)

@@ -8,8 +8,12 @@ config_version=5
 
 config/name="ProjetCactus"
 config/description="FPS roguelike/puzzle coop local 1-4 joueurs en split-screen, manettes USB uniquement."
-config/features=PackedStringArray("4.5", "Forward Plus")
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
 
 [display]
 
