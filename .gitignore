@@ -58,3 +58,7 @@ node_modules/
 .env.local
 *.key
 *.pem
+
+# ============================================================
+# perso windows
+.claude/settings.local.json
