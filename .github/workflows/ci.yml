@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  GODOT_VERSION: "4.6-stable"
+
+jobs:
+  rust-check:
+    name: Rust check & clippy (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: cargo check
+        run: cargo check
+
+      - name: cargo clippy
+        run: cargo clippy -- -D warnings
+
+  godot-check:
+    name: Godot headless check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Download Godot (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
+          unzip -q "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
+          chmod +x "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64"
+          echo "GODOT_BIN=./Godot_v${{ env.GODOT_VERSION }}_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Download Godot (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_macos.universal.zip"
+          unzip -q "Godot_v${{ env.GODOT_VERSION }}_macos.universal.zip"
+          echo "GODOT_BIN=./Godot_v${{ env.GODOT_VERSION }}_macos.universal/Godot.app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+
+      - name: Check Godot project
+        run: ${{ env.GODOT_BIN }} --headless --check-only godot/project.godot
+        timeout-minutes: 3
