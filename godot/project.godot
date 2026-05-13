@@ -1,6 +1,6 @@
 ; Engine configuration file.
-; Édité initialement à la main lors du M0 — par la suite, éditer via l'éditeur Godot
-; uniquement et commiter dans des PR isolées (cf CLAUDE.md zones partagées).
+; Édité initialement à la main lors du M0 — par la suite, éditer via l'éditeur
+; Godot uniquement et commiter dans des PR isolées (cf CLAUDE.md zones partagées).
 ;
 ; Format:
 ;   [section] ; section goes between []
@@ -15,6 +15,11 @@ config/description="FPS roguelike/puzzle coop local 1-4 joueurs en split-screen,
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+InputRouter="*res://autoload/input_router.gd"
+PlayerManager="*res://autoload/player_manager.gd"
+
 [display]
 
 window/size/viewport_width=1920
@@ -22,7 +27,6 @@ window/size/viewport_height=1080
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
-window/vsync/vsync_mode=1
 
 [editor_plugins]
 
@@ -30,7 +34,6 @@ enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
 
 [physics]
 
-common/physics_ticks_per_second=60
 3d/default_gravity=20.0
 
 [rendering]

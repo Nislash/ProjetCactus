@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://ccdatahejmote"]
+
+[ext_resource type="Script" uid="uid://cmee4rul4his4" path="res://scripts/core/lobby_controller.gd" id="1_8k3pl"]
+[ext_resource type="Script" uid="uid://bfho4p76etopv" path="res://scripts/core/lobby_slot_ui.gd" id="2_52wvy"]
+
+[node name="Lobby" type="Control" unique_id=37299850]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_8k3pl")
+
+[node name="Background" type="ColorRect" parent="." unique_id=238840499]
+layout_mode = 0
+color = Color(0, 0, 0, 1)
+
+[node name="Layout" type="VBoxContainer" parent="." unique_id=1953856367]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 64.0
+offset_right = -64.0
+offset_bottom = -64.0
+theme_override_constants/separation = 32
+
+[node name="Title" type="Label" parent="Layout" unique_id=561108584]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "ProjetCactus — Lobby"
+horizontal_alignment = 1
+
+[node name="Slots" type="HBoxContainer" parent="Layout" unique_id=1301070787]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="Slot0" type="PanelContainer" parent="Layout/Slots" unique_id=2012101945]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_52wvy")
+
+[node name="Label" type="Label" parent="Layout/Slots/Slot0" unique_id=765456203]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Slot1" type="PanelContainer" parent="Layout/Slots" unique_id=14415432]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_52wvy")
+
+[node name="Label" type="Label" parent="Layout/Slots/Slot1" unique_id=1104069111]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Slot2" type="PanelContainer" parent="Layout/Slots" unique_id=2125194915]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_52wvy")
+
+[node name="Label" type="Label" parent="Layout/Slots/Slot2" unique_id=1353022097]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Slot3" type="PanelContainer" parent="Layout/Slots" unique_id=1849741374]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_52wvy")
+
+[node name="Label" type="Label" parent="Layout/Slots/Slot3" unique_id=197418383]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Layout" unique_id=79691014]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Appuyez sur Start pour rejoindre."
+horizontal_alignment = 1
