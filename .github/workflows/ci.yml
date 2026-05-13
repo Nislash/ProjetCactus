@@ -43,21 +43,31 @@ jobs:
         with:
           lfs: true
 
+      - name: Cache Godot binary
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-${{ runner.os }}
+
       - name: Download Godot (Linux)
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           wget -q "https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
           unzip -q "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
-          chmod +x "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64"
-          echo "GODOT_BIN=./Godot_v${{ env.GODOT_VERSION }}_linux.x86_64" >> "$GITHUB_ENV"
+          mkdir -p godot-bin
+          mv "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64" godot-bin/godot
+          chmod +x godot-bin/godot
 
       - name: Download Godot (macOS)
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && steps.cache-godot.outputs.cache-hit != 'true'
         run: |
           wget -q "https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_macos.universal.zip"
           unzip -q "Godot_v${{ env.GODOT_VERSION }}_macos.universal.zip"
-          echo "GODOT_BIN=./Godot_v${{ env.GODOT_VERSION }}_macos.universal/Godot.app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+          mkdir -p godot-bin
+          cp "Godot_v${{ env.GODOT_VERSION }}_macos.universal/Godot.app/Contents/MacOS/Godot" godot-bin/godot
+          chmod +x godot-bin/godot
 
       - name: Check Godot project
-        run: ${{ env.GODOT_BIN }} --headless --check-only godot/project.godot
+        run: ./godot-bin/godot --headless --check-only godot/project.godot
         timeout-minutes: 3
