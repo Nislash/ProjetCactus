@@ -1,0 +1,9 @@
+{
+  "_comment": "Configuration MCP du repo. tomyud1/godot-mcp doit etre installe et le plugin Godot active. Voir docs/tech/godot_mcp_setup.md pour le setup detaille. Le nom du package npm peut varier selon la release — verifier le README amont avant install.",
+  "mcpServers": {
+    "godot": {
+      "command": "npx",
+      "args": ["-y", "godot-mcp"]
+    }
+  }
+}
