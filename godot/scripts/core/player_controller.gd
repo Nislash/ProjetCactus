@@ -34,11 +34,8 @@ extends CharacterBody3D
 @export_group("Down & Revive")
 ## Multiplicateur de vitesse en état DOWNED (rampe lentement, ~ramper).
 @export var downed_speed_multiplier: float = 0.3
-## Distance maxi à laquelle un allié peut faire un revive.
-@export var revive_range: float = 2.0
-## Durée du hold pour le revive (secondes).
-@export var revive_duration: float = 3.0
-## HP rendu au revive (en % du max_health).
+## HP rendu au revive (en % du max_health). Distance + durée portées par le
+## node ReviveInteractable enfant du player (cf player.tscn).
 @export_range(0.1, 1.0) var revive_hp_ratio: float = 0.5
 
 @export_group("Interaction")
@@ -57,7 +54,6 @@ signal downed()
 signal revived()
 signal respawned()
 signal death_count_changed(count: int)
-signal revive_progress_changed(target_player_id: int, progress: float)
 signal interaction_progress_changed(prompt: String, progress: float)
 
 enum PlayerState { ALIVE, DOWNED }
@@ -70,10 +66,6 @@ var _pitch: float = 0.0
 var _dash_time_left: float = 0.0
 var _dash_cooldown_left: float = 0.0
 var _dash_direction: Vector3 = Vector3.ZERO
-## Si on est ALIVE et qu'on tient `interact` sur un allié DOWNED, on accumule
-## ici la durée passée à le relever. Reset à 0 dès qu'on relâche.
-var _revive_target: PlayerController = null
-var _revive_progress: float = 0.0
 var _interact_target: Interactable = null
 var _interact_progress: float = 0.0
 
@@ -125,8 +117,6 @@ func _respawn() -> void:
 	rotation.y = 0.0
 	_camera_pivot.rotation.x = 0.0
 	_health.reset()
-	_revive_target = null
-	_revive_progress = 0.0
 	death_count += 1
 	death_count_changed.emit(death_count)
 	respawned.emit()
@@ -179,24 +169,15 @@ func _update_shooting() -> void:
 		_weapon.shoot()
 
 
-## Boucle d'interaction tenue avec le bouton `interact`. Priorité :
-##   1. Interactable à portée (pickup gemme, levier, coffre, shop, futur)
-##      → délégué à try_interact() du composant.
-##   2. Allié DOWNED à portée → revive (cas spécial — migration vers
-##      ReviveInteractable prévue en suivi de #48).
-## La priorité va aux Interactables car généralement plus courts à hold.
+## Boucle d'interaction tenue avec le bouton `interact`. Délègue entièrement
+## au scan du groupe `"interactables"` — un pickup gemme, un levier, un
+## coffre, un shop, ou le revive d'un allié downed (via ReviveInteractable
+## enfant des players DOWNED, cf scenes/characters/player/player.tscn).
 func _update_interact(delta: float) -> void:
 	var holding: bool = InputRouter.is_action_pressed(player_id, &"interact")
-
-	# --- INTERACTABLES (pickup / levier / coffre / shop / etc.) ---
 	var candidate: Interactable = _find_interactable_in_range() if holding else null
-	if candidate != null:
-		# Reset le revive (priorité aux interactables).
-		if _revive_target != null:
-			revive_progress_changed.emit(_revive_target.player_id, 0.0)
-			_revive_target = null
-			_revive_progress = 0.0
 
+	if candidate != null:
 		if candidate != _interact_target:
 			_interact_target = candidate
 			_interact_progress = 0.0
@@ -212,33 +193,12 @@ func _update_interact(delta: float) -> void:
 			target.try_interact(self)
 		return
 
-	# Pas d'interactable courant : reset son state + cancel signal.
+	# Pas d'interactable courant : reset state + cancel signal.
 	if _interact_target != null:
 		_interact_target.interaction_cancelled.emit()
 		interaction_progress_changed.emit("", 0.0)
 		_interact_target = null
 		_interact_progress = 0.0
-
-	# --- REVIVE (cas spécial — à migrer vers ReviveInteractable, suivi #48) ---
-	var ally_candidate: PlayerController = _find_downed_ally_in_range() if holding else null
-	if ally_candidate == null:
-		if _revive_target != null:
-			revive_progress_changed.emit(_revive_target.player_id, 0.0)
-		_revive_target = null
-		_revive_progress = 0.0
-		return
-
-	if ally_candidate != _revive_target:
-		_revive_target = ally_candidate
-		_revive_progress = 0.0
-	_revive_progress += delta
-	revive_progress_changed.emit(_revive_target.player_id, _revive_progress / revive_duration)
-	if _revive_progress >= revive_duration:
-		var target: PlayerController = _revive_target
-		_revive_target = null
-		_revive_progress = 0.0
-		revive_progress_changed.emit(target.player_id, 0.0)
-		target.revive_by(self)
 
 
 ## Trouve le meilleur Interactable du groupe "interactables" à portée : on
@@ -269,18 +229,6 @@ func _find_interactable_in_range() -> Interactable:
 			best = inter
 	return best
 
-
-func _find_downed_ally_in_range() -> PlayerController:
-	var range_sq: float = revive_range * revive_range
-	for node in get_tree().get_nodes_in_group("players"):
-		if node == self or not (node is PlayerController):
-			continue
-		var ally: PlayerController = node
-		if not ally.is_downed():
-			continue
-		if (ally.global_position - global_position).length_squared() <= range_sq:
-			return ally
-	return null
 
 
 ## Mouvement en état DOWNED : le joueur peut ramper lentement mais ne peut ni
