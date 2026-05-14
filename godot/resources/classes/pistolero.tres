@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=4 format=3 uid="uid://class_pistolero_m1"]
+
+[ext_resource type="Script" path="res://scripts/core/data/class_data.gd" id="1_class"]
+[ext_resource type="Resource" path="res://resources/weapons/pistol.tres" id="2_weapon"]
+[ext_resource type="Resource" path="res://resources/spells/fire.tres" id="3_spell"]
+
+[resource]
+script = ExtResource("1_class")
+class_name_display = "Pistolero"
+description = "Tireur agile. Tirs rapides au pistolet, mobilité forte. Premier rôle de la matrice combo."
+base_hp = 100
+base_speed = 7.0
+base_jump_velocity = 7.0
+starting_weapon = ExtResource("2_weapon")
+starting_spell = ExtResource("3_spell")
+compatible_spell_schools = [true, true, true, true, true]

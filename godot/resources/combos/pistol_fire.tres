@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ComboData" load_steps=4 format=3 uid="uid://combo_pistol_fire_m1"]
+
+[ext_resource type="Script" path="res://scripts/core/data/combo_data.gd" id="1_combo"]
+[ext_resource type="Resource" path="res://resources/weapons/pistol.tres" id="2_weapon"]
+[ext_resource type="Resource" path="res://resources/spells/fire.tres" id="3_spell"]
+
+[resource]
+script = ExtResource("1_combo")
+combo_name_display = "Pistolet boule de feu"
+description = "Le pistolet tire des projectiles enflammés qui brûlent l'ennemi à l'impact. Signature combo du Pistolero × Pyromancie."
+weapon = ExtResource("2_weapon")
+spell = ExtResource("3_spell")
+override_projectile_scene = null
+force_projectile_mode = true
+damage_multiplier = 1.0
+aoe_radius = 0.0
+override_status_id = &"burn"
+override_status_duration = 3.0
+override_status_dps = 5.0
+vfx_overlay_scene = null
+override_element_color = Color(1, 0.4, 0.15, 1)

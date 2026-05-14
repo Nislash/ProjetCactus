@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3 uid="uid://weapon_pistol_m1"]
+
+[ext_resource type="Script" path="res://scripts/core/data/weapon_data.gd" id="1_weapon"]
+
+[resource]
+script = ExtResource("1_weapon")
+weapon_name_display = "Pistolet"
+description = "Pistolet semi-auto. Précis, polyvalent, cadence raisonnable. Arme de base du Pistolero."
+damage_base = 10
+fire_rate = 4.0
+max_range = 50.0
+fire_mode = 0
+max_ammo = 12
+reload_time = 1.5
+compatible_spell_schools = [true, true, true, true, true]
+projectile_scene = null
