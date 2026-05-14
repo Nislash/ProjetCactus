@@ -27,6 +27,13 @@ signal reload_finished()
 @export var max_ammo: int = 12
 @export var reload_time: float = 1.5
 
+@export_group("Combo")
+## Si défini, le tir spawne ce projectile au lieu du raycast hitscan. La
+## signature gameplay (cf CLAUDE.md "doit se ressentir") : avec le combo
+## Pistolet × Feu, on tire une boule de feu visible qui brûle l'ennemi à
+## l'impact.
+@export var combo_projectile_scene: PackedScene
+
 ## Node propriétaire de l'arme (typiquement le player). Sert à exclure son
 ## propre collider pour ne pas se tirer dessus, et à transmettre `source` au
 ## HealthComponent qui reçoit les dégâts.
@@ -73,6 +80,12 @@ func shoot() -> void:
 	if current_ammo == 0:
 		reload()
 
+	# Combo Pistolet × Feu : on bypass le hitscan et on spawn un projectile
+	# qui vole + applique burn à l'impact (cf #17).
+	if combo_projectile_scene != null:
+		_shoot_combo_projectile()
+		return
+
 	var space_state := get_world_3d().direct_space_state
 	var origin: Vector3 = global_transform.origin
 	# La direction "forward" d'un Node3D dans Godot est -Z basis vector.
@@ -104,6 +117,20 @@ var _cooldown_left: float = 0.0
 func _process(delta: float) -> void:
 	if _cooldown_left > 0.0:
 		_cooldown_left -= delta
+
+
+func _shoot_combo_projectile() -> void:
+	var origin: Vector3 = global_transform.origin
+	var direction: Vector3 = -global_transform.basis.z.normalized()
+	# Spawn un peu en avant de la caméra pour ne pas exploser à la face.
+	var spawn_pos: Vector3 = origin + direction * 0.5
+	var projectile: Node = combo_projectile_scene.instantiate()
+	get_tree().current_scene.add_child(projectile)
+	# La fireball expose setup(start_pos, dir, owner_to_exclude).
+	if projectile.has_method(&"setup"):
+		var owner_node: Node = get_node_or_null(owner_body)
+		projectile.call(&"setup", spawn_pos, direction, owner_node)
+	fired.emit(false, spawn_pos, null)
 
 
 func _find_health_component(node: Node) -> HealthComponent:

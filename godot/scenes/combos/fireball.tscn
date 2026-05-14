@@ -1,0 +1,43 @@
+[gd_scene load_steps=5 format=3 uid="uid://combo_fireball_m1"]
+
+[ext_resource type="Script" path="res://scripts/core/fireball.gd" id="1_fireball"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_fireball"]
+radius = 0.18
+
+[sub_resource type="SphereMesh" id="SphereMesh_fireball"]
+radius = 0.18
+height = 0.36
+radial_segments = 12
+rings = 6
+
+[sub_resource type="StandardMaterial3D" id="Mat_fireball"]
+albedo_color = Color(1, 0.55, 0.18, 1)
+shading_mode = 2
+emission_enabled = true
+emission = Color(1, 0.35, 0.12, 1)
+emission_energy_multiplier = 3.5
+
+[sub_resource type="OmniLight3D" id="OmniLight3D_fireball"]
+light_color = Color(1, 0.55, 0.18, 1)
+light_energy = 1.4
+omni_range = 4.0
+
+[node name="Fireball" type="Area3D"]
+script = ExtResource("1_fireball")
+collision_layer = 0
+collision_mask = 1
+monitoring = true
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_fireball")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_fireball")
+material_override = SubResource("Mat_fireball")
+
+[node name="Light" type="OmniLight3D" parent="."]
+light_color = Color(1, 0.55, 0.18, 1)
+light_energy = 1.4
+omni_range = 4.0
