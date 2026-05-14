@@ -52,22 +52,33 @@ offset_bottom = 86.0
 theme_override_font_sizes/font_size = 16
 text = "Morts : 0"
 
-; ─── BAS-DROITE : AMMO ─────────────────────────────────────────────────
+; ─── BAS-DROITE : AMMO + NOM ARME ──────────────────────────────────────
 [node name="AmmoPanel" type="Control" parent="." unique_id=801002]
 layout_mode = 0
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -260.0
-offset_top = -90.0
+offset_left = -300.0
+offset_top = -120.0
 offset_right = -24.0
 offset_bottom = -24.0
 mouse_filter = 2
 
+[node name="WeaponLabel" type="Label" parent="AmmoPanel" unique_id=801040]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_right = 1.0
+offset_bottom = 26.0
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.95, 0.8, 1)
+text = "Pistolet"
+
 [node name="AmmoLabel" type="Label" parent="AmmoPanel" unique_id=801003]
 unique_name_in_owner = true
 layout_mode = 0
+offset_top = 32.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 horizontal_alignment = 2
