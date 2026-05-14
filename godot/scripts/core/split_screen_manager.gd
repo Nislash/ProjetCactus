@@ -16,11 +16,13 @@ extends Control
 ##   - 3-4 joueurs : 2×2 quadrants (slot 4 vide en mode 3)
 
 const PLAYER_SCENE_PATH := "res://scenes/characters/player/player.tscn"
+const PLAYER_HUD_PATH := "res://scenes/ui/hud/player_hud.tscn"
 const MAX_PLAYERS: int = 4
 
 @export var world_path: NodePath
 @export var spawn_points: Array[NodePath] = []
 @export var player_scene: PackedScene = preload(PLAYER_SCENE_PATH)
+@export var player_hud_scene: PackedScene = preload(PLAYER_HUD_PATH)
 
 var _world: Node3D
 var _grid: GridContainer
@@ -85,14 +87,23 @@ func _spawn_slot(player_id: int, _device_id: int) -> void:
 	var player: PlayerController = player_scene.instantiate() as PlayerController
 	player.player_id = player_id
 	_world.add_child(player)
-	player.global_transform.origin = _get_spawn_position(player_id)
+	player.set_spawn_position(_get_spawn_position(player_id))
 	player.attach_camera_to(viewport)
+
+	# Le HUD vit DANS le SubViewport du joueur pour que le rendu split-screen
+	# affiche le HUD côte à côte de la caméra correspondante (cf docs/tech/split_screen.md).
+	var hud: CanvasLayer = CanvasLayer.new()
+	viewport.add_child(hud)
+	var hud_ui: Control = player_hud_scene.instantiate()
+	hud.add_child(hud_ui)
+	hud_ui.bind_to_player(player)
 
 	_slots.append({
 		"player_id": player_id,
 		"container": container,
 		"viewport": viewport,
 		"player": player,
+		"hud": hud,
 	})
 
 
