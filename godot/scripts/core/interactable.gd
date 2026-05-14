@@ -12,9 +12,11 @@ extends Area3D
 ## declenchement). Peuvent override can_interact (filtrage : ex. gemme deja
 ## ramassee, allie non-downed pour un ReviveInteractable, etc.).
 
+@warning_ignore_start("unused_signal")
 signal interaction_started(by_player: Node)
 signal interaction_completed(by_player: Node)
 signal interaction_cancelled()
+@warning_ignore_restore("unused_signal")
 
 ## Texte affiche au HUD pendant le hold (ex. "Ramasser Feu", "Activer le levier").
 @export var prompt_text: String = "Interagir"
