@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=2 format=3 uid="uid://spell_fire_m1"]
+
+[ext_resource type="Script" path="res://scripts/core/data/spell_data.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+spell_name_display = "Feu"
+description = "Pyromancie élémentaire. Embrase la cible, infligeant des dégâts sur la durée."
+school = 0
+damage_modifier = 1.0
+status_effect_id = &"burn"
+status_duration = 3.0
+status_dps = 5.0
+element_color = Color(1, 0.4, 0.15, 1)
