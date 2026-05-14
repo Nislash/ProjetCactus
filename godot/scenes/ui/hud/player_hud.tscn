@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://dq6tj5wihdtuw"]
+
+[ext_resource type="Script" uid="uid://cnfq3jtbf0dr6" path="res://scripts/core/player_hud.gd" id="1_6k60i"]
+
+[node name="PlayerHUD" type="Control" unique_id=709935607]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_6k60i")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=453398032]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=313928307]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HpLabel" type="Label" parent="Margin/VBox" unique_id=1487567276]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "HP 100 / 100"
+
+[node name="HpBar" type="ProgressBar" parent="Margin/VBox" unique_id=1309012511]
+unique_name_in_owner = true
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="DeathsLabel" type="Label" parent="Margin/VBox" unique_id=1914333007]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Morts : 0"
+
+[node name="Crosshair" type="Control" parent="." unique_id=341303142]
+anchors_preset = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+mouse_filter = 2
+
+[node name="Top" type="ColorRect" parent="Crosshair" unique_id=341303143]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 4.0
+offset_right = 18.0
+offset_bottom = 14.0
+color = Color(1, 1, 1, 0.85)
+
+[node name="Bottom" type="ColorRect" parent="Crosshair" unique_id=341303144]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 18.0
+offset_right = 18.0
+offset_bottom = 28.0
+color = Color(1, 1, 1, 0.85)
+
+[node name="Left" type="ColorRect" parent="Crosshair" unique_id=341303145]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 14.0
+offset_right = 14.0
+offset_bottom = 18.0
+color = Color(1, 1, 1, 0.85)
+
+[node name="Right" type="ColorRect" parent="Crosshair" unique_id=341303146]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 28.0
+offset_bottom = 18.0
+color = Color(1, 1, 1, 0.85)
+
+[node name="Dot" type="ColorRect" parent="Crosshair" unique_id=341303147]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = 17.0
+offset_bottom = 17.0
+color = Color(1, 0.3, 0.2, 1)
