@@ -48,7 +48,7 @@ jobs:
 
       - name: Build Rust library
         working-directory: rust
-        run: cargo build --release
+        run: cargo build
 
       - name: Cache Godot binary
         id: cache-godot
@@ -65,6 +65,15 @@ jobs:
           mkdir -p godot-bin
           mv "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64" godot-bin/godot
           chmod +x godot-bin/godot
+
+      - name: Verify Rust library exists
+        run: |
+          echo "=== debug ==="
+          ls -la rust/target/debug/libcactus_native.so 2>&1 || echo "MISSING: debug .so"
+          echo "=== release ==="
+          ls -la rust/target/release/libcactus_native.so 2>&1 || echo "MISSING: release .so"
+          echo "=== gdextension ==="
+          cat godot/addons/cactus_native/cactus_native.gdextension
 
       - name: Disable MCP plugin for headless check
         run: |
