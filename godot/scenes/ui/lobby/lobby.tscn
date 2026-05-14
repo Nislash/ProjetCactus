@@ -96,47 +96,67 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 16
 alignment = 1
 
-[node name="BtnTuto" type="Button" parent="Layout/MenuPanel"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 56)
+; ── 2 gros boutons côte à côte : Tuto / Lancer le Run ──
+[node name="MainButtons" type="HBoxContainer" parent="Layout/MenuPanel"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
-text = "Lancer le tuto"
+theme_override_constants/separation = 24
+alignment = 1
 
-[node name="BtnRun" type="Button" parent="Layout/MenuPanel"]
+[node name="BtnTuto" type="Button" parent="Layout/MenuPanel/MainButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 56)
+custom_minimum_size = Vector2(320, 96)
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
-text = "Lancer le run (level 01)"
+theme_override_font_sizes/font_size = 36
+text = "Tuto"
 
-[node name="BtnRun02" type="Button" parent="Layout/MenuPanel"]
+[node name="BtnRun" type="Button" parent="Layout/MenuPanel/MainButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 56)
+custom_minimum_size = Vector2(320, 96)
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
-text = "Lancer le level 02 (3 étages)"
+theme_override_font_sizes/font_size = 36
+text = "Lancer le Run"
 
-[node name="BtnLeaderboard" type="Button" parent="Layout/MenuPanel"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 56)
+; ── Dropdown discret pour choisir le level lancé par "Lancer le Run" ──
+[node name="LevelSelectRow" type="HBoxContainer" parent="Layout/MenuPanel"]
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="LevelLabel" type="Label" parent="Layout/MenuPanel/LevelSelectRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Level :"
+
+[node name="LevelDropdown" type="OptionButton" parent="Layout/MenuPanel/LevelSelectRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+; ── Boutons secondaires en petit ──
+[node name="SecondaryButtons" type="HBoxContainer" parent="Layout/MenuPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnLeaderboard" type="Button" parent="Layout/MenuPanel/SecondaryButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "Leaderboard"
 
-[node name="BtnSettings" type="Button" parent="Layout/MenuPanel"]
+[node name="BtnSettings" type="Button" parent="Layout/MenuPanel/SecondaryButtons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(420, 56)
+custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 16
 text = "Settings"
 
 [node name="StatusLabel" type="Label" parent="Layout"]
