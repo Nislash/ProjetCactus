@@ -29,7 +29,6 @@ func bind_to_player(player: PlayerController) -> void:
 	player.death_count_changed.connect(_on_death_count_changed)
 	player.downed.connect(_on_downed)
 	player.revived.connect(_on_revived)
-	player.revive_progress_changed.connect(_on_revive_progress_changed)
 	player.interaction_progress_changed.connect(_on_interaction_progress_changed)
 	_on_health_changed(hc.current_health, hc.max_health)
 	_on_death_count_changed(player.death_count)
@@ -58,14 +57,6 @@ func _on_downed() -> void:
 func _on_revived() -> void:
 	_hp_label.remove_theme_color_override("font_color")
 	# La valeur HP réelle sera réémise par health_changed lors du reset().
-
-
-func _on_revive_progress_changed(target_player_id: int, progress: float) -> void:
-	if progress <= 0.0:
-		_spell_label.text = "Sort : —"
-		return
-	var pct: int = int(progress * 100.0)
-	_spell_label.text = "Relève J%d… %d%%" % [target_player_id, pct]
 
 
 func _on_health_changed(current: int, max_hp: int) -> void:
