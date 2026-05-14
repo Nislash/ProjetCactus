@@ -13,6 +13,9 @@ extends Node3D
 ## couche au-dessus qui choisira d'exclure si besoin (`add_exception()`).
 
 signal fired(hit: bool, hit_position: Vector3, target: Node)
+signal ammo_changed(current: int, max: int)
+signal reload_started()
+signal reload_finished()
 
 @export var max_range: float = 50.0
 @export var damage: int = 10
@@ -20,20 +23,55 @@ signal fired(hit: bool, hit_position: Vector3, target: Node)
 @export var ray_visible_duration: float = 0.06
 @export var collision_mask: int = 0xFFFFFFFF
 
+@export_group("Ammo")
+@export var max_ammo: int = 12
+@export var reload_time: float = 1.5
+
 ## Node propriétaire de l'arme (typiquement le player). Sert à exclure son
 ## propre collider pour ne pas se tirer dessus, et à transmettre `source` au
 ## HealthComponent qui reçoit les dégâts.
 @export var owner_body: NodePath
 
+var current_ammo: int = 0
+var is_reloading: bool = false
+
+
+func _ready() -> void:
+	current_ammo = max_ammo
+	ammo_changed.emit(current_ammo, max_ammo)
+
 
 func can_fire() -> bool:
-	return _cooldown_left <= 0.0
+	return _cooldown_left <= 0.0 and current_ammo > 0 and not is_reloading
+
+
+func reload() -> void:
+	if is_reloading or current_ammo >= max_ammo:
+		return
+	is_reloading = true
+	reload_started.emit()
+	var timer := get_tree().create_timer(reload_time)
+	timer.timeout.connect(_on_reload_finished)
+
+
+func _on_reload_finished() -> void:
+	current_ammo = max_ammo
+	is_reloading = false
+	ammo_changed.emit(current_ammo, max_ammo)
+	reload_finished.emit()
 
 
 func shoot() -> void:
 	if not can_fire():
+		# Auto-reload si on n'a plus de munitions et qu'on essaie de tirer.
+		if current_ammo == 0 and not is_reloading:
+			reload()
 		return
 	_cooldown_left = 1.0 / fire_rate
+	current_ammo -= 1
+	ammo_changed.emit(current_ammo, max_ammo)
+	if current_ammo == 0:
+		reload()
 
 	var space_state := get_world_3d().direct_space_state
 	var origin: Vector3 = global_transform.origin
