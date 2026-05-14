@@ -60,6 +60,10 @@ func get_health() -> HealthComponent:
 	return _health
 
 
+func get_weapon() -> WeaponHitscan:
+	return _weapon
+
+
 func _on_died(source: Node) -> void:
 	died.emit(source)
 	# Respawn immédiat au spawn point d'origine. La PJ ne meurt pas vraiment :
