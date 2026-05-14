@@ -26,6 +26,11 @@ extends CharacterBody3D
 @export var dash_duration: float = 0.15
 @export var dash_cooldown: float = 0.8
 
+@export_group("Garde-fou")
+## Altitude (Y) en dessous de laquelle on considère que le joueur est tombé
+## dans le vide → respawn auto au spawn point (compte comme une mort).
+@export var fall_threshold_y: float = -10.0
+
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _camera_remote: RemoteTransform3D = $CameraPivot/CameraRemote
@@ -83,6 +88,11 @@ func _on_died(source: Node) -> void:
 
 func _physics_process(delta: float) -> void:
 	if not InputRouter.is_player_registered(player_id):
+		return
+
+	# Kill plane : si on tombe dans le vide, on compte une mort + respawn.
+	if global_transform.origin.y < fall_threshold_y:
+		_on_died(null)
 		return
 
 	_update_look(delta)
