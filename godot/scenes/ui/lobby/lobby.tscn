@@ -113,7 +113,15 @@ custom_minimum_size = Vector2(420, 56)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 28
-text = "Lancer le run"
+text = "Lancer le run (level 01)"
+
+[node name="BtnRun02" type="Button" parent="Layout/MenuPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(420, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 28
+text = "Lancer le level 02 (3 étages)"
 
 [node name="BtnLeaderboard" type="Button" parent="Layout/MenuPanel"]
 unique_name_in_owner = true

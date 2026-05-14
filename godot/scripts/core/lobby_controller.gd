@@ -21,6 +21,7 @@ extends Control
 const RUN_SHELL_SCENE := "res://scenes/run/run_shell.tscn"
 const LEVEL_TUTO := "res://scenes/levels/test_open_arena.tscn"
 const LEVEL_RUN := "res://scenes/levels/level_01_poc/level_01_poc.tscn"
+const LEVEL_RUN_02 := "res://scenes/levels/level_02_poc/level_02_poc.tscn"
 const MAX_PLAYERS: int = 4
 
 enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
@@ -37,6 +38,7 @@ enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
 @onready var _settings_panel: Control = %SettingsPanel
 @onready var _btn_tuto: Button = %BtnTuto
 @onready var _btn_run: Button = %BtnRun
+@onready var _btn_run_02: Button = %BtnRun02
 @onready var _btn_leaderboard: Button = %BtnLeaderboard
 @onready var _btn_settings: Button = %BtnSettings
 
@@ -50,6 +52,7 @@ func _ready() -> void:
 
 	_btn_tuto.pressed.connect(_on_tuto_pressed)
 	_btn_run.pressed.connect(_on_run_pressed)
+	_btn_run_02.pressed.connect(_on_run_02_pressed)
 	_btn_leaderboard.pressed.connect(_on_leaderboard_pressed)
 	_btn_settings.pressed.connect(_on_settings_pressed)
 
@@ -115,6 +118,10 @@ func _on_tuto_pressed() -> void:
 
 func _on_run_pressed() -> void:
 	_launch_level(LEVEL_RUN)
+
+
+func _on_run_02_pressed() -> void:
+	_launch_level(LEVEL_RUN_02)
 
 
 func _on_leaderboard_pressed() -> void:
