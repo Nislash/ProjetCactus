@@ -1,19 +1,18 @@
-[gd_scene load_steps=22 format=3 uid="uid://test_open_arena_m1"]
+[gd_scene load_steps=24 format=3 uid="uid://test_open_arena_m1"]
 
 ; ============================================================
 ; Test Open Arena — niveau M1 alternatif au level_01_poc
 ;
-; Layout :
-;   - Arène totale 70×70 (de -35 à +35 sur X et Z), fermée par 4 murs hauts.
-;   - Salle centrale 40×40 (de -20 à +20) entourée de murs intérieurs avec
-;     1 ouverture de 6m au centre de chaque côté (N/S/E/W).
-;   - Couloirs périphériques de ~15m de large entre la salle centrale et
-;     les murs extérieurs → permet de contourner / flanquer.
+; Architecture en oignon (3 niveaux) :
+;   1. SALLE CENTRALE 40×40 (de -20 à +20) — combat principal
+;      Ouvertures 6m N/S/E/W vers les couloirs périphériques.
+;   2. COULOIRS PÉRIPHÉRIQUES anneau de 15m de large (entre ±20 et ±35)
+;      Permettent de contourner / flanquer la salle centrale.
+;   3. MINI COULOIRS (4m × 8m) au centre de chaque mur extérieur,
+;      vers 4 PETITES SALLES annexes 10×10 (loot, ambush, hidden enemy).
 ;
-; Obstacles internes (dans la salle centrale) : 2 piliers + 2 murs courts.
-;
-; Spawn joueurs : couloir sud (4 markers).
-; Spawn ennemis (12) : 6 dans la salle centrale + 6 dans les couloirs.
+; Murs extérieurs découpés (ouverture 4m au centre) pour laisser passer.
+; 16 ennemis répartis sur les 3 zones.
 ;
 ; Conventions EnemySpawner : "EnemyB*" → mêlée, "EnemyC*" → ranged.
 ; ============================================================
@@ -25,20 +24,20 @@ size = Vector3(70, 0.5, 70)
 [sub_resource type="BoxMesh" id="msh_floor"]
 size = Vector3(70, 0.5, 70)
 
-; Murs extérieurs périphérie 70×70
-[sub_resource type="BoxShape3D" id="sha_wall_outer_ns"]
-size = Vector3(70, 6, 1)
+; Murs extérieurs DÉCOUPÉS : 33m chacun (70/2 - 2m ouv./2 = 33)
+[sub_resource type="BoxShape3D" id="sha_wall_outer_half_ns"]
+size = Vector3(33, 6, 1)
 
-[sub_resource type="BoxMesh" id="msh_wall_outer_ns"]
-size = Vector3(70, 6, 1)
+[sub_resource type="BoxMesh" id="msh_wall_outer_half_ns"]
+size = Vector3(33, 6, 1)
 
-[sub_resource type="BoxShape3D" id="sha_wall_outer_ew"]
-size = Vector3(1, 6, 70)
+[sub_resource type="BoxShape3D" id="sha_wall_outer_half_ew"]
+size = Vector3(1, 6, 33)
 
-[sub_resource type="BoxMesh" id="msh_wall_outer_ew"]
-size = Vector3(1, 6, 70)
+[sub_resource type="BoxMesh" id="msh_wall_outer_half_ew"]
+size = Vector3(1, 6, 33)
 
-; Murs intérieurs de la salle centrale : 17m de long chacun (40 - 6 ouverture / 2)
+; Murs intérieurs salle centrale (inchangé)
 [sub_resource type="BoxShape3D" id="sha_wall_inner_ns"]
 size = Vector3(17, 4, 0.5)
 
@@ -51,7 +50,51 @@ size = Vector3(0.5, 4, 17)
 [sub_resource type="BoxMesh" id="msh_wall_inner_ew"]
 size = Vector3(0.5, 4, 17)
 
-; Obstacles internes
+; Mini couloirs : sol 4×8 + murs latéraux 0.5×8
+[sub_resource type="BoxShape3D" id="sha_mini_floor_ns"]
+size = Vector3(4, 0.5, 8)
+
+[sub_resource type="BoxMesh" id="msh_mini_floor_ns"]
+size = Vector3(4, 0.5, 8)
+
+[sub_resource type="BoxShape3D" id="sha_mini_floor_ew"]
+size = Vector3(8, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="msh_mini_floor_ew"]
+size = Vector3(8, 0.5, 4)
+
+[sub_resource type="BoxShape3D" id="sha_mini_wall_ns"]
+size = Vector3(0.5, 6, 8)
+
+[sub_resource type="BoxMesh" id="msh_mini_wall_ns"]
+size = Vector3(0.5, 6, 8)
+
+[sub_resource type="BoxShape3D" id="sha_mini_wall_ew"]
+size = Vector3(8, 6, 0.5)
+
+[sub_resource type="BoxMesh" id="msh_mini_wall_ew"]
+size = Vector3(8, 6, 0.5)
+
+; Petites salles annexes : sol 10×10 + murs autour (sauf côté connecté)
+[sub_resource type="BoxShape3D" id="sha_small_floor"]
+size = Vector3(10, 0.5, 10)
+
+[sub_resource type="BoxMesh" id="msh_small_floor"]
+size = Vector3(10, 0.5, 10)
+
+[sub_resource type="BoxShape3D" id="sha_small_wall_ns"]
+size = Vector3(10, 6, 0.5)
+
+[sub_resource type="BoxMesh" id="msh_small_wall_ns"]
+size = Vector3(10, 6, 0.5)
+
+[sub_resource type="BoxShape3D" id="sha_small_wall_ew"]
+size = Vector3(0.5, 6, 10)
+
+[sub_resource type="BoxMesh" id="msh_small_wall_ew"]
+size = Vector3(0.5, 6, 10)
+
+; Obstacles internes (inchangé)
 [sub_resource type="BoxShape3D" id="sha_pillar"]
 size = Vector3(2, 4, 2)
 
@@ -93,7 +136,7 @@ shadow_enabled = true
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")
 
-; ─── SOL TOTAL ───────────────────────────────────────────────
+; ─── SOL ARÈNE PRINCIPALE 70×70 ──────────────────────────────
 [node name="Floor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 
@@ -103,46 +146,84 @@ shape = SubResource("sha_floor")
 [node name="Mesh" type="MeshInstance3D" parent="Floor"]
 mesh = SubResource("msh_floor")
 
-; ─── MURS EXTÉRIEURS (périphérie 70×70) ──────────────────────
-[node name="WallOuterNorth" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 35)
+; ─── MURS EXTÉRIEURS découpés (ouv. 4m au centre) ────────────
+; Nord (z=+35) : 2 morceaux, ouv. x∈[-2, +2]
+[node name="WallOuterN_Left" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 3, 35)
 
-[node name="Shape" type="CollisionShape3D" parent="WallOuterNorth"]
-shape = SubResource("sha_wall_outer_ns")
+[node name="Shape" type="CollisionShape3D" parent="WallOuterN_Left"]
+shape = SubResource("sha_wall_outer_half_ns")
 
-[node name="Mesh" type="MeshInstance3D" parent="WallOuterNorth"]
-mesh = SubResource("msh_wall_outer_ns")
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterN_Left"]
+mesh = SubResource("msh_wall_outer_half_ns")
 
-[node name="WallOuterSouth" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -35)
+[node name="WallOuterN_Right" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 3, 35)
 
-[node name="Shape" type="CollisionShape3D" parent="WallOuterSouth"]
-shape = SubResource("sha_wall_outer_ns")
+[node name="Shape" type="CollisionShape3D" parent="WallOuterN_Right"]
+shape = SubResource("sha_wall_outer_half_ns")
 
-[node name="Mesh" type="MeshInstance3D" parent="WallOuterSouth"]
-mesh = SubResource("msh_wall_outer_ns")
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterN_Right"]
+mesh = SubResource("msh_wall_outer_half_ns")
 
-[node name="WallOuterEast" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 3, 0)
+; Sud (z=-35) : 2 morceaux, ouv. x∈[-2, +2]
+[node name="WallOuterS_Left" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.5, 3, -35)
 
-[node name="Shape" type="CollisionShape3D" parent="WallOuterEast"]
-shape = SubResource("sha_wall_outer_ew")
+[node name="Shape" type="CollisionShape3D" parent="WallOuterS_Left"]
+shape = SubResource("sha_wall_outer_half_ns")
 
-[node name="Mesh" type="MeshInstance3D" parent="WallOuterEast"]
-mesh = SubResource("msh_wall_outer_ew")
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterS_Left"]
+mesh = SubResource("msh_wall_outer_half_ns")
 
-[node name="WallOuterWest" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 3, 0)
+[node name="WallOuterS_Right" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 3, -35)
 
-[node name="Shape" type="CollisionShape3D" parent="WallOuterWest"]
-shape = SubResource("sha_wall_outer_ew")
+[node name="Shape" type="CollisionShape3D" parent="WallOuterS_Right"]
+shape = SubResource("sha_wall_outer_half_ns")
 
-[node name="Mesh" type="MeshInstance3D" parent="WallOuterWest"]
-mesh = SubResource("msh_wall_outer_ew")
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterS_Right"]
+mesh = SubResource("msh_wall_outer_half_ns")
 
-; ─── MURS INTÉRIEURS de la SALLE CENTRALE (40×40) ────────────
-; Chaque côté = 2 morceaux de 17m, ouverture centrale de 6m
-; Côté Nord (z=+20) : ouv. x∈[-3, +3]
+; Est (x=+35) : 2 morceaux, ouv. z∈[-2, +2]
+[node name="WallOuterE_Top" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 3, -18.5)
+
+[node name="Shape" type="CollisionShape3D" parent="WallOuterE_Top"]
+shape = SubResource("sha_wall_outer_half_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterE_Top"]
+mesh = SubResource("msh_wall_outer_half_ew")
+
+[node name="WallOuterE_Bottom" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 3, 18.5)
+
+[node name="Shape" type="CollisionShape3D" parent="WallOuterE_Bottom"]
+shape = SubResource("sha_wall_outer_half_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterE_Bottom"]
+mesh = SubResource("msh_wall_outer_half_ew")
+
+; Ouest (x=-35) : 2 morceaux, ouv. z∈[-2, +2]
+[node name="WallOuterW_Top" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 3, -18.5)
+
+[node name="Shape" type="CollisionShape3D" parent="WallOuterW_Top"]
+shape = SubResource("sha_wall_outer_half_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterW_Top"]
+mesh = SubResource("msh_wall_outer_half_ew")
+
+[node name="WallOuterW_Bottom" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 3, 18.5)
+
+[node name="Shape" type="CollisionShape3D" parent="WallOuterW_Bottom"]
+shape = SubResource("sha_wall_outer_half_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallOuterW_Bottom"]
+mesh = SubResource("msh_wall_outer_half_ew")
+
+; ─── MURS INTÉRIEURS salle centrale (40×40, ouv. 6m) ─────────
 [node name="WallInnerN_Left" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 2, 20)
 
@@ -161,7 +242,6 @@ shape = SubResource("sha_wall_inner_ns")
 [node name="Mesh" type="MeshInstance3D" parent="WallInnerN_Right"]
 mesh = SubResource("msh_wall_inner_ns")
 
-; Côté Sud (z=-20) : ouv. x∈[-3, +3]
 [node name="WallInnerS_Left" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 2, -20)
 
@@ -180,7 +260,6 @@ shape = SubResource("sha_wall_inner_ns")
 [node name="Mesh" type="MeshInstance3D" parent="WallInnerS_Right"]
 mesh = SubResource("msh_wall_inner_ns")
 
-; Côté Est (x=+20) : ouv. z∈[-3, +3]
 [node name="WallInnerE_Top" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2, -11.5)
 
@@ -199,7 +278,6 @@ shape = SubResource("sha_wall_inner_ew")
 [node name="Mesh" type="MeshInstance3D" parent="WallInnerE_Bottom"]
 mesh = SubResource("msh_wall_inner_ew")
 
-; Côté Ouest (x=-20) : ouv. z∈[-3, +3]
 [node name="WallInnerW_Top" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 2, -11.5)
 
@@ -255,6 +333,268 @@ shape = SubResource("sha_short_wall")
 [node name="Mesh" type="MeshInstance3D" parent="WallShortSE"]
 mesh = SubResource("msh_short_wall")
 
+; ─── MINI COULOIR NORD (sortie z=+35, vers petite salle Nord) ─
+[node name="MiniCorridorN_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 39)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorN_Floor"]
+shape = SubResource("sha_mini_floor_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorN_Floor"]
+mesh = SubResource("msh_mini_floor_ns")
+
+[node name="MiniCorridorN_WallLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 3, 39)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorN_WallLeft"]
+shape = SubResource("sha_mini_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorN_WallLeft"]
+mesh = SubResource("msh_mini_wall_ns")
+
+[node name="MiniCorridorN_WallRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 3, 39)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorN_WallRight"]
+shape = SubResource("sha_mini_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorN_WallRight"]
+mesh = SubResource("msh_mini_wall_ns")
+
+; ─── PETITE SALLE NORD (10×10, centre z=+48) ─────────────────
+[node name="SmallRoomN_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 48)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomN_Floor"]
+shape = SubResource("sha_small_floor")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomN_Floor"]
+mesh = SubResource("msh_small_floor")
+
+; Murs : N (fond), E, W. Pas de S (ouverture vers mini couloir).
+[node name="SmallRoomN_WallBack" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 53)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomN_WallBack"]
+shape = SubResource("sha_small_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomN_WallBack"]
+mesh = SubResource("msh_small_wall_ns")
+
+[node name="SmallRoomN_WallEast" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, 48)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomN_WallEast"]
+shape = SubResource("sha_small_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomN_WallEast"]
+mesh = SubResource("msh_small_wall_ew")
+
+[node name="SmallRoomN_WallWest" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3, 48)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomN_WallWest"]
+shape = SubResource("sha_small_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomN_WallWest"]
+mesh = SubResource("msh_small_wall_ew")
+
+; Petits murs latéraux entre le mini couloir et la petite salle (raccord)
+; (le bord de la petite salle est à z=43, mais le mini couloir s'arrête
+; à z=43 aussi — donc déjà connectés. Pas besoin de raccord vertical.)
+
+; ─── MINI COULOIR SUD (sortie z=-35, vers petite salle Sud) ──
+[node name="MiniCorridorS_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -39)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorS_Floor"]
+shape = SubResource("sha_mini_floor_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorS_Floor"]
+mesh = SubResource("msh_mini_floor_ns")
+
+[node name="MiniCorridorS_WallLeft" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.25, 3, -39)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorS_WallLeft"]
+shape = SubResource("sha_mini_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorS_WallLeft"]
+mesh = SubResource("msh_mini_wall_ns")
+
+[node name="MiniCorridorS_WallRight" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 3, -39)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorS_WallRight"]
+shape = SubResource("sha_mini_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorS_WallRight"]
+mesh = SubResource("msh_mini_wall_ns")
+
+[node name="SmallRoomS_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -48)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomS_Floor"]
+shape = SubResource("sha_small_floor")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomS_Floor"]
+mesh = SubResource("msh_small_floor")
+
+[node name="SmallRoomS_WallBack" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -53)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomS_WallBack"]
+shape = SubResource("sha_small_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomS_WallBack"]
+mesh = SubResource("msh_small_wall_ns")
+
+[node name="SmallRoomS_WallEast" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, -48)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomS_WallEast"]
+shape = SubResource("sha_small_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomS_WallEast"]
+mesh = SubResource("msh_small_wall_ew")
+
+[node name="SmallRoomS_WallWest" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3, -48)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomS_WallWest"]
+shape = SubResource("sha_small_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomS_WallWest"]
+mesh = SubResource("msh_small_wall_ew")
+
+; ─── MINI COULOIR EST (sortie x=+35, vers petite salle Est) ──
+[node name="MiniCorridorE_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39, -0.25, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorE_Floor"]
+shape = SubResource("sha_mini_floor_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorE_Floor"]
+mesh = SubResource("msh_mini_floor_ew")
+
+[node name="MiniCorridorE_WallTop" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39, 3, -2.25)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorE_WallTop"]
+shape = SubResource("sha_mini_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorE_WallTop"]
+mesh = SubResource("msh_mini_wall_ew")
+
+[node name="MiniCorridorE_WallBottom" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39, 3, 2.25)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorE_WallBottom"]
+shape = SubResource("sha_mini_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorE_WallBottom"]
+mesh = SubResource("msh_mini_wall_ew")
+
+[node name="SmallRoomE_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, -0.25, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomE_Floor"]
+shape = SubResource("sha_small_floor")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomE_Floor"]
+mesh = SubResource("msh_small_floor")
+
+[node name="SmallRoomE_WallBack" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 3, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomE_WallBack"]
+shape = SubResource("sha_small_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomE_WallBack"]
+mesh = SubResource("msh_small_wall_ew")
+
+[node name="SmallRoomE_WallNorth" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 3, 5)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomE_WallNorth"]
+shape = SubResource("sha_small_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomE_WallNorth"]
+mesh = SubResource("msh_small_wall_ns")
+
+[node name="SmallRoomE_WallSouth" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 3, -5)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomE_WallSouth"]
+shape = SubResource("sha_small_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomE_WallSouth"]
+mesh = SubResource("msh_small_wall_ns")
+
+; ─── MINI COULOIR OUEST (sortie x=-35, vers petite salle Ouest) ──
+[node name="MiniCorridorW_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39, -0.25, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorW_Floor"]
+shape = SubResource("sha_mini_floor_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorW_Floor"]
+mesh = SubResource("msh_mini_floor_ew")
+
+[node name="MiniCorridorW_WallTop" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39, 3, -2.25)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorW_WallTop"]
+shape = SubResource("sha_mini_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorW_WallTop"]
+mesh = SubResource("msh_mini_wall_ew")
+
+[node name="MiniCorridorW_WallBottom" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -39, 3, 2.25)
+
+[node name="Shape" type="CollisionShape3D" parent="MiniCorridorW_WallBottom"]
+shape = SubResource("sha_mini_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="MiniCorridorW_WallBottom"]
+mesh = SubResource("msh_mini_wall_ew")
+
+[node name="SmallRoomW_Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, -0.25, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomW_Floor"]
+shape = SubResource("sha_small_floor")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomW_Floor"]
+mesh = SubResource("msh_small_floor")
+
+[node name="SmallRoomW_WallBack" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -53, 3, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomW_WallBack"]
+shape = SubResource("sha_small_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomW_WallBack"]
+mesh = SubResource("msh_small_wall_ew")
+
+[node name="SmallRoomW_WallNorth" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 3, 5)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomW_WallNorth"]
+shape = SubResource("sha_small_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomW_WallNorth"]
+mesh = SubResource("msh_small_wall_ns")
+
+[node name="SmallRoomW_WallSouth" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 3, -5)
+
+[node name="Shape" type="CollisionShape3D" parent="SmallRoomW_WallSouth"]
+shape = SubResource("sha_small_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="SmallRoomW_WallSouth"]
+mesh = SubResource("msh_small_wall_ns")
+
 ; ─── SPAWN POINTS JOUEURS (couloir sud) ──────────────────────
 [node name="PlayerSpawnPoints" type="Node3D" parent="."]
 
@@ -270,10 +610,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, -32)
 [node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, -32)
 
-; ─── SPAWN POINTS ENNEMIS ────────────────────────────────────
+; ─── SPAWN POINTS ENNEMIS (16 au total) ──────────────────────
 [node name="EnemySpawnPoints" type="Node3D" parent="."]
 
-; Mêlée (B*) — dans la salle centrale + couloirs
+; Salle centrale (5 : 3 mêlée + 2 ranged)
 [node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 0)
 
@@ -283,7 +623,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 0)
 [node name="EnemyB2" type="Marker3D" parent="EnemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 12)
 
-; Mêlée dans les couloirs périphériques
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1, 15)
+
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1, 15)
+
+; Couloirs périphériques (7 : 3 mêlée + 4 ranged)
 [node name="EnemyB3" type="Marker3D" parent="EnemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1, 10)
 
@@ -292,13 +638,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1, 10)
 
 [node name="EnemyB5" type="Marker3D" parent="EnemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 28)
-
-; Ranged (C*) — placés stratégiquement
-[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 1, 15)
-
-[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 1, 15)
 
 [node name="EnemyC2" type="Marker3D" parent="EnemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1, -20)
@@ -311,3 +650,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1, 28)
 
 [node name="EnemyC5" type="Marker3D" parent="EnemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1, 28)
+
+; Petites salles (4 : 1 ranged dans chaque, "tireurs cachés")
+[node name="EnemyC6" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 48)
+
+[node name="EnemyC7" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -48)
+
+[node name="EnemyC8" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 1, 0)
+
+[node name="EnemyC9" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 1, 0)
