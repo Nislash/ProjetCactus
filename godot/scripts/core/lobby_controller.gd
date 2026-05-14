@@ -5,13 +5,17 @@ extends Control
 ## Phases :
 ## - JOIN : aucun joueur encore inscrit. Les manettes peuvent presser Start
 ##   pour rejoindre. Boutons menu invisibles tant que personne n'est joint.
-## - MENU : 1+ joueur joint. 4 boutons visibles (Tuto, Run, Leaderboard,
-##   Settings). Navigation D-pad + A pour valider, B pour quitter le slot.
+## - MENU : 1+ joueur joint. 2 gros boutons (Tuto, Lancer le Run) +
+##   dropdown level select + boutons secondaires (Leaderboard, Settings).
 ## - PANEL : un sous-panel (leaderboard / settings) est ouvert. B pour
 ##   revenir au menu.
 ##
 ## Tuto et Run set RunState.selected_level_path puis change_scene_to_file
 ## vers res://scenes/run/run_shell.tscn — le shell instancie le level.
+##
+## Pour ajouter un nouveau level jouable via "Lancer le Run", ajoutez une
+## entree au tableau LEVELS ci-dessous. Le dropdown se peuple
+## automatiquement au _ready et le bouton Run lance le level selectionne.
 ##
 ## Navigation menu : on utilise les actions Godot built-in `ui_up`, `ui_down`,
 ## `ui_accept`, `ui_cancel`. Project.godot ajoute D-pad + A/B sur ces actions
@@ -20,9 +24,16 @@ extends Control
 
 const RUN_SHELL_SCENE := "res://scenes/run/run_shell.tscn"
 const LEVEL_TUTO := "res://scenes/levels/test_open_arena.tscn"
-const LEVEL_RUN := "res://scenes/levels/level_01_poc/level_01_poc.tscn"
-const LEVEL_RUN_02 := "res://scenes/levels/level_02_poc/level_02_poc.tscn"
 const MAX_PLAYERS: int = 4
+
+## Liste des niveaux jouables via le bouton "Lancer le Run". Le dropdown se
+## remplit dans cet ordre. Premier element = selection par defaut.
+##
+## Ajoutez une entree quand un nouveau niveau est pret. Le numero affiche
+## sert juste de tag (le path est la source de verite).
+const LEVELS: Array = [
+	{"id": 1, "name": "POC niveau 1 (caverne crystalline)", "path": "res://scenes/levels/level_01_poc/level_01_poc.tscn"},
+]
 
 enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
 
@@ -38,7 +49,7 @@ enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
 @onready var _settings_panel: Control = %SettingsPanel
 @onready var _btn_tuto: Button = %BtnTuto
 @onready var _btn_run: Button = %BtnRun
-@onready var _btn_run_02: Button = %BtnRun02
+@onready var _level_dropdown: OptionButton = %LevelDropdown
 @onready var _btn_leaderboard: Button = %BtnLeaderboard
 @onready var _btn_settings: Button = %BtnSettings
 
@@ -52,12 +63,21 @@ func _ready() -> void:
 
 	_btn_tuto.pressed.connect(_on_tuto_pressed)
 	_btn_run.pressed.connect(_on_run_pressed)
-	_btn_run_02.pressed.connect(_on_run_02_pressed)
 	_btn_leaderboard.pressed.connect(_on_leaderboard_pressed)
 	_btn_settings.pressed.connect(_on_settings_pressed)
 
+	_populate_level_dropdown()
 	_set_phase(Phase.JOIN)
 	_refresh_status()
+
+
+func _populate_level_dropdown() -> void:
+	_level_dropdown.clear()
+	for i in LEVELS.size():
+		var lvl: Dictionary = LEVELS[i]
+		_level_dropdown.add_item("%02d — %s" % [lvl.id, lvl.name], i)
+	if LEVELS.size() > 0:
+		_level_dropdown.select(0)
 
 
 func _process(_delta: float) -> void:
@@ -117,11 +137,10 @@ func _on_tuto_pressed() -> void:
 
 
 func _on_run_pressed() -> void:
-	_launch_level(LEVEL_RUN)
-
-
-func _on_run_02_pressed() -> void:
-	_launch_level(LEVEL_RUN_02)
+	var idx: int = _level_dropdown.get_selected_id()
+	if idx < 0 or idx >= LEVELS.size():
+		idx = 0
+	_launch_level(LEVELS[idx].path)
 
 
 func _on_leaderboard_pressed() -> void:
