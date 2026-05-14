@@ -31,7 +31,11 @@ func _ready() -> void:
 	# Le manager occupe tout l'écran et héberge la grille de viewports.
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	_world = get_node(world_path)
+	_world = get_node_or_null(world_path) as Node3D
+	if _world == null:
+		# Fallback : cherche "World" comme nœud frère ou enfant du parent.
+		_world = get_parent().get_node_or_null("World") as Node3D
+	assert(_world != null, "SplitScreenManager: impossible de trouver le World3D. Set world_path ou ajoute un Node3D 'World' frère.")
 
 	_grid = GridContainer.new()
 	_grid.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -60,7 +64,7 @@ func _on_player_left(player_id: int) -> void:
 
 
 func _spawn_slot(player_id: int, _device_id: int) -> void:
-	if _find_slot(player_id) != null:
+	if not _find_slot(player_id).is_empty():
 		return
 
 	var container: SubViewportContainer = SubViewportContainer.new()
@@ -70,7 +74,7 @@ func _spawn_slot(player_id: int, _device_id: int) -> void:
 
 	var viewport: SubViewport = SubViewport.new()
 	viewport.handle_input_locally = false
-	viewport.size_2d_override_stretch = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	# Partage le world 3D du root pour voir la même scène 3D que les autres
 	# viewports. Set juste après l'ajout au tree (world_3d nécessite le tree).
 	container.add_child(viewport)
@@ -138,7 +142,7 @@ func _refresh_layout() -> void:
 		_grid.move_child(_slots[i].container, i)
 
 	var viewport_size: Vector2 = size
-	if viewport_size == Vector2.ZERO:
+	if viewport_size.x < 1.0 or viewport_size.y < 1.0:
 		viewport_size = get_viewport_rect().size
 
 	match count:
