@@ -4,6 +4,11 @@ extends Node
 ## Pool de HP générique attachable comme enfant d'une entité (player, enemy).
 ## Émet des signaux pour que le HUD et le gameplay code y réagissent sans
 ## coupling fort.
+##
+## Status effects (burn, slow, freeze, poison, stun) sont délégués à un
+## StatusComponent enfant instancié au _ready. Les signaux burn_started /
+## burn_ended et la méthode apply_burn restent comme shims pour les
+## consommateurs existants (fireball.gd, enemy_base.gd).
 
 signal health_changed(current: int, max: int)
 signal damaged(amount: int, source: Node)
@@ -17,52 +22,35 @@ signal burn_ended()
 
 var current_health: int = 0
 var is_dead: bool = false
-## Burn status : tant que > 0 on tick le DoT en _process.
-var _burn_time_left: float = 0.0
-var _burn_dps: float = 0.0
-var _burn_source: Node = null
-var _burn_accumulator: float = 0.0
+var _status: StatusComponent = null
 
 
 func _ready() -> void:
+	_status = StatusComponent.new()
+	_status.name = "Status"
+	add_child(_status)
+	_status.status_damage_tick.connect(_on_status_damage_tick)
+	_status.status_started.connect(_on_status_started)
+	_status.status_ended.connect(_on_status_ended)
 	if start_full:
 		current_health = max_health
 	health_changed.emit(current_health, max_health)
 
 
-func _process(delta: float) -> void:
-	if _burn_time_left <= 0.0 or is_dead:
-		return
-	_burn_time_left -= delta
-	_burn_accumulator += _burn_dps * delta
-	# Quand on a accumulé au moins 1 dmg, on l'applique en entier.
-	# Évite take_damage(1) chaque frame qui spammerait le signal.
-	if _burn_accumulator >= 1.0:
-		var int_dmg: int = int(_burn_accumulator)
-		_burn_accumulator -= float(int_dmg)
-		take_damage(int_dmg, _burn_source)
-	if _burn_time_left <= 0.0:
-		_burn_time_left = 0.0
-		_burn_dps = 0.0
-		_burn_source = null
-		_burn_accumulator = 0.0
-		burn_ended.emit()
+func get_status() -> StatusComponent:
+	return _status
 
 
 ## Applique (ou rafraîchit) un status de brûlure. `duration` en secondes,
-## `dps` en HP/sec. Si déjà en burn, on garde le dps le plus élevé et on
-## reset la durée à `duration`.
+## `dps` en HP/sec. Shim qui délègue à StatusComponent.
 func apply_burn(duration: float, dps: float, source: Node = null) -> void:
-	if is_dead or duration <= 0.0 or dps <= 0.0:
+	if is_dead:
 		return
-	_burn_dps = max(_burn_dps, dps)
-	_burn_time_left = duration
-	_burn_source = source
-	burn_started.emit(duration, _burn_dps, source)
+	_status.apply_status(StatusComponent.BURN, duration, dps, source)
 
 
 func is_burning() -> bool:
-	return _burn_time_left > 0.0
+	return _status != null and _status.has_status(StatusComponent.BURN)
 
 
 ## Inflige `amount` PV de dégâts. `source` est l'attaquant (peut être null
@@ -76,6 +64,7 @@ func take_damage(amount: int, source: Node = null) -> void:
 	health_changed.emit(current_health, max_health)
 	if current_health <= 0:
 		is_dead = true
+		_status.clear_all()
 		died.emit(source)
 
 
@@ -87,14 +76,24 @@ func heal(amount: int) -> void:
 	health_changed.emit(current_health, max_health)
 
 
-## Reset au plein HP (utile après respawn). Clear aussi les status (burn).
+## Reset au plein HP (utile après respawn). Clear aussi les status.
 func reset() -> void:
 	current_health = max_health
 	is_dead = false
-	if _burn_time_left > 0.0:
-		burn_ended.emit()
-	_burn_time_left = 0.0
-	_burn_dps = 0.0
-	_burn_source = null
-	_burn_accumulator = 0.0
+	if _status != null:
+		_status.clear_all()
 	health_changed.emit(current_health, max_health)
+
+
+func _on_status_damage_tick(amount: int, source: Node) -> void:
+	take_damage(amount, source)
+
+
+func _on_status_started(id: StringName, duration: float, magnitude: float, source: Node) -> void:
+	if id == StatusComponent.BURN:
+		burn_started.emit(duration, magnitude, source)
+
+
+func _on_status_ended(id: StringName) -> void:
+	if id == StatusComponent.BURN:
+		burn_ended.emit()
