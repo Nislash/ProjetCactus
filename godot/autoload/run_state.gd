@@ -29,6 +29,9 @@ const REASON_QUIT := &"quit"
 ## }
 var _players: Dictionary = {}
 var is_running: bool = false
+## Chemin de la scene de niveau a charger par run_shell.tscn au prochain run.
+## Set par le lobby (Tuto / Lancer le run) avant change_scene_to_file.
+var selected_level_path: String = ""
 
 
 ## Démarre un nouveau run avec les loadouts initiaux. Appelé par le coffre
