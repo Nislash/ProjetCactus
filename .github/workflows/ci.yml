@@ -75,10 +75,6 @@ jobs:
           echo "=== gdextension ==="
           cat godot/addons/cactus_native/cactus_native.gdextension
 
-      - name: Disable MCP plugin for headless check
-        run: |
-          sed -i 's|enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")|enabled=PackedStringArray()|' godot/project.godot
-
       - name: Check Godot project
         run: ./godot-bin/godot --headless --check-only godot/project.godot
         timeout-minutes: 5

@@ -39,8 +39,9 @@ func _enter_tree() -> void:
 	# Add status indicator to editor
 	_setup_status_indicator()
 
-	# Start connection
-	_mcp_client.connect_to_server()
+	# Skip connection in CI (GitHub Actions sets CI=true, no MCP server available)
+	if OS.get_environment("CI") != "true":
+		_mcp_client.connect_to_server()
 
 	print("[Godot MCP] Plugin loaded - connecting to MCP server...")
 
