@@ -40,6 +40,16 @@ jobs:
         with:
           lfs: true
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Build Rust library
+        working-directory: rust
+        run: cargo build --release
+
       - name: Cache Godot binary
         id: cache-godot
         uses: actions/cache@v4
@@ -56,6 +66,10 @@ jobs:
           mv "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64" godot-bin/godot
           chmod +x godot-bin/godot
 
+      - name: Disable MCP plugin for headless check
+        run: |
+          sed -i 's|enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")|enabled=PackedStringArray()|' godot/project.godot
+
       - name: Check Godot project
         run: ./godot-bin/godot --headless --check-only godot/project.godot
-        timeout-minutes: 3
+        timeout-minutes: 5
