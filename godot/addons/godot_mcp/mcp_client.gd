@@ -20,7 +20,7 @@ var server_url: String = DEFAULT_URL
 var _is_connected := false
 var _reconnect_timer: Timer
 var _current_reconnect_delay := RECONNECT_DELAY
-var _should_reconnect := true
+var _should_reconnect := false
 var _project_path: String
 var _initialized := false
 var _runtime_connected: bool = false
