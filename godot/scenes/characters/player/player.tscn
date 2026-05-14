@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://db7hs4bcs45ro"]
+[gd_scene load_steps=5 format=3 uid="uid://db7hs4bcs45ro"]
 
 [ext_resource type="Script" uid="uid://kvn1yabbqf8b" path="res://scripts/core/player_controller.gd" id="1_7uws0"]
 [ext_resource type="Script" uid="uid://dky7nmxy5s4ut" path="res://scripts/core/weapon_hitscan.gd" id="2_t61fv"]
-[ext_resource type="Script" path="res://scripts/core/health_component.gd" id="3_health"]
+[ext_resource type="Script" uid="uid://duufd13mvbexe" path="res://scripts/core/health_component.gd" id="3_health"]
+[ext_resource type="Resource" uid="uid://weapon_pistol_m1" path="res://resources/weapons/pistol.tres" id="4_pistol"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_7uws0"]
 radius = 0.4
@@ -34,6 +35,7 @@ update_scale = false
 
 [node name="Weapon" type="Node3D" parent="CameraPivot" unique_id=1815635427]
 script = ExtResource("2_t61fv")
+data = ExtResource("4_pistol")
 owner_body = NodePath("../..")
 
 [node name="Health" type="Node" parent="." unique_id=1234567001]

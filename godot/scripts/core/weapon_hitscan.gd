@@ -18,6 +18,12 @@ signal reload_started()
 signal reload_finished()
 signal weapon_name_changed(new_name: String)
 
+## Source de vérité des stats. Si défini (cf player.tscn → pistol.tres), les
+## valeurs @export ci-dessous sont écrasées au _ready. Si null, on retombe sur
+## les defaults @export — pratique pour créer une WeaponHitscan en code sans
+## data ou pour les tests.
+@export var data: WeaponData
+
 @export var base_weapon_name: String = "Pistolet"
 @export var max_range: float = 50.0
 @export var damage: int = 10
@@ -49,7 +55,34 @@ var is_reloading: bool = false
 
 
 func _ready() -> void:
+	_apply_data()
 	current_ammo = max_ammo
+	ammo_changed.emit(current_ammo, max_ammo)
+	weapon_name_changed.emit(get_display_name())
+
+
+## Copie les stats de data vers les vars internes. Idempotent. Appelable
+## à tout moment (ex: si on hot-swap d'arme en runtime via le coffre).
+func _apply_data() -> void:
+	if data == null:
+		return
+	damage = data.damage_base
+	fire_rate = data.fire_rate
+	max_range = data.max_range
+	max_ammo = data.max_ammo
+	reload_time = data.reload_time
+	if not data.weapon_name_display.is_empty():
+		base_weapon_name = data.weapon_name_display
+
+
+## Change l'arme à chaud. Met à jour stats + nom HUD. Reset l'ammo au full
+## de la nouvelle arme. Ne touche pas au combo / sort équipé (le sort suit
+## le joueur, pas l'arme).
+func set_data(new_data: WeaponData) -> void:
+	data = new_data
+	_apply_data()
+	current_ammo = max_ammo
+	is_reloading = false
 	ammo_changed.emit(current_ammo, max_ammo)
 	weapon_name_changed.emit(get_display_name())
 
