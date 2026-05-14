@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3 uid="uid://enemy_ranged_m1"]
+
+[ext_resource type="Script" path="res://scripts/core/enemy_ranged.gd" id="1_ranged"]
+[ext_resource type="Script" path="res://scripts/core/health_component.gd" id="2_health"]
+[ext_resource type="PackedScene" uid="uid://health_bar_3d_m1" path="res://scenes/ui/health_bar_3d.tscn" id="3_hbar"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ranged"]
+radius = 0.4
+height = 1.6
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_ranged"]
+radius = 0.4
+height = 1.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_ranged"]
+albedo_color = Color(0.9, 0.65, 0.15, 1)
+
+[node name="EnemyRanged" type="CharacterBody3D"]
+script = ExtResource("1_ranged")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("CapsuleShape3D_ranged")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+mesh = SubResource("CapsuleMesh_ranged")
+material_override = SubResource("Mat_ranged")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 35
+
+[node name="HealthBar3D" parent="." instance=ExtResource("3_hbar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 0)
