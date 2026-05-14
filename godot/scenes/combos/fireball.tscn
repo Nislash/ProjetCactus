@@ -68,3 +68,12 @@ material_override = SubResource("Mat_halo")
 light_color = Color(1, 0.55, 0.2, 1)
 light_energy = 3.0
 omni_range = 7.0
+
+; Son de lancement (joué automatiquement au _ready par fireball.gd).
+; Pour ajouter un son : glisser un fichier .wav ou .ogg dans le slot "stream"
+; via l'éditeur Godot OU set le @export launch_sound sur le node Fireball.
+[node name="LaunchSfx" type="AudioStreamPlayer3D" parent="."]
+unit_size = 12.0
+max_db = 0.0
+attenuation_filter_db = -12.0
+autoplay = false

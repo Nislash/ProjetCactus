@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://enemy_melee_m1"]
+[gd_scene load_steps=6 format=3 uid="uid://enemy_melee_m1"]
 
 [ext_resource type="Script" path="res://scripts/core/enemy_melee.gd" id="1_melee"]
 [ext_resource type="Script" path="res://scripts/core/health_component.gd" id="2_health"]
+[ext_resource type="PackedScene" uid="uid://health_bar_3d_m1" path="res://scenes/ui/health_bar_3d.tscn" id="3_hbar"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_melee"]
 radius = 0.4
@@ -29,3 +30,6 @@ material_override = SubResource("Mat_melee")
 [node name="Health" type="Node" parent="."]
 script = ExtResource("2_health")
 max_health = 50
+
+[node name="HealthBar3D" parent="." instance=ExtResource("3_hbar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 0)

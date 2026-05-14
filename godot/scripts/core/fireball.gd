@@ -14,6 +14,10 @@ extends Area3D
 ## Couleur du projectile + trail (héritée de ComboData.override_element_color
 ## ou SpellData.element_color en M2).
 @export var element_color: Color = Color(1.0, 0.4, 0.15, 1.0)
+## Son joué au _ready (lancement). Si null, pas de son.
+## Format recommandé : .wav (qualité brute, court) à mettre dans
+## `godot/assets/audio/sfx/fireball_launch.wav` puis assigner ici via inspector.
+@export var launch_sound: AudioStream
 
 var owner_body: Node = null
 var direction: Vector3 = Vector3.FORWARD
@@ -26,6 +30,11 @@ func _ready() -> void:
 	_life_left = lifetime_max
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
+	# Joue le son de lancement si défini.
+	var sfx: AudioStreamPlayer3D = get_node_or_null(^"LaunchSfx") as AudioStreamPlayer3D
+	if sfx != null and launch_sound != null:
+		sfx.stream = launch_sound
+		sfx.play()
 
 
 ## Setup à l'instanciation. Si `owner_to_exclude` est set, on ignore les

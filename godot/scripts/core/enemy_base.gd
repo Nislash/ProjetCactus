@@ -37,6 +37,11 @@ func _ready() -> void:
 		_burning_material.emission = Color(1.0, 0.5, 0.15, 1.0)
 		_burning_material.emission_energy_multiplier = 2.5
 
+	# Jauge HP 3D billboard (optionnelle, attachée dans la scène fille).
+	var hbar: HealthBar3D = get_node_or_null(^"HealthBar3D") as HealthBar3D
+	if hbar != null:
+		hbar.bind_to(_health)
+
 
 func _on_burn_started(_duration: float, _dps: float, _source: Node) -> void:
 	if _mesh != null and _burning_material != null:

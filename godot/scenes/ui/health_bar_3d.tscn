@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3 uid="uid://health_bar_3d_m1"]
+
+[ext_resource type="Script" path="res://scripts/core/health_bar_3d.gd" id="1_hbar"]
+
+; Background : QuadMesh noir billboard, 1.0 × 0.12
+[sub_resource type="QuadMesh" id="QuadMesh_bg"]
+size = Vector2(1, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="Mat_bg"]
+albedo_color = Color(0.05, 0.05, 0.05, 0.85)
+shading_mode = 2
+emission_enabled = true
+emission = Color(0, 0, 0, 1)
+billboard_mode = 1
+billboard_keep_scale = true
+transparency = 1
+no_depth_test = true
+
+; Fill : QuadMesh billboard, même taille mais avec couleur ajustée par script
+[sub_resource type="QuadMesh" id="QuadMesh_fill"]
+size = Vector2(1, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_fill"]
+albedo_color = Color(0.2, 0.85, 0.2, 1)
+shading_mode = 2
+emission_enabled = true
+emission = Color(0.2, 0.85, 0.2, 1)
+emission_energy_multiplier = 1.5
+billboard_mode = 1
+billboard_keep_scale = true
+no_depth_test = true
+
+[node name="HealthBar3D" type="Node3D"]
+script = ExtResource("1_hbar")
+
+[node name="Background" type="MeshInstance3D" parent="."]
+mesh = SubResource("QuadMesh_bg")
+material_override = SubResource("Mat_bg")
+
+[node name="Fill" type="MeshInstance3D" parent="."]
+mesh = SubResource("QuadMesh_fill")
+material_override = SubResource("Mat_fill")
