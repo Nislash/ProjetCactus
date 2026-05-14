@@ -31,6 +31,16 @@ extends CharacterBody3D
 ## dans le vide → respawn auto au spawn point (compte comme une mort).
 @export var fall_threshold_y: float = -10.0
 
+@export_group("Down & Revive")
+## Multiplicateur de vitesse en état DOWNED (rampe lentement, ~ramper).
+@export var downed_speed_multiplier: float = 0.3
+## Distance maxi à laquelle un allié peut faire un revive.
+@export var revive_range: float = 2.0
+## Durée du hold pour le revive (secondes).
+@export var revive_duration: float = 3.0
+## HP rendu au revive (en % du max_health).
+@export_range(0.1, 1.0) var revive_hp_ratio: float = 0.5
+
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _camera_remote: RemoteTransform3D = $CameraPivot/CameraRemote
@@ -38,9 +48,15 @@ extends CharacterBody3D
 @onready var _health: HealthComponent = $Health
 
 signal died(source: Node)
+signal downed()
+signal revived()
 signal respawned()
 signal death_count_changed(count: int)
+signal revive_progress_changed(target_player_id: int, progress: float)
 
+enum PlayerState { ALIVE, DOWNED }
+
+var state: PlayerState = PlayerState.ALIVE
 var death_count: int = 0
 var _spawn_position: Vector3 = Vector3.ZERO
 var _yaw: float = 0.0
@@ -48,10 +64,17 @@ var _pitch: float = 0.0
 var _dash_time_left: float = 0.0
 var _dash_cooldown_left: float = 0.0
 var _dash_direction: Vector3 = Vector3.ZERO
+## Si on est ALIVE et qu'on tient `interact` sur un allié DOWNED, on accumule
+## ici la durée passée à le relever. Reset à 0 dès qu'on relâche.
+var _revive_target: PlayerController = null
+var _revive_progress: float = 0.0
 
 
 func _ready() -> void:
 	_health.died.connect(_on_died)
+	# Permet aux ennemis (et autres systèmes) de retrouver les joueurs via
+	# get_tree().get_nodes_in_group("players").
+	add_to_group("players")
 
 
 ## Doit être appelé par celui qui spawn le player (SplitScreenManager) après
@@ -69,11 +92,24 @@ func get_weapon() -> WeaponHitscan:
 	return _weapon
 
 
+## À 0 HP : on passe en état DOWNED (cf CLAUDE.md "Friendly fire & revive").
+## Le joueur peut ramper mais pas tirer ; un allié peut le relever en
+## maintenant `interact` à proximité. Le kill plane reste géré séparément
+## (chute = respawn full HP, ne passe pas par downed).
 func _on_died(source: Node) -> void:
+	if state == PlayerState.DOWNED:
+		return
+	state = PlayerState.DOWNED
+	velocity = Vector3.ZERO
+	_dash_time_left = 0.0
 	died.emit(source)
-	# Respawn immédiat au spawn point d'origine. La PJ ne meurt pas vraiment :
-	# on téléporte, on remet full HP, on incrémente le compteur (M2 ajoutera
-	# le downed + revive proprement).
+	downed.emit()
+
+
+## Téléporte le joueur au spawn point d'origine et réinitialise tout.
+## Utilisé pour la chute (kill plane) où on ne veut PAS passer par downed.
+func _respawn() -> void:
+	state = PlayerState.ALIVE
 	velocity = Vector3.ZERO
 	global_transform.origin = _spawn_position
 	_yaw = 0.0
@@ -81,24 +117,51 @@ func _on_died(source: Node) -> void:
 	rotation.y = 0.0
 	_camera_pivot.rotation.x = 0.0
 	_health.reset()
+	_revive_target = null
+	_revive_progress = 0.0
 	death_count += 1
 	death_count_changed.emit(death_count)
 	respawned.emit()
+
+
+## Relève le joueur (appelé par un allié). HP rendu = revive_hp_ratio * max.
+func revive_by(_reviver: PlayerController) -> void:
+	if state != PlayerState.DOWNED:
+		return
+	state = PlayerState.ALIVE
+	_health.reset()
+	_health.current_health = int(_health.max_health * revive_hp_ratio)
+	_health.health_changed.emit(_health.current_health, _health.max_health)
+	revived.emit()
+
+
+func is_alive() -> bool:
+	return state == PlayerState.ALIVE and not _health.is_dead
+
+
+func is_downed() -> bool:
+	return state == PlayerState.DOWNED
 
 
 func _physics_process(delta: float) -> void:
 	if not InputRouter.is_player_registered(player_id):
 		return
 
-	# Kill plane : si on tombe dans le vide, on compte une mort + respawn.
+	# Kill plane : chute dans le vide = respawn direct (skip downed).
 	if global_transform.origin.y < fall_threshold_y:
-		_on_died(null)
+		_respawn()
 		return
 
 	_update_look(delta)
-	_update_dash_timers(delta)
-	_update_shooting()
-	_apply_movement(delta)
+
+	if state == PlayerState.DOWNED:
+		_update_downed_movement(delta)
+	else:
+		_update_dash_timers(delta)
+		_update_shooting()
+		_update_revive(delta)
+		_apply_movement(delta)
+
 	move_and_slide()
 
 
@@ -106,6 +169,63 @@ func _update_shooting() -> void:
 	# RT en hold : tire à la cadence définie par l'arme (auto-fire).
 	if InputRouter.is_action_pressed(player_id, &"shoot") and _weapon.can_fire():
 		_weapon.shoot()
+
+
+## Cherche un allié DOWNED à portée et progresse le revive tant qu'on tient
+## interact. Quand on relâche ou que la cible n'est plus à portée, on reset.
+func _update_revive(delta: float) -> void:
+	var holding: bool = InputRouter.is_action_pressed(player_id, &"interact")
+	var candidate: PlayerController = _find_downed_ally_in_range() if holding else null
+
+	if candidate == null:
+		if _revive_target != null:
+			revive_progress_changed.emit(_revive_target.player_id, 0.0)
+		_revive_target = null
+		_revive_progress = 0.0
+		return
+
+	if candidate != _revive_target:
+		_revive_target = candidate
+		_revive_progress = 0.0
+
+	_revive_progress += delta
+	revive_progress_changed.emit(_revive_target.player_id, _revive_progress / revive_duration)
+	if _revive_progress >= revive_duration:
+		var target: PlayerController = _revive_target
+		_revive_target = null
+		_revive_progress = 0.0
+		revive_progress_changed.emit(target.player_id, 0.0)
+		target.revive_by(self)
+
+
+func _find_downed_ally_in_range() -> PlayerController:
+	var range_sq: float = revive_range * revive_range
+	for node in get_tree().get_nodes_in_group("players"):
+		if node == self or not (node is PlayerController):
+			continue
+		var ally: PlayerController = node
+		if not ally.is_downed():
+			continue
+		if (ally.global_position - global_position).length_squared() <= range_sq:
+			return ally
+	return null
+
+
+## Mouvement en état DOWNED : le joueur peut ramper lentement mais ne peut ni
+## tirer ni dash ni sauter. La gravité s'applique normalement.
+func _update_downed_movement(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	var input_2d: Vector2 = InputRouter.get_move_vector(player_id)
+	var direction: Vector3 = (transform.basis * Vector3(input_2d.x, 0.0, input_2d.y)).normalized()
+	var horizontal: Vector2 = Vector2(velocity.x, velocity.z)
+	if direction.length() > 0.0:
+		var target: Vector2 = Vector2(direction.x, direction.z) * move_speed * downed_speed_multiplier
+		horizontal = horizontal.move_toward(target, acceleration * delta)
+	else:
+		horizontal = horizontal.move_toward(Vector2.ZERO, friction * delta)
+	velocity.x = horizontal.x
+	velocity.z = horizontal.y
 
 
 func _update_look(delta: float) -> void:

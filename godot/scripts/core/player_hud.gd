@@ -18,11 +18,17 @@ extends Control
 @onready var _reload_label: Label = %ReloadLabel
 @onready var _spell_label: Label = %SpellLabel
 
+var _bound_player: PlayerController
+
 
 func bind_to_player(player: PlayerController) -> void:
+	_bound_player = player
 	var hc: HealthComponent = player.get_health()
 	hc.health_changed.connect(_on_health_changed)
 	player.death_count_changed.connect(_on_death_count_changed)
+	player.downed.connect(_on_downed)
+	player.revived.connect(_on_revived)
+	player.revive_progress_changed.connect(_on_revive_progress_changed)
 	_on_health_changed(hc.current_health, hc.max_health)
 	_on_death_count_changed(player.death_count)
 
@@ -39,9 +45,31 @@ func bind_to_player(player: PlayerController) -> void:
 	_spell_label.text = "Sort : —"
 
 
+func _on_downed() -> void:
+	# Surcharge le HP label pour signaler clairement l'état downed.
+	_hp_label.text = "▼ À TERRE — Allié : maintenir X pour relever"
+	_hp_label.add_theme_color_override("font_color", Color(1, 0.3, 0.2, 1))
+
+
+func _on_revived() -> void:
+	_hp_label.remove_theme_color_override("font_color")
+	# La valeur HP réelle sera réémise par health_changed lors du reset().
+
+
+func _on_revive_progress_changed(target_player_id: int, progress: float) -> void:
+	if progress <= 0.0:
+		_spell_label.text = "Sort : —"
+		return
+	var pct: int = int(progress * 100.0)
+	_spell_label.text = "Relève J%d… %d%%" % [target_player_id, pct]
+
+
 func _on_health_changed(current: int, max_hp: int) -> void:
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = current
+	# Si le joueur est downed, on garde le label custom (set par _on_downed).
+	if _bound_player != null and _bound_player.is_downed():
+		return
 	_hp_label.text = "HP %d / %d" % [current, max_hp]
 
 
