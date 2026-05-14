@@ -12,8 +12,10 @@ signal killed(source: Node)
 @export var move_speed: float = 4.0
 @export var acceleration: float = 30.0
 @export var friction: float = 40.0
-## Distance au-delà de laquelle on ignore le joueur (perf).
-@export var aggro_range: float = 40.0
+## Distance d'aggro : tant qu'aucun joueur n'est dans ce rayon, l'ennemi
+## reste idle (immobile, n'attaque pas). Dès qu'un joueur entre, il devient
+## actif. Combine perf + comportement classique "patrouille zone".
+@export var aggro_range: float = 12.0
 
 @onready var _health: HealthComponent = $Health
 
