@@ -30,7 +30,7 @@ func bind_to_player(player: PlayerController) -> void:
 	player.downed.connect(_on_downed)
 	player.revived.connect(_on_revived)
 	player.revive_progress_changed.connect(_on_revive_progress_changed)
-	player.pickup_progress_changed.connect(_on_pickup_progress_changed)
+	player.interaction_progress_changed.connect(_on_interaction_progress_changed)
 	_on_health_changed(hc.current_health, hc.max_health)
 	_on_death_count_changed(player.death_count)
 
@@ -97,11 +97,11 @@ func _on_weapon_name_changed(new_name: String) -> void:
 	_weapon_label.text = new_name
 
 
-## Le slot _spell_label sert aussi de message ramassage pendant un pickup.
-## Quand le pickup est annulé, on revient au texte "Sort : —".
-func _on_pickup_progress_changed(pickup_name: String, progress: float) -> void:
-	if progress <= 0.0 or pickup_name.is_empty():
+## Le slot _spell_label sert aussi de message d'interaction pendant un hold.
+## Quand l'interaction est annulée, on revient au texte "Sort : —".
+func _on_interaction_progress_changed(prompt: String, progress: float) -> void:
+	if progress <= 0.0 or prompt.is_empty():
 		_spell_label.text = "Sort : —"
 		return
 	var pct: int = int(progress * 100.0)
-	_spell_label.text = "Ramasse %s… %d%%" % [pickup_name, pct]
+	_spell_label.text = "%s… %d%%" % [prompt, pct]

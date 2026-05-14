@@ -41,11 +41,10 @@ extends CharacterBody3D
 ## HP rendu au revive (en % du max_health).
 @export_range(0.1, 1.0) var revive_hp_ratio: float = 0.5
 
-@export_group("Pickup")
-## Distance maxi pour ramasser un SpellPickup.
-@export var pickup_range: float = 2.5
-## Durée du hold pour ramasser un pickup (secondes).
-@export var pickup_duration: float = 0.6
+@export_group("Interaction")
+## Distance maxi pour scanner les Interactables. Limite haute — chaque
+## Interactable porte sa propre `interaction_range` plus stricte.
+@export var interaction_scan_range: float = 5.0
 
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
@@ -59,7 +58,7 @@ signal revived()
 signal respawned()
 signal death_count_changed(count: int)
 signal revive_progress_changed(target_player_id: int, progress: float)
-signal pickup_progress_changed(pickup_name: String, progress: float)
+signal interaction_progress_changed(prompt: String, progress: float)
 
 enum PlayerState { ALIVE, DOWNED }
 
@@ -75,8 +74,8 @@ var _dash_direction: Vector3 = Vector3.ZERO
 ## ici la durée passée à le relever. Reset à 0 dès qu'on relâche.
 var _revive_target: PlayerController = null
 var _revive_progress: float = 0.0
-var _pickup_target: SpellPickup = null
-var _pickup_progress: float = 0.0
+var _interact_target: Interactable = null
+var _interact_progress: float = 0.0
 
 
 func _ready() -> void:
@@ -181,41 +180,46 @@ func _update_shooting() -> void:
 
 
 ## Boucle d'interaction tenue avec le bouton `interact`. Priorité :
-##   1. Pickup à portée (gemme / parchemin) → équipe le sort.
-##   2. Allié DOWNED à portée → revive.
-## La priorité va au pickup parce que c'est plus court (0.6s vs 3s).
+##   1. Interactable à portée (pickup gemme, levier, coffre, shop, futur)
+##      → délégué à try_interact() du composant.
+##   2. Allié DOWNED à portée → revive (cas spécial — migration vers
+##      ReviveInteractable prévue en suivi de #48).
+## La priorité va aux Interactables car généralement plus courts à hold.
 func _update_interact(delta: float) -> void:
 	var holding: bool = InputRouter.is_action_pressed(player_id, &"interact")
 
-	# --- PICKUP ---
-	var pickup_candidate: SpellPickup = _find_pickup_in_range() if holding else null
-	if pickup_candidate != null:
-		# Reset le revive (priorité au pickup).
+	# --- INTERACTABLES (pickup / levier / coffre / shop / etc.) ---
+	var candidate: Interactable = _find_interactable_in_range() if holding else null
+	if candidate != null:
+		# Reset le revive (priorité aux interactables).
 		if _revive_target != null:
 			revive_progress_changed.emit(_revive_target.player_id, 0.0)
 			_revive_target = null
 			_revive_progress = 0.0
 
-		if pickup_candidate != _pickup_target:
-			_pickup_target = pickup_candidate
-			_pickup_progress = 0.0
-		_pickup_progress += delta
-		pickup_progress_changed.emit(_pickup_target.spell_name, _pickup_progress / pickup_duration)
-		if _pickup_progress >= pickup_duration:
-			var target: SpellPickup = _pickup_target
-			_pickup_target = null
-			_pickup_progress = 0.0
-			pickup_progress_changed.emit("", 0.0)
-			target.try_pickup(self)
+		if candidate != _interact_target:
+			_interact_target = candidate
+			_interact_progress = 0.0
+			candidate.interaction_started.emit(self)
+		_interact_progress += delta
+		var ratio: float = _interact_progress / max(_interact_target.hold_duration, 0.001)
+		interaction_progress_changed.emit(_interact_target.prompt_text, ratio)
+		if _interact_progress >= _interact_target.hold_duration:
+			var target: Interactable = _interact_target
+			_interact_target = null
+			_interact_progress = 0.0
+			interaction_progress_changed.emit("", 0.0)
+			target.try_interact(self)
 		return
 
-	# Pas de pickup en cours : reset son state.
-	if _pickup_target != null:
-		pickup_progress_changed.emit("", 0.0)
-		_pickup_target = null
-		_pickup_progress = 0.0
+	# Pas d'interactable courant : reset son state + cancel signal.
+	if _interact_target != null:
+		_interact_target.interaction_cancelled.emit()
+		interaction_progress_changed.emit("", 0.0)
+		_interact_target = null
+		_interact_progress = 0.0
 
-	# --- REVIVE ---
+	# --- REVIVE (cas spécial — à migrer vers ReviveInteractable, suivi #48) ---
 	var ally_candidate: PlayerController = _find_downed_ally_in_range() if holding else null
 	if ally_candidate == null:
 		if _revive_target != null:
@@ -237,18 +241,32 @@ func _update_interact(delta: float) -> void:
 		target.revive_by(self)
 
 
-func _find_pickup_in_range() -> SpellPickup:
-	var range_sq: float = pickup_range * pickup_range
-	var best: SpellPickup = null
+## Trouve le meilleur Interactable du groupe "interactables" à portée : on
+## filtre par interaction_range propre à chaque objet, puis on choisit la
+## priorité la plus haute (selection_priority), et en cas d'égalité le plus
+## proche. can_interact() permet aux sous-classes de se cacher (gemme déjà
+## ramassée, allié non-downed pour un futur ReviveInteractable, etc.).
+func _find_interactable_in_range() -> Interactable:
+	var scan_range_sq: float = interaction_scan_range * interaction_scan_range
+	var best: Interactable = null
+	var best_priority: int = -2147483648
 	var best_dist: float = INF
-	for node in get_tree().get_nodes_in_group("spell_pickups"):
-		if not (node is SpellPickup):
+	for node in get_tree().get_nodes_in_group("interactables"):
+		if not (node is Interactable):
 			continue
-		var pickup: SpellPickup = node
-		var d: float = (pickup.global_position - global_position).length_squared()
-		if d < range_sq and d < best_dist:
+		var inter: Interactable = node
+		if not inter.can_interact(self):
+			continue
+		var d: float = (inter.global_position - global_position).length_squared()
+		if d > scan_range_sq:
+			continue
+		var inter_range_sq: float = inter.interaction_range * inter.interaction_range
+		if d > inter_range_sq:
+			continue
+		if inter.selection_priority > best_priority or (inter.selection_priority == best_priority and d < best_dist):
+			best_priority = inter.selection_priority
 			best_dist = d
-			best = pickup
+			best = inter
 	return best
 
 
