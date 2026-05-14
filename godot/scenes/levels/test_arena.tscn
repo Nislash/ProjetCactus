@@ -1,0 +1,100 @@
+[gd_scene format=3 uid="uid://bshhq134mi02j"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7uodg"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7uodg"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3tacb"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3tacb"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gq5x3"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gq5x3"]
+size = Vector3(20, 3, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3wevi"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3wevi"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4brh2"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4brh2"]
+size = Vector3(0.4, 3, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gt1ig"]
+size = Vector3(1, 2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gt1ig"]
+size = Vector3(1, 2, 1)
+
+[node name="TestArena" type="Node3D" unique_id=1657747421]
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=107243629]
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="." unique_id=98834759]
+
+[node name="Shape" type="CollisionShape3D" parent="Floor" unique_id=1998814342]
+shape = SubResource("BoxShape3D_7uodg")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor" unique_id=388669557]
+mesh = SubResource("BoxMesh_7uodg")
+
+[node name="WallNorth" type="StaticBody3D" parent="." unique_id=82750085]
+
+[node name="Shape" type="CollisionShape3D" parent="WallNorth" unique_id=893899456]
+shape = SubResource("BoxShape3D_3tacb")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallNorth" unique_id=1731715638]
+mesh = SubResource("BoxMesh_3tacb")
+
+[node name="WallSouth" type="StaticBody3D" parent="." unique_id=1570643260]
+
+[node name="Shape" type="CollisionShape3D" parent="WallSouth" unique_id=978160094]
+shape = SubResource("BoxShape3D_gq5x3")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallSouth" unique_id=810541076]
+mesh = SubResource("BoxMesh_gq5x3")
+
+[node name="WallEast" type="StaticBody3D" parent="." unique_id=340002813]
+
+[node name="Shape" type="CollisionShape3D" parent="WallEast" unique_id=775565867]
+shape = SubResource("BoxShape3D_3wevi")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallEast" unique_id=33142397]
+mesh = SubResource("BoxMesh_3wevi")
+
+[node name="WallWest" type="StaticBody3D" parent="." unique_id=1637484309]
+
+[node name="Shape" type="CollisionShape3D" parent="WallWest" unique_id=1712985707]
+shape = SubResource("BoxShape3D_4brh2")
+
+[node name="Mesh" type="MeshInstance3D" parent="WallWest" unique_id=901514074]
+mesh = SubResource("BoxMesh_4brh2")
+
+[node name="Pillar" type="StaticBody3D" parent="." unique_id=682873348]
+
+[node name="Shape" type="CollisionShape3D" parent="Pillar" unique_id=1884972892]
+shape = SubResource("BoxShape3D_gt1ig")
+
+[node name="Mesh" type="MeshInstance3D" parent="Pillar" unique_id=1295575475]
+mesh = SubResource("BoxMesh_gt1ig")
+
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=1066692583]
+
+[node name="Spawn0" type="Marker3D" parent="SpawnPoints" unique_id=760050074]
+
+[node name="Spawn1" type="Marker3D" parent="SpawnPoints" unique_id=691103280]
+
+[node name="Spawn2" type="Marker3D" parent="SpawnPoints" unique_id=210729312]
+
+[node name="Spawn3" type="Marker3D" parent="SpawnPoints" unique_id=873331257]

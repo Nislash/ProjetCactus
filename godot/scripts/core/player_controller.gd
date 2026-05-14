@@ -28,6 +28,7 @@ extends CharacterBody3D
 
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
+@onready var _camera_remote: RemoteTransform3D = $CameraPivot/CameraRemote
 
 var _yaw: float = 0.0
 var _pitch: float = 0.0
@@ -103,3 +104,20 @@ func _apply_movement(delta: float) -> void:
 
 func get_camera() -> Camera3D:
 	return _camera
+
+
+## Reparente la Camera3D du player vers `viewport` et configure le
+## RemoteTransform3D pour qu'elle suive la transform de `CameraPivot`.
+##
+## Utilisé par le SplitScreenManager au spawn. En mode solo, ne pas appeler
+## cette méthode — la Camera3D reste dans le player.tscn et fonctionne
+## directement.
+func attach_camera_to(viewport: SubViewport) -> void:
+	if _camera.get_parent() == viewport:
+		return
+	_camera.get_parent().remove_child(_camera)
+	viewport.add_child(_camera)
+	_camera.current = true
+	# Le RemoteTransform3D vit dans le player (CameraPivot) et propage la
+	# transform globale vers la Camera3D maintenant externe.
+	_camera_remote.remote_path = _camera.get_path()

@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://wp46dhl8lyoc"]
+
+[ext_resource type="Script" uid="uid://3d8t3kus5v4g" path="res://scripts/debug/multi_test_bootstrap.gd" id="1_5yase"]
+[ext_resource type="PackedScene" uid="uid://bshhq134mi02j" path="res://scenes/levels/test_arena.tscn" id="2_or7on"]
+[ext_resource type="Script" uid="uid://br1uquawi0uob" path="res://scripts/core/split_screen_manager.gd" id="2_werws"]
+
+[node name="Main" type="Node" unique_id=1067967091]
+
+[node name="MultiBootstrap" type="Node" parent="." unique_id=1752198749]
+script = ExtResource("1_5yase")
+
+[node name="World" type="Node3D" parent="." unique_id=98168102]
+
+[node name="TestArena" parent="World" unique_id=1657747421 instance=ExtResource("2_or7on")]
+
+[node name="SplitScreen" type="Control" parent="." unique_id=1586905290]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("2_werws")
+spawn_points = [{
+"type": "NodePath",
+"value": "../World/TestArena/SpawnPoints/Spawn0"
+}, {
+"type": "NodePath",
+"value": "../World/TestArena/SpawnPoints/Spawn1"
+}, {
+"type": "NodePath",
+"value": "../World/TestArena/SpawnPoints/Spawn2"
+}, {
+"type": "NodePath",
+"value": "../World/TestArena/SpawnPoints/Spawn3"
+}]
