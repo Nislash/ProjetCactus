@@ -39,7 +39,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 	# Joue le son de lancement si défini.
-	var sfx: AudioStreamPlayer3D = get_node_or_null(^"LaunchSfx") as AudioStreamPlayer3D
+	var sfx: AudioStreamPlayer = get_node_or_null(^"LaunchSfx") as AudioStreamPlayer
 	if sfx != null and launch_sound != null:
 		sfx.stream = launch_sound
 		sfx.play()
@@ -60,13 +60,29 @@ func _physics_process(delta: float) -> void:
 	if _life_left <= 0.0:
 		queue_free()
 		return
-	global_position += direction * speed * delta
+
+	# Détection par raycast entre la position actuelle et la suivante.
+	# Évite le tunneling à haute vitesse (Area3D.body_entered peut manquer
+	# l'overlap si on passe outre un body fin en 1 frame).
+	var next_pos: Vector3 = global_position + direction * speed * delta
+	var space_state := get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(global_position, next_pos, 0xFFFFFFFF)
+	if owner_body is CollisionObject3D:
+		query.exclude = [(owner_body as CollisionObject3D).get_rid()]
+	var result: Dictionary = space_state.intersect_ray(query)
+	if not result.is_empty():
+		global_position = result.get(&"position", next_pos)
+		_apply_hit(result.get(&"collider", null) as Node, result.get(&"normal", -direction))
+		return
+	global_position = next_pos
 
 
 func _on_body_entered(body: Node) -> void:
+	# Fallback : si la fireball spawne directement dans un body (collision
+	# à t=0 sans avoir eu le temps de raycast), on déclenche l'impact ici.
 	if body == owner_body or _has_hit:
 		return
-	_apply_hit(body)
+	_apply_hit(body, -direction)
 
 
 func _on_area_entered(_area: Area3D) -> void:
@@ -74,8 +90,12 @@ func _on_area_entered(_area: Area3D) -> void:
 	pass
 
 
-func _apply_hit(body: Node) -> void:
+func _apply_hit(body: Node, surface_normal: Vector3 = Vector3.ZERO) -> void:
 	_has_hit = true
+	if body == null:
+		_play_impact_sound()
+		queue_free()
+		return
 	var hc: HealthComponent = _find_health_component(body)
 	if hc != null:
 		hc.take_damage(damage, owner_body)
@@ -83,7 +103,7 @@ func _apply_hit(body: Node) -> void:
 	else:
 		# Pas de HealthComponent → c'est un mur / obstacle statique.
 		# On laisse une marque visuelle qui s'estompe.
-		_spawn_burn_mark()
+		_spawn_burn_mark(surface_normal)
 	_play_impact_sound()
 	queue_free()
 
@@ -91,20 +111,20 @@ func _apply_hit(body: Node) -> void:
 func _play_impact_sound() -> void:
 	if impact_sound == null:
 		return
-	var sfx: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+	# AudioStreamPlayer (2D global, volume constant). Le 3D avait une
+	# atténuation trop forte rendant les sons quasi inaudibles depuis le
+	# point de vue du player. À revoir avec un vrai mix sonore en M2.
+	var sfx: AudioStreamPlayer = AudioStreamPlayer.new()
 	sfx.stream = impact_sound
-	sfx.unit_size = 12.0
-	sfx.attenuation_filter_db = -12.0
+	sfx.volume_db = 0.0
 	get_tree().current_scene.add_child(sfx)
-	sfx.global_position = global_position
 	sfx.play()
 	sfx.finished.connect(sfx.queue_free)
 
 
-## Spawne un QuadMesh noir émissif à l'endroit de l'impact, orienté face
-## à la direction d'où vient le projectile (= contre le mur touché).
-## L'opacité fade vers 0 sur `burn_mark_duration` puis queue_free.
-func _spawn_burn_mark() -> void:
+## Spawne un QuadMesh noir émissif à l'endroit de l'impact, orienté avec
+## la normale de la surface touchée. Fade alpha + emission sur burn_mark_duration.
+func _spawn_burn_mark(surface_normal: Vector3) -> void:
 	var mark: MeshInstance3D = MeshInstance3D.new()
 	var quad: QuadMesh = QuadMesh.new()
 	quad.size = Vector2(burn_mark_size, burn_mark_size)
@@ -120,10 +140,15 @@ func _spawn_burn_mark() -> void:
 	mark.material_override = mat
 
 	get_tree().current_scene.add_child(mark)
-	# Recule un poil le quad par rapport au mur pour éviter le z-fighting.
-	mark.global_position = global_position - direction.normalized() * 0.05
-	# Oriente le quad face avant vers le sens du tir = plaqué contre le mur.
-	mark.look_at(global_position + direction, Vector3.UP)
+
+	# Si on a une vraie normale (du raycast), on l'utilise pour orienter le
+	# quad parfaitement plaqué contre la surface. Sinon fallback -direction.
+	var normal: Vector3 = surface_normal.normalized() if surface_normal.length() > 0.01 else -direction.normalized()
+	# Recule un poil le quad par rapport à la surface pour éviter le z-fighting.
+	mark.global_position = global_position + normal * 0.02
+	# Le quad doit avoir sa face avant orientée selon la normale (donc on
+	# regarde dans la direction opposée à la normale).
+	mark.look_at(mark.global_position - normal, Vector3.UP if abs(normal.y) < 0.95 else Vector3.FORWARD)
 
 	var tween: Tween = get_tree().create_tween()
 	tween.set_parallel(true)

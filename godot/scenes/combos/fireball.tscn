@@ -1,22 +1,15 @@
-[gd_scene load_steps=7 format=3 uid="uid://combo_fireball_m1"]
+[gd_scene format=3 uid="uid://dvk7grmxtnlxx"]
 
-[ext_resource type="Script" path="res://scripts/core/fireball.gd" id="1_fireball"]
-
-; Boule de feu : 0.9m de diamètre, vol lent (réglé dans fireball.gd) pour
-; qu'on voie clairement la trajectoire. Émissive forte + lumière dynamique.
+[ext_resource type="Script" uid="uid://2mw2d62vq8r7" path="res://scripts/core/fireball.gd" id="1_fireball"]
+[ext_resource type="AudioStream" uid="uid://b25ygfh1pmc6v" path="res://assets/audio/sfx/fireball_impact.mp3" id="2_0ax57"]
+[ext_resource type="AudioStream" uid="uid://c0lm2i2r1j6gw" path="res://assets/audio/sfx/fireball_throw.mp3" id="2_g4hjr"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_fireball"]
 radius = 0.45
 
-[sub_resource type="SphereMesh" id="SphereMesh_fireball"]
-radius = 0.45
-height = 0.9
-radial_segments = 16
-rings = 8
-
 [sub_resource type="StandardMaterial3D" id="Mat_fireball"]
-albedo_color = Color(1, 0.45, 0.1, 1)
 shading_mode = 2
+albedo_color = Color(1, 0.45, 0.1, 1)
 emission_enabled = true
 emission = Color(1, 0.5, 0.15, 1)
 emission_energy_multiplier = 5.0
@@ -24,11 +17,16 @@ rim_enabled = true
 rim = 0.8
 rim_tint = 1.0
 
-; Particles de "halo" autour de la boule (effet flammes statiques)
+[sub_resource type="SphereMesh" id="SphereMesh_fireball"]
+radius = 0.45
+height = 0.9
+radial_segments = 16
+rings = 8
+
 [sub_resource type="StandardMaterial3D" id="Mat_halo"]
 transparency = 1
-albedo_color = Color(1, 0.3, 0.05, 0.45)
 shading_mode = 2
+albedo_color = Color(1, 0.3, 0.05, 0.45)
 emission_enabled = true
 emission = Color(1, 0.4, 0.1, 1)
 emission_energy_multiplier = 2.0
@@ -41,39 +39,32 @@ height = 1.5
 radial_segments = 12
 rings = 6
 
-[node name="Fireball" type="Area3D"]
-script = ExtResource("1_fireball")
+[node name="Fireball" type="Area3D" unique_id=1523021595]
 collision_layer = 0
-collision_mask = 1
+collision_mask = 4294967295
 monitoring = true
 monitorable = false
+script = ExtResource("1_fireball")
 speed = 18.0
-damage = 12
-burn_duration = 3.0
-burn_dps = 5.0
 lifetime_max = 2.5
+launch_sound = ExtResource("2_g4hjr")
+impact_sound = ExtResource("2_0ax57")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1397315378]
 shape = SubResource("SphereShape3D_fireball")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("SphereMesh_fireball")
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=2124788819]
 material_override = SubResource("Mat_fireball")
+mesh = SubResource("SphereMesh_fireball")
 
-[node name="Halo" type="MeshInstance3D" parent="."]
-mesh = SubResource("SphereMesh_halo")
+[node name="Halo" type="MeshInstance3D" parent="." unique_id=176252624]
 material_override = SubResource("Mat_halo")
+mesh = SubResource("SphereMesh_halo")
 
-[node name="Light" type="OmniLight3D" parent="."]
+[node name="Light" type="OmniLight3D" parent="." unique_id=517608050]
 light_color = Color(1, 0.55, 0.2, 1)
 light_energy = 3.0
 omni_range = 7.0
 
-; Son de lancement (joué automatiquement au _ready par fireball.gd).
-; Pour ajouter un son : glisser un fichier .wav ou .ogg dans le slot "stream"
-; via l'éditeur Godot OU set le @export launch_sound sur le node Fireball.
-[node name="LaunchSfx" type="AudioStreamPlayer3D" parent="."]
-unit_size = 12.0
-max_db = 0.0
-attenuation_filter_db = -12.0
-autoplay = false
+[node name="LaunchSfx" type="AudioStreamPlayer" parent="." unique_id=978110256]
+volume_db = 0.0
