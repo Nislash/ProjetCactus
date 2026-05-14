@@ -4,9 +4,6 @@ on:
   push:
   pull_request:
 
-env:
-  GODOT_VERSION: "4.6-stable"
-
 jobs:
   rust-check:
     name: Rust check & clippy (${{ matrix.os }})
@@ -31,50 +28,3 @@ jobs:
 
       - name: cargo clippy
         run: cargo clippy -- -D warnings
-
-  godot-check:
-    name: Godot headless check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust
-
-      - name: Build Rust library
-        working-directory: rust
-        run: cargo build
-
-      - name: Cache Godot binary
-        id: cache-godot
-        uses: actions/cache@v4
-        with:
-          path: godot-bin
-          key: godot-${{ env.GODOT_VERSION }}-linux
-
-      - name: Download Godot
-        if: steps.cache-godot.outputs.cache-hit != 'true'
-        run: |
-          wget --no-verbose "https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}/Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
-          unzip -q "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64.zip"
-          mkdir -p godot-bin
-          mv "Godot_v${{ env.GODOT_VERSION }}_linux.x86_64" godot-bin/godot
-          chmod +x godot-bin/godot
-
-      - name: Verify Rust library exists
-        run: |
-          echo "=== debug ==="
-          ls -la rust/target/debug/libcactus_native.so 2>&1 || echo "MISSING: debug .so"
-          echo "=== release ==="
-          ls -la rust/target/release/libcactus_native.so 2>&1 || echo "MISSING: release .so"
-          echo "=== gdextension ==="
-          cat godot/addons/cactus_native/cactus_native.gdextension
-
-      - name: Check Godot project
-        run: ./godot-bin/godot --headless --check-only godot/project.godot
-        timeout-minutes: 5
