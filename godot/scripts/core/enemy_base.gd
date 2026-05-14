@@ -18,11 +18,34 @@ signal killed(source: Node)
 @export var aggro_range: float = 12.0
 
 @onready var _health: HealthComponent = $Health
+@onready var _mesh: MeshInstance3D = $Mesh
+
+var _original_material: Material = null
+var _burning_material: StandardMaterial3D = null
 
 
 func _ready() -> void:
 	_health.died.connect(_on_died)
 	_health.damaged.connect(func(amount, source): damaged.emit(amount, source))
+	_health.burn_started.connect(_on_burn_started)
+	_health.burn_ended.connect(_on_burn_ended)
+	if _mesh != null:
+		_original_material = _mesh.material_override
+		_burning_material = StandardMaterial3D.new()
+		_burning_material.albedo_color = Color(1.0, 0.35, 0.1, 1.0)
+		_burning_material.emission_enabled = true
+		_burning_material.emission = Color(1.0, 0.5, 0.15, 1.0)
+		_burning_material.emission_energy_multiplier = 2.5
+
+
+func _on_burn_started(_duration: float, _dps: float, _source: Node) -> void:
+	if _mesh != null and _burning_material != null:
+		_mesh.material_override = _burning_material
+
+
+func _on_burn_ended() -> void:
+	if _mesh != null:
+		_mesh.material_override = _original_material
 
 
 func get_health() -> HealthComponent:

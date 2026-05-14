@@ -1,27 +1,45 @@
-[gd_scene load_steps=5 format=3 uid="uid://combo_fireball_m1"]
+[gd_scene load_steps=7 format=3 uid="uid://combo_fireball_m1"]
 
 [ext_resource type="Script" path="res://scripts/core/fireball.gd" id="1_fireball"]
 
+; Boule de feu : 0.9m de diamètre, vol lent (réglé dans fireball.gd) pour
+; qu'on voie clairement la trajectoire. Émissive forte + lumière dynamique.
+
 [sub_resource type="SphereShape3D" id="SphereShape3D_fireball"]
-radius = 0.18
+radius = 0.45
 
 [sub_resource type="SphereMesh" id="SphereMesh_fireball"]
-radius = 0.18
-height = 0.36
-radial_segments = 12
-rings = 6
+radius = 0.45
+height = 0.9
+radial_segments = 16
+rings = 8
 
 [sub_resource type="StandardMaterial3D" id="Mat_fireball"]
-albedo_color = Color(1, 0.55, 0.18, 1)
+albedo_color = Color(1, 0.45, 0.1, 1)
 shading_mode = 2
 emission_enabled = true
-emission = Color(1, 0.35, 0.12, 1)
-emission_energy_multiplier = 3.5
+emission = Color(1, 0.5, 0.15, 1)
+emission_energy_multiplier = 5.0
+rim_enabled = true
+rim = 0.8
+rim_tint = 1.0
 
-[sub_resource type="OmniLight3D" id="OmniLight3D_fireball"]
-light_color = Color(1, 0.55, 0.18, 1)
-light_energy = 1.4
-omni_range = 4.0
+; Particles de "halo" autour de la boule (effet flammes statiques)
+[sub_resource type="StandardMaterial3D" id="Mat_halo"]
+transparency = 1
+albedo_color = Color(1, 0.3, 0.05, 0.45)
+shading_mode = 2
+emission_enabled = true
+emission = Color(1, 0.4, 0.1, 1)
+emission_energy_multiplier = 2.0
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="SphereMesh" id="SphereMesh_halo"]
+radius = 0.75
+height = 1.5
+radial_segments = 12
+rings = 6
 
 [node name="Fireball" type="Area3D"]
 script = ExtResource("1_fireball")
@@ -29,6 +47,11 @@ collision_layer = 0
 collision_mask = 1
 monitoring = true
 monitorable = false
+speed = 18.0
+damage = 12
+burn_duration = 3.0
+burn_dps = 5.0
+lifetime_max = 2.5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_fireball")
@@ -37,7 +60,11 @@ shape = SubResource("SphereShape3D_fireball")
 mesh = SubResource("SphereMesh_fireball")
 material_override = SubResource("Mat_fireball")
 
+[node name="Halo" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_halo")
+material_override = SubResource("Mat_halo")
+
 [node name="Light" type="OmniLight3D" parent="."]
-light_color = Color(1, 0.55, 0.18, 1)
-light_energy = 1.4
-omni_range = 4.0
+light_color = Color(1, 0.55, 0.2, 1)
+light_energy = 3.0
+omni_range = 7.0
