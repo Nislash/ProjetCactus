@@ -41,6 +41,12 @@ extends CharacterBody3D
 ## HP rendu au revive (en % du max_health).
 @export_range(0.1, 1.0) var revive_hp_ratio: float = 0.5
 
+@export_group("Pickup")
+## Distance maxi pour ramasser un SpellPickup.
+@export var pickup_range: float = 2.5
+## Durée du hold pour ramasser un pickup (secondes).
+@export var pickup_duration: float = 0.6
+
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _camera_remote: RemoteTransform3D = $CameraPivot/CameraRemote
@@ -53,6 +59,7 @@ signal revived()
 signal respawned()
 signal death_count_changed(count: int)
 signal revive_progress_changed(target_player_id: int, progress: float)
+signal pickup_progress_changed(pickup_name: String, progress: float)
 
 enum PlayerState { ALIVE, DOWNED }
 
@@ -68,6 +75,8 @@ var _dash_direction: Vector3 = Vector3.ZERO
 ## ici la durée passée à le relever. Reset à 0 dès qu'on relâche.
 var _revive_target: PlayerController = null
 var _revive_progress: float = 0.0
+var _pickup_target: SpellPickup = null
+var _pickup_progress: float = 0.0
 
 
 func _ready() -> void:
@@ -159,7 +168,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		_update_dash_timers(delta)
 		_update_shooting()
-		_update_revive(delta)
+		_update_interact(delta)
 		_apply_movement(delta)
 
 	move_and_slide()
@@ -171,23 +180,53 @@ func _update_shooting() -> void:
 		_weapon.shoot()
 
 
-## Cherche un allié DOWNED à portée et progresse le revive tant qu'on tient
-## interact. Quand on relâche ou que la cible n'est plus à portée, on reset.
-func _update_revive(delta: float) -> void:
+## Boucle d'interaction tenue avec le bouton `interact`. Priorité :
+##   1. Pickup à portée (gemme / parchemin) → équipe le sort.
+##   2. Allié DOWNED à portée → revive.
+## La priorité va au pickup parce que c'est plus court (0.6s vs 3s).
+func _update_interact(delta: float) -> void:
 	var holding: bool = InputRouter.is_action_pressed(player_id, &"interact")
-	var candidate: PlayerController = _find_downed_ally_in_range() if holding else null
 
-	if candidate == null:
+	# --- PICKUP ---
+	var pickup_candidate: SpellPickup = _find_pickup_in_range() if holding else null
+	if pickup_candidate != null:
+		# Reset le revive (priorité au pickup).
+		if _revive_target != null:
+			revive_progress_changed.emit(_revive_target.player_id, 0.0)
+			_revive_target = null
+			_revive_progress = 0.0
+
+		if pickup_candidate != _pickup_target:
+			_pickup_target = pickup_candidate
+			_pickup_progress = 0.0
+		_pickup_progress += delta
+		pickup_progress_changed.emit(_pickup_target.spell_name, _pickup_progress / pickup_duration)
+		if _pickup_progress >= pickup_duration:
+			var target: SpellPickup = _pickup_target
+			_pickup_target = null
+			_pickup_progress = 0.0
+			pickup_progress_changed.emit("", 0.0)
+			target.try_pickup(self)
+		return
+
+	# Pas de pickup en cours : reset son state.
+	if _pickup_target != null:
+		pickup_progress_changed.emit("", 0.0)
+		_pickup_target = null
+		_pickup_progress = 0.0
+
+	# --- REVIVE ---
+	var ally_candidate: PlayerController = _find_downed_ally_in_range() if holding else null
+	if ally_candidate == null:
 		if _revive_target != null:
 			revive_progress_changed.emit(_revive_target.player_id, 0.0)
 		_revive_target = null
 		_revive_progress = 0.0
 		return
 
-	if candidate != _revive_target:
-		_revive_target = candidate
+	if ally_candidate != _revive_target:
+		_revive_target = ally_candidate
 		_revive_progress = 0.0
-
 	_revive_progress += delta
 	revive_progress_changed.emit(_revive_target.player_id, _revive_progress / revive_duration)
 	if _revive_progress >= revive_duration:
@@ -196,6 +235,21 @@ func _update_revive(delta: float) -> void:
 		_revive_progress = 0.0
 		revive_progress_changed.emit(target.player_id, 0.0)
 		target.revive_by(self)
+
+
+func _find_pickup_in_range() -> SpellPickup:
+	var range_sq: float = pickup_range * pickup_range
+	var best: SpellPickup = null
+	var best_dist: float = INF
+	for node in get_tree().get_nodes_in_group("spell_pickups"):
+		if not (node is SpellPickup):
+			continue
+		var pickup: SpellPickup = node
+		var d: float = (pickup.global_position - global_position).length_squared()
+		if d < range_sq and d < best_dist:
+			best_dist = d
+			best = pickup
+	return best
 
 
 func _find_downed_ally_in_range() -> PlayerController:

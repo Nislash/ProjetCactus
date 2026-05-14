@@ -17,6 +17,7 @@ extends Control
 @onready var _ammo_label: Label = %AmmoLabel
 @onready var _reload_label: Label = %ReloadLabel
 @onready var _spell_label: Label = %SpellLabel
+@onready var _weapon_label: Label = %WeaponLabel
 
 var _bound_player: PlayerController
 
@@ -29,6 +30,7 @@ func bind_to_player(player: PlayerController) -> void:
 	player.downed.connect(_on_downed)
 	player.revived.connect(_on_revived)
 	player.revive_progress_changed.connect(_on_revive_progress_changed)
+	player.pickup_progress_changed.connect(_on_pickup_progress_changed)
 	_on_health_changed(hc.current_health, hc.max_health)
 	_on_death_count_changed(player.death_count)
 
@@ -37,7 +39,9 @@ func bind_to_player(player: PlayerController) -> void:
 		weapon.ammo_changed.connect(_on_ammo_changed)
 		weapon.reload_started.connect(_on_reload_started)
 		weapon.reload_finished.connect(_on_reload_finished)
+		weapon.weapon_name_changed.connect(_on_weapon_name_changed)
 		_on_ammo_changed(weapon.current_ammo, weapon.max_ammo)
+		_on_weapon_name_changed(weapon.get_display_name())
 		_reload_label.text = ""
 
 	# M1 : pas de sort équipé. Slot placeholder qu'on remplira en M2
@@ -87,3 +91,17 @@ func _on_reload_started() -> void:
 
 func _on_reload_finished() -> void:
 	_reload_label.text = ""
+
+
+func _on_weapon_name_changed(new_name: String) -> void:
+	_weapon_label.text = new_name
+
+
+## Le slot _spell_label sert aussi de message ramassage pendant un pickup.
+## Quand le pickup est annulé, on revient au texte "Sort : —".
+func _on_pickup_progress_changed(pickup_name: String, progress: float) -> void:
+	if progress <= 0.0 or pickup_name.is_empty():
+		_spell_label.text = "Sort : —"
+		return
+	var pct: int = int(progress * 100.0)
+	_spell_label.text = "Ramasse %s… %d%%" % [pickup_name, pct]

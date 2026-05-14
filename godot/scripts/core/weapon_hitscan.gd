@@ -16,7 +16,9 @@ signal fired(hit: bool, hit_position: Vector3, target: Node)
 signal ammo_changed(current: int, max: int)
 signal reload_started()
 signal reload_finished()
+signal weapon_name_changed(new_name: String)
 
+@export var base_weapon_name: String = "Pistolet"
 @export var max_range: float = 50.0
 @export var damage: int = 10
 @export var fire_rate: float = 4.0  ## Tirs par seconde
@@ -28,11 +30,14 @@ signal reload_finished()
 @export var reload_time: float = 1.5
 
 @export_group("Combo")
-## Si défini, le tir spawne ce projectile au lieu du raycast hitscan. La
-## signature gameplay (cf CLAUDE.md "doit se ressentir") : avec le combo
-## Pistolet × Feu, on tire une boule de feu visible qui brûle l'ennemi à
-## l'impact.
+## Si défini, le tir spawne ce projectile au lieu du raycast hitscan.
+## Habituellement assigné dynamiquement par equip_spell() au runtime quand le
+## joueur ramasse un parchemin / gemme.
 @export var combo_projectile_scene: PackedScene
+
+# Nom du sort équipé (vide = arme nue, ex: "Feu", "Glace"). Détermine le nom
+# affiché dans le HUD : "Pistolet × Feu" si spell équipé, sinon "Pistolet".
+var equipped_spell_name: String = ""
 
 ## Node propriétaire de l'arme (typiquement le player). Sert à exclure son
 ## propre collider pour ne pas se tirer dessus, et à transmettre `source` au
@@ -46,6 +51,29 @@ var is_reloading: bool = false
 func _ready() -> void:
 	current_ammo = max_ammo
 	ammo_changed.emit(current_ammo, max_ammo)
+	weapon_name_changed.emit(get_display_name())
+
+
+## Nom à afficher dans le HUD : "Pistolet" en base, "Pistolet × Feu" si
+## un sort est équipé.
+func get_display_name() -> String:
+	if equipped_spell_name.is_empty():
+		return base_weapon_name
+	return "%s × %s" % [base_weapon_name, equipped_spell_name]
+
+
+## Équipe un sort (combo). Set le projectile à spawn + le nom affiché.
+func equip_spell(spell_name: String, projectile_scene: PackedScene) -> void:
+	equipped_spell_name = spell_name
+	combo_projectile_scene = projectile_scene
+	weapon_name_changed.emit(get_display_name())
+
+
+## Retire le sort équipé. L'arme redevient hitscan classique.
+func unequip_spell() -> void:
+	equipped_spell_name = ""
+	combo_projectile_scene = null
+	weapon_name_changed.emit(get_display_name())
 
 
 func can_fire() -> bool:

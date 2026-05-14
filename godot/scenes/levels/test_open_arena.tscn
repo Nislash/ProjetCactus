@@ -1,4 +1,6 @@
-[gd_scene load_steps=26 format=3 uid="uid://test_open_arena_m1"]
+[gd_scene load_steps=27 format=3 uid="uid://test_open_arena_m1"]
+
+[ext_resource type="PackedScene" uid="uid://spell_pickup_fire_m2" path="res://scenes/pickups/spell_pickup_fire.tscn" id="100_firepickup"]
 
 ; ============================================================
 ; Test Open Arena — niveau M1 alternatif au level_01_poc
@@ -737,15 +739,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1, 28)
 [node name="EnemyC5" type="Marker3D" parent="EnemySpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1, 28)
 
-; Petites salles (4 : 1 ranged dans chaque, "tireurs cachés")
-[node name="EnemyC6" type="Marker3D" parent="EnemySpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 48)
+; Les 4 markers C6-C9 dans les petites salles sont retirés pour M2 (training
+; pickups) : les petites salles sont les "salles de loot" où on récupère les
+; gemmes en sécurité. Les ennemis cachés dedans gênaient le ramassage.
+; À ré-ajouter quand on aura un système de spawn dynamique par type de salle.
 
-[node name="EnemyC7" type="Marker3D" parent="EnemySpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -48)
+; ─── PICKUPS : 4 gemmes Feu dans les petites salles annexes ──────────
+[node name="Pickups" type="Node3D" parent="."]
 
-[node name="EnemyC8" type="Marker3D" parent="EnemySpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 1, 0)
+[node name="GemFireN" parent="Pickups" instance=ExtResource("100_firepickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 48)
 
-[node name="EnemyC9" type="Marker3D" parent="EnemySpawnPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 1, 0)
+[node name="GemFireS" parent="Pickups" instance=ExtResource("100_firepickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -48)
+
+[node name="GemFireE" parent="Pickups" instance=ExtResource("100_firepickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 1.2, 0)
+
+[node name="GemFireW" parent="Pickups" instance=ExtResource("100_firepickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 1.2, 0)
