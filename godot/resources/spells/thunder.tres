@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=2 format=3 uid="uid://spell_thunder_m2"]
+
+[ext_resource type="Script" path="res://scripts/core/data/spell_data.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+spell_name_display = "Foudre"
+description = "Magie de foudre. Décharge électrique qui peut chainer (pistolet) ou stunner (épée)."
+school = 2
+damage_modifier = 1.2
+status_effect_id = &"stun"
+status_duration = 0.5
+status_dps = 0.0
+element_color = Color(1, 0.95, 0.3, 1)

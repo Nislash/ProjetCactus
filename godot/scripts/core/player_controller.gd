@@ -46,7 +46,8 @@ extends CharacterBody3D
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _camera_remote: RemoteTransform3D = $CameraPivot/CameraRemote
-@onready var _weapon: WeaponHitscan = $CameraPivot/Weapon
+@onready var _weapon_hitscan: WeaponHitscan = $CameraPivot/Weapon
+@onready var _weapon_melee: WeaponMelee = $CameraPivot/Melee if has_node("CameraPivot/Melee") else null
 @onready var _health: HealthComponent = $Health
 
 signal died(source: Node)
@@ -55,6 +56,10 @@ signal revived()
 signal respawned()
 signal death_count_changed(count: int)
 signal interaction_progress_changed(prompt: String, progress: float)
+signal weapon_equipped(weapon_kind: StringName)
+## Émis quand le joueur appuie D-pad up pour cycler l'état de SA minimap.
+## Le HUD écoute et bascule MINI → FULL → HIDDEN → MINI.
+signal minimap_toggle_requested()
 
 enum PlayerState { ALIVE, DOWNED }
 
@@ -68,6 +73,9 @@ var _dash_cooldown_left: float = 0.0
 var _dash_direction: Vector3 = Vector3.ZERO
 var _interact_target: Interactable = null
 var _interact_progress: float = 0.0
+## Type d'arme actuellement equipee : "" (rien), "pistol", "melee".
+## Set par equip_weapon_kind() (appele par WeaponPickup).
+var _equipped_weapon: StringName = &""
 
 
 func _ready() -> void:
@@ -75,6 +83,27 @@ func _ready() -> void:
 	# Permet aux ennemis (et autres systèmes) de retrouver les joueurs via
 	# get_tree().get_nodes_in_group("players").
 	add_to_group("players")
+	# Au start, aucune arme equipee — le joueur doit ramasser un WeaponPickup.
+	_set_weapon_visible(_weapon_hitscan, false)
+	_set_weapon_visible(_weapon_melee, false)
+
+
+## Equipe une arme par son kind ("pistol" ou "melee"). Cache l'autre arme.
+## Appele par WeaponPickup.try_interact() quand le joueur ramasse une arme.
+func equip_weapon_kind(kind: StringName) -> void:
+	_equipped_weapon = kind
+	_set_weapon_visible(_weapon_hitscan, kind == &"pistol")
+	_set_weapon_visible(_weapon_melee, kind == &"melee")
+	weapon_equipped.emit(kind)
+
+
+func _set_weapon_visible(node: Node, on: bool) -> void:
+	if node == null:
+		return
+	if node is Node3D:
+		(node as Node3D).visible = on
+	node.set_process(on)
+	node.set_physics_process(on)
 
 
 ## Doit être appelé par celui qui spawn le player (SplitScreenManager) après
@@ -88,16 +117,39 @@ func get_health() -> HealthComponent:
 	return _health
 
 
+## Retourne l'arme hitscan (Pistolet) — utilise par SpellPickup pour
+## equiper une gemme via equip_spell(). Reste valable meme quand l'arme
+## n'est pas l'arme equipee (la gemme attendra que le pistolet soit
+## equipe pour avoir un effet).
 func get_weapon() -> WeaponHitscan:
-	return _weapon
+	return _weapon_hitscan
+
+
+## Retourne l'arme melee (Epee). Sera utilisee par les SpellPickup pour
+## equiper une gemme sur la lame quand les combos melee×gemme arriveront.
+func get_melee() -> WeaponMelee:
+	return _weapon_melee
+
+
+## Type d'arme actuellement equipee (StringName : "" / "pistol" / "melee").
+func get_equipped_weapon_kind() -> StringName:
+	return _equipped_weapon
 
 
 ## À 0 HP : on passe en état DOWNED (cf CLAUDE.md "Friendly fire & revive").
 ## Le joueur peut ramper mais pas tirer ; un allié peut le relever en
 ## maintenant `interact` à proximité. Le kill plane reste géré séparément
 ## (chute = respawn full HP, ne passe pas par downed).
+##
+## En SOLO : pas d'allié pour faire le revive → on respawn directement
+## au spawn point (équivalent au kill plane). Évite le lock complet.
 func _on_died(source: Node) -> void:
 	if state == PlayerState.DOWNED:
+		return
+	# Solo (1 seul joueur enregistré) → respawn auto, pas de DOWNED
+	if PlayerManager.get_active_player_count() <= 1:
+		died.emit(source)
+		_respawn()
 		return
 	state = PlayerState.DOWNED
 	velocity = Vector3.ZERO
@@ -152,6 +204,10 @@ func _physics_process(delta: float) -> void:
 
 	_update_look(delta)
 
+	# Toggle minimap (cycle MINI/FULL/HIDDEN). Disponible meme quand DOWNED.
+	if InputRouter.is_action_just_pressed(player_id, &"toggle_map"):
+		minimap_toggle_requested.emit()
+
 	if state == PlayerState.DOWNED:
 		_update_downed_movement(delta)
 	else:
@@ -164,9 +220,15 @@ func _physics_process(delta: float) -> void:
 
 
 func _update_shooting() -> void:
-	# RT en hold : tire à la cadence définie par l'arme (auto-fire).
-	if InputRouter.is_action_pressed(player_id, &"shoot") and _weapon.can_fire():
-		_weapon.shoot()
+	# RT pilote l'arme equipee. Pistolet = auto-fire (hold). Epee = un swing
+	# par appui (just_pressed pour eviter le spam).
+	match _equipped_weapon:
+		&"pistol":
+			if InputRouter.is_action_pressed(player_id, &"shoot") and _weapon_hitscan.can_fire():
+				_weapon_hitscan.shoot()
+		&"melee":
+			if _weapon_melee != null and InputRouter.is_action_just_pressed(player_id, &"shoot") and _weapon_melee.can_fire():
+				_weapon_melee.swing()
 
 
 ## Boucle d'interaction tenue avec le bouton `interact`. Délègue entièrement

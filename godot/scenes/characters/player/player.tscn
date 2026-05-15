@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://db7hs4bcs45ro"]
+[gd_scene load_steps=10 format=3 uid="uid://db7hs4bcs45ro"]
 
 [ext_resource type="Script" uid="uid://kvn1yabbqf8b" path="res://scripts/core/player_controller.gd" id="1_7uws0"]
 [ext_resource type="Script" uid="uid://dky7nmxy5s4ut" path="res://scripts/core/weapon_hitscan.gd" id="2_t61fv"]
 [ext_resource type="Script" uid="uid://duufd13mvbexe" path="res://scripts/core/health_component.gd" id="3_health"]
 [ext_resource type="Resource" uid="uid://weapon_pistol_m1" path="res://resources/weapons/pistol.tres" id="4_pistol"]
 [ext_resource type="Script" uid="uid://brv06do14214r" path="res://scripts/core/revive_interactable.gd" id="5_hss88"]
+[ext_resource type="Script" path="res://scripts/core/weapon_melee.gd" id="6_melee"]
+[ext_resource type="Resource" uid="uid://weapon_melee_sword_m2" path="res://resources/weapons/melee_sword.tres" id="7_sword"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_7uws0"]
 radius = 0.4
@@ -16,6 +18,17 @@ height = 1.8
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_revive"]
 radius = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_blade"]
+size = Vector3(0.1, 0.05, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="Mat_blade"]
+albedo_color = Color(0.85, 0.85, 0.9, 1)
+metallic = 0.7
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.6, 0.7, 0.85, 1)
+emission_energy_multiplier = 0.5
 
 [node name="Player" type="CharacterBody3D" unique_id=452855176]
 script = ExtResource("1_7uws0")
@@ -41,6 +54,19 @@ update_scale = false
 script = ExtResource("2_t61fv")
 data = ExtResource("4_pistol")
 owner_body = NodePath("../..")
+
+[node name="Melee" type="Node3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -0.3, 0)
+script = ExtResource("6_melee")
+data = ExtResource("7_sword")
+owner_body = NodePath("../..")
+
+[node name="Blade" type="Node3D" parent="CameraPivot/Melee"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
+
+[node name="Mesh" type="MeshInstance3D" parent="CameraPivot/Melee/Blade"]
+mesh = SubResource("BoxMesh_blade")
+material_override = SubResource("Mat_blade")
 
 [node name="Health" type="Node" parent="." unique_id=1234567001]
 script = ExtResource("3_health")

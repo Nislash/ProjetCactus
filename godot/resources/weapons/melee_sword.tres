@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3 uid="uid://weapon_melee_sword_m2"]
+
+[ext_resource type="Script" path="res://scripts/core/data/weapon_data.gd" id="1_weapon"]
+
+[resource]
+script = ExtResource("1_weapon")
+weapon_name_display = "Épée"
+description = "Lame de mêlée. Dégâts élevés à courte portée, pas de munitions, cooldown raisonnable. Bouton LT par défaut."
+damage_base = 25
+fire_rate = 1.5
+max_range = 1.6
+fire_mode = 0
+max_ammo = 999
+reload_time = 0.0
+compatible_spell_schools = [true, true, true, true, true]
+projectile_scene = null

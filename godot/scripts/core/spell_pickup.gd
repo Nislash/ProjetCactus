@@ -54,7 +54,10 @@ func _process(delta: float) -> void:
 func can_interact(by_player: Node) -> bool:
 	if _picked or not (by_player is PlayerController):
 		return false
-	return (by_player as PlayerController).get_weapon() != null
+	# On exige une arme equipee — sans arme, la gemme n'a rien a equiper.
+	# Si plus tard on veut un slot gemme persistent, retirer ce check et
+	# stocker la gemme cote PlayerController.
+	return (by_player as PlayerController).get_equipped_weapon_kind() != &""
 
 
 func try_interact(by_player: Node) -> bool:
@@ -62,7 +65,16 @@ func try_interact(by_player: Node) -> bool:
 		return false
 	var player: PlayerController = by_player as PlayerController
 	_picked = true
-	player.get_weapon().equip_spell(spell_name, projectile_scene)
+	# On equipe la gemme sur l'arme actuellement en main, pas sur une arme
+	# arbitraire. Pistol → WeaponHitscan.equip_spell. Melee → WeaponMelee.
+	# Les 2 armes ont la meme signature equip_spell(name, projectile_scene)
+	# meme si la melee ignore projectile_scene (pas de projectile distant).
+	match player.get_equipped_weapon_kind():
+		&"pistol":
+			player.get_weapon().equip_spell(spell_name, projectile_scene)
+		&"melee":
+			if player.get_melee() != null:
+				player.get_melee().equip_spell(spell_name, projectile_scene)
 	picked_up.emit(player)
 	interaction_completed.emit(player)
 	queue_free()

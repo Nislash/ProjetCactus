@@ -1,8 +1,12 @@
-[gd_scene load_steps=34 format=3 uid="uid://test_open_arena_m1"]
+[gd_scene load_steps=38 format=3 uid="uid://test_open_arena_m1"]
 
 [ext_resource type="PackedScene" uid="uid://spell_pickup_fire_m2" path="res://scenes/pickups/spell_pickup_fire.tscn" id="100_firepickup"]
+[ext_resource type="PackedScene" uid="uid://spell_pickup_ice_m2" path="res://scenes/pickups/spell_pickup_ice.tscn" id="101_icepickup"]
+[ext_resource type="PackedScene" uid="uid://spell_pickup_thunder_m2" path="res://scenes/pickups/spell_pickup_thunder.tscn" id="102_thunderpickup"]
+[ext_resource type="PackedScene" uid="uid://spell_pickup_poison_m2" path="res://scenes/pickups/spell_pickup_poison.tscn" id="103_poisonpickup"]
 [ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="200_lever"]
 [ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="201_door"]
+[ext_resource type="PackedScene" uid="uid://weapon_pickup_m2" path="res://scenes/world/weapon_pickup.tscn" id="300_wpickup"]
 
 ; ============================================================
 ; Test Open Arena — niveau M1 alternatif au level_01_poc
@@ -783,20 +787,40 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 1, 28)
 ; gemmes en sécurité. Les ennemis cachés dedans gênaient le ramassage.
 ; À ré-ajouter quand on aura un système de spawn dynamique par type de salle.
 
-; ─── PICKUPS : 4 gemmes Feu dans les petites salles annexes ──────────
+; ─── PICKUPS : 4 gemmes (1 par école) dans les petites salles annexes ──
+; N=Feu, S=Glace, E=Foudre, W=Poison — pédagogique : chaque salle = un
+; élément distinct.
 [node name="Pickups" type="Node3D" parent="."]
 
 [node name="GemFireN" parent="Pickups" instance=ExtResource("100_firepickup")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 48)
 
-[node name="GemFireS" parent="Pickups" instance=ExtResource("100_firepickup")]
+[node name="GemIceS" parent="Pickups" instance=ExtResource("101_icepickup")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -48)
 
-[node name="GemFireE" parent="Pickups" instance=ExtResource("100_firepickup")]
+[node name="GemThunderE" parent="Pickups" instance=ExtResource("102_thunderpickup")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 1.2, 0)
 
-[node name="GemFireW" parent="Pickups" instance=ExtResource("100_firepickup")]
+[node name="GemPoisonW" parent="Pickups" instance=ExtResource("103_poisonpickup")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 1.2, 0)
+
+; ─── WEAPON PICKUPS au spawn area : Pistolet + Épée ──────────
+; Le joueur ramasse l'arme de son choix au start. Pas d'arme = pas de
+; tir (cf player_controller._update_shooting). Pickup persistant : on
+; peut revenir changer d'arme entre 2 vies.
+[node name="WeaponPickups" type="Node3D" parent="."]
+
+[node name="PistolPickup" parent="WeaponPickups" instance=ExtResource("300_wpickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.2, -25)
+weapon_kind = &"pistol"
+display_name = "Pistolet"
+indicator_color = Color(0.9, 0.3, 0.25, 1)
+
+[node name="MeleePickup" parent="WeaponPickups" instance=ExtResource("300_wpickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.2, -25)
+weapon_kind = &"melee"
+display_name = "Épée"
+indicator_color = Color(0.85, 0.85, 0.95, 1)
 
 ; ============================================================
 ; PUZZLE LEVIER → PORTE CACHÉE → CAVE

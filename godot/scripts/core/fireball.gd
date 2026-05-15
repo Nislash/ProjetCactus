@@ -1,19 +1,51 @@
 extends Area3D
 
-## Projectile boule de feu du combo Pistolet × Feu (#17).
+## Orbe magique générique. Spawn par WeaponHitscan en mode combo. Vole en
+## ligne droite, applique damage + status configurable au premier
+## HealthComponent touché, puis se queue_free. Auto-destruction après
+## `lifetime_max` même si rien n'est touché.
 ##
-## Spawn par WeaponHitscan en mode combo. Vole en ligne droite, applique
-## damage + burn au premier HealthComponent touché, puis se queue_free.
-## Auto-destruction après `lifetime_max` même si rien n'est touché.
+## Variantes par élément (cf scenes/combos/) :
+##   - fireball.tscn  : status_id="burn"   → DoT brûlure
+##   - ice_orb.tscn   : status_id="freeze" → immobilise N secondes
+##   - thunder_orb.tscn: status_id="stun" + chain → propage aux ennemis proches
+##   - poison_orb.tscn: status_id="poison" → DoT empilable
+##
+## Le nom "Fireball" du class est conservé pour compat avec les .tscn
+## existants. Conceptuellement c'est maintenant un MagicOrb générique.
 
 @export var speed: float = 30.0
 @export var damage: int = 12
-@export var burn_duration: float = 3.0
-@export var burn_dps: float = 5.0
 @export var lifetime_max: float = 2.0
 ## Couleur du projectile + trail (héritée de ComboData.override_element_color
 ## ou SpellData.element_color en M2).
 @export var element_color: Color = Color(1.0, 0.4, 0.15, 1.0)
+
+@export_group("Status à l'impact")
+## ID du status appliqué via StatusComponent. Ex : "burn", "freeze",
+## "slow", "stun", "poison". Si vide ou status_duration<=0, aucun status
+## n'est appliqué (juste damage).
+@export var status_id: StringName = &"burn"
+@export var status_duration: float = 3.0
+## Magnitude du status. DPS pour les DoT (burn, poison), 1.0 indicateur
+## pour les non-DoT (freeze, stun, slow).
+@export var status_magnitude: float = 5.0
+
+@export_group("Chain (foudre)")
+## Nombre d'ennemis supplémentaires touchés par chain après l'impact
+## initial. 0 = pas de chain (orbes feu/glace/poison). 2 = thunder.
+@export var chain_targets: int = 0
+@export var chain_radius: float = 6.0
+## Damage appliqué au chain = damage * chain_damage_falloff^N (N = ordre).
+@export var chain_damage_falloff: float = 0.7
+## Couleur du visual lightning bolt entre 2 cibles.
+@export var chain_visual_color: Color = Color(1, 0.95, 0.3, 1)
+@export var chain_visual_duration: float = 0.25
+
+# Compat avec ancien API : burn_duration/burn_dps shadow status_duration/magnitude
+# si laissés à 0 dans des .tscn legacy. À retirer plus tard.
+@export var burn_duration: float = 0.0
+@export var burn_dps: float = 0.0
 ## Son joué au _ready (lancement). À mettre dans
 ## `godot/assets/audio/sfx/fireball_throw.mp3` (ou .wav).
 @export var launch_sound: AudioStream
@@ -99,13 +131,96 @@ func _apply_hit(body: Node, surface_normal: Vector3 = Vector3.ZERO) -> void:
 	var hc: HealthComponent = _find_health_component(body)
 	if hc != null:
 		hc.take_damage(damage, owner_body)
-		hc.apply_burn(burn_duration, burn_dps, owner_body)
+		_apply_status_to(hc)
+		# Chain (foudre) : propage aux N ennemis les plus proches.
+		if chain_targets > 0:
+			_do_chain(body, global_position)
 	else:
 		# Pas de HealthComponent → c'est un mur / obstacle statique.
 		# On laisse une marque visuelle qui s'estompe.
 		_spawn_burn_mark(surface_normal)
 	_play_impact_sound()
 	queue_free()
+
+
+## Applique le status configuré (ou apply_burn legacy si burn_dps>0 set
+## dans un ancien .tscn).
+func _apply_status_to(hc: HealthComponent) -> void:
+	# Compat legacy : si burn_duration/burn_dps sont set, on applique
+	# burn directement (chemin historique fireball.tscn avant refacto).
+	if burn_duration > 0.0 and burn_dps > 0.0:
+		hc.apply_burn(burn_duration, burn_dps, owner_body)
+		return
+	if status_duration > 0.0 and status_magnitude > 0.0 and status_id != &"":
+		var status: StatusComponent = hc.get_status()
+		if status != null:
+			status.apply_status(status_id, status_duration, status_magnitude, owner_body)
+
+
+## Chain foudre : trouve jusqu'à `chain_targets` ennemis du groupe
+## "enemies" dans `chain_radius` autour de la cible initiale, applique
+## damage (avec falloff) + status à chacun, et dessine un visual
+## lightning bolt entre la cible précédente et la nouvelle.
+func _do_chain(initial_target: Node, from_pos: Vector3) -> void:
+	var hit_set: Array = [initial_target]
+	var current_pos: Vector3 = from_pos
+	var current_damage: float = float(damage) * chain_damage_falloff
+	for i in chain_targets:
+		var next: Node = _find_nearest_unhit_enemy(current_pos, hit_set)
+		if next == null:
+			break
+		var next_node3d: Node3D = next as Node3D
+		if next_node3d == null:
+			break
+		var next_hc: HealthComponent = _find_health_component(next)
+		if next_hc != null:
+			next_hc.take_damage(int(current_damage), owner_body)
+			_apply_status_to(next_hc)
+		_spawn_chain_visual(current_pos, next_node3d.global_position)
+		hit_set.append(next)
+		current_pos = next_node3d.global_position
+		current_damage *= chain_damage_falloff
+
+
+func _find_nearest_unhit_enemy(from_pos: Vector3, hit_set: Array) -> Node:
+	var best: Node = null
+	var best_dist: float = chain_radius * chain_radius
+	for n in get_tree().get_nodes_in_group(&"enemies"):
+		if hit_set.has(n) or not (n is Node3D):
+			continue
+		var d: float = (from_pos - (n as Node3D).global_position).length_squared()
+		if d < best_dist:
+			best_dist = d
+			best = n
+	return best
+
+
+## Spawne un BoxMesh fin entre les 2 positions, jaune émissif, qui
+## disparait après chain_visual_duration. Inspiré de WeaponHitscan.
+func _spawn_chain_visual(from_pos: Vector3, to_pos: Vector3) -> void:
+	var segment: Vector3 = to_pos - from_pos
+	var length: float = segment.length()
+	if length < 0.01:
+		return
+	var mesh_instance := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.08, 0.08, length)
+	mesh_instance.mesh = box
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = chain_visual_color
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = chain_visual_color
+	mat.emission_energy_multiplier = 4.0
+	mesh_instance.material_override = mat
+	get_tree().current_scene.add_child(mesh_instance)
+	mesh_instance.global_position = (from_pos + to_pos) * 0.5
+	mesh_instance.look_at(to_pos, Vector3.UP)
+	var timer := get_tree().create_timer(chain_visual_duration)
+	timer.timeout.connect(func() -> void:
+		if is_instance_valid(mesh_instance):
+			mesh_instance.queue_free()
+	)
 
 
 func _play_impact_sound() -> void:

@@ -21,21 +21,33 @@ signal killed(source: Node)
 @onready var _mesh: MeshInstance3D = $Mesh
 
 var _original_material: Material = null
-var _burning_material: StandardMaterial3D = null
+## Cache des materials feedback par status_id, créés au _ready.
+var _status_materials: Dictionary = {}
+## Pile des status visuels actifs (par ordre d'application). Le HUD du
+## mesh affiche le dernier appliqué. Quand il s'éteint, on retombe sur
+## le précédent (ou _original_material si vide).
+var _active_status_visuals: Array = []
 
 
 func _ready() -> void:
+	# Permet aux orbes (chain foudre, AoE futur) de retrouver les ennemis.
+	add_to_group(&"enemies")
+
 	_health.died.connect(_on_died)
 	_health.damaged.connect(func(amount, source): damaged.emit(amount, source))
-	_health.burn_started.connect(_on_burn_started)
-	_health.burn_ended.connect(_on_burn_ended)
+	# StatusComponent expose des signaux génériques (burn, slow, freeze,
+	# poison, stun…). On les écoute pour le feedback visuel.
+	var status: StatusComponent = _health.get_status()
+	if status != null:
+		status.status_started.connect(_on_status_started)
+		status.status_ended.connect(_on_status_ended)
 	if _mesh != null:
 		_original_material = _mesh.material_override
-		_burning_material = StandardMaterial3D.new()
-		_burning_material.albedo_color = Color(1.0, 0.35, 0.1, 1.0)
-		_burning_material.emission_enabled = true
-		_burning_material.emission = Color(1.0, 0.5, 0.15, 1.0)
-		_burning_material.emission_energy_multiplier = 2.5
+		_status_materials[StatusComponent.BURN] = _make_status_mat(Color(1.0, 0.35, 0.1, 1.0))
+		_status_materials[StatusComponent.SLOW] = _make_status_mat(Color(0.4, 0.75, 1.0, 1.0))
+		_status_materials[StatusComponent.FREEZE] = _make_status_mat(Color(0.65, 0.9, 1.0, 1.0))
+		_status_materials[StatusComponent.POISON] = _make_status_mat(Color(0.45, 0.95, 0.4, 1.0))
+		_status_materials[StatusComponent.STUN] = _make_status_mat(Color(1.0, 0.95, 0.3, 1.0))
 
 	# Jauge HP 3D billboard (optionnelle, attachée dans la scène fille).
 	var hbar: HealthBar3D = get_node_or_null(^"HealthBar3D") as HealthBar3D
@@ -43,14 +55,56 @@ func _ready() -> void:
 		hbar.bind_to(_health)
 
 
-func _on_burn_started(_duration: float, _dps: float, _source: Node) -> void:
-	if _mesh != null and _burning_material != null:
-		_mesh.material_override = _burning_material
+func _make_status_mat(color: Color) -> StandardMaterial3D:
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 2.5
+	return mat
 
 
-func _on_burn_ended() -> void:
-	if _mesh != null:
+func _on_status_started(id: StringName, _duration: float, _magnitude: float, _source: Node) -> void:
+	if _mesh == null or not _status_materials.has(id):
+		return
+	# Si déjà dans la pile (re-application), on ne re-pousse pas.
+	if not _active_status_visuals.has(id):
+		_active_status_visuals.append(id)
+	_mesh.material_override = _status_materials[id]
+
+
+func _on_status_ended(id: StringName) -> void:
+	_active_status_visuals.erase(id)
+	if _mesh == null:
+		return
+	if _active_status_visuals.is_empty():
 		_mesh.material_override = _original_material
+	else:
+		# Retombe sur le status visuel le plus récent encore actif.
+		var top: StringName = _active_status_visuals[_active_status_visuals.size() - 1]
+		_mesh.material_override = _status_materials[top]
+
+
+## Multiplicateur de vitesse selon les status actifs. 0 si freeze ou stun
+## (immobile), 0.4 si slow (ralenti), 1.0 sinon. Lu par les sous-classes
+## (enemy_melee, enemy_ranged) pour piloter leur speed.
+func get_speed_multiplier() -> float:
+	var status: StatusComponent = _health.get_status()
+	if status == null:
+		return 1.0
+	if status.has_status(StatusComponent.FREEZE) or status.has_status(StatusComponent.STUN):
+		return 0.0
+	if status.has_status(StatusComponent.SLOW):
+		return 0.4
+	return 1.0
+
+
+## True si l'ennemi peut attaquer. Bloqué par freeze et stun.
+func can_act() -> bool:
+	var status: StatusComponent = _health.get_status()
+	if status == null:
+		return true
+	return not (status.has_status(StatusComponent.FREEZE) or status.has_status(StatusComponent.STUN))
 
 
 func get_health() -> HealthComponent:

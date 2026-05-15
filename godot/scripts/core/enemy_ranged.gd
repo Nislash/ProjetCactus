@@ -16,6 +16,12 @@ func _enemy_tick(delta: float) -> void:
 	if _attack_cooldown_left > 0.0:
 		_attack_cooldown_left -= delta
 
+	# Status freeze/stun → pas de mouvement, pas de tir
+	var speed_mult: float = get_speed_multiplier()
+	if speed_mult <= 0.0:
+		_apply_horizontal_velocity(Vector3.ZERO, delta)
+		return
+
 	var target: PlayerController = _find_closest_player()
 	if target == null:
 		_apply_horizontal_velocity(Vector3.ZERO, delta)
@@ -31,13 +37,13 @@ func _enemy_tick(delta: float) -> void:
 		move_dir = to_target.normalized()
 	elif dist < ideal_distance - distance_tolerance:
 		move_dir = -to_target.normalized()
-	_apply_horizontal_velocity(move_dir, delta)
+	_apply_horizontal_velocity(move_dir * speed_mult, delta)
 
 	if to_target.length() > 0.1:
 		look_at(target.global_position * Vector3(1, 0, 1) + Vector3(0, global_position.y, 0), Vector3.UP)
 
-	# Tir hitscan si dans la portée et cooldown OK.
-	if _attack_cooldown_left <= 0.0 and dist < attack_max_range:
+	# Tir hitscan si dans la portée et cooldown OK et pas freeze/stun.
+	if _attack_cooldown_left <= 0.0 and dist < attack_max_range and can_act():
 		_shoot_at(target)
 		_attack_cooldown_left = attack_cooldown
 
