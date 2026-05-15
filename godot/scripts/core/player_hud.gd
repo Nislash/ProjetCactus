@@ -43,7 +43,6 @@ const SPELL_NAME_TO_ELEMENT: Dictionary = {
 @onready var _relic_inventory_screen: RelicInventoryScreen = %RelicInventoryScreen if has_node("%RelicInventoryScreen") else null
 @onready var _minimap_panel: Control = $MinimapPanel
 @onready var _minimap_background: ColorRect = $MinimapPanel/Background
-@onready var _minimap_player_dot: ColorRect = $MinimapPanel/PlayerDot
 @onready var _minimap_container: SubViewportContainer = %MinimapViewportContainer
 @onready var _minimap_viewport: SubViewport = %MinimapViewport
 @onready var _minimap_camera: MinimapCamera = %MinimapCamera
@@ -189,7 +188,7 @@ func _apply_minimap_layout() -> void:
 			_minimap_container.set_deferred("offset_top", 4.0)
 			_minimap_container.set_deferred("offset_right", 156.0)
 			_minimap_container.set_deferred("offset_bottom", 156.0)
-			_minimap_viewport.size = Vector2i(152, 152)
+			# Le SubViewport.size suit automatiquement le container (stretch=true).
 			_minimap_camera.size = MINIMAP_ORTHO_MINI
 		MinimapState.FULL:
 			_minimap_panel.visible = true
@@ -213,7 +212,7 @@ func _apply_minimap_layout() -> void:
 			_minimap_container.set_deferred("offset_top", 4.0)
 			_minimap_container.set_deferred("offset_right", w - 4.0)
 			_minimap_container.set_deferred("offset_bottom", h - 4.0)
-			_minimap_viewport.size = Vector2i(int(w - 8), int(h - 8))
+			# Le SubViewport.size suit automatiquement le container (stretch=true).
 			_minimap_camera.size = MINIMAP_ORTHO_FULL
 
 
@@ -358,8 +357,8 @@ func _kind_to_string(kind: StringName) -> String:
 ## retourne toujours "default".
 func _current_element_key() -> String:
 	if _bound_weapon is WeaponHitscan:
-		var name: String = (_bound_weapon as WeaponHitscan).equipped_spell_name
-		return SPELL_NAME_TO_ELEMENT.get(name, "default")
+		var spell_name: String = (_bound_weapon as WeaponHitscan).equipped_spell_name
+		return SPELL_NAME_TO_ELEMENT.get(spell_name, "default")
 	return "default"
 
 

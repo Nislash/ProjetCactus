@@ -14,7 +14,7 @@ extends Node
 ## - on_hit     : weapon.fired
 ## - on_damaged : health.damaged
 ## - on_dash    : player.dash_started
-## - on_low_hp  : player.low_hp_crossed (émis quand HP < threshold * max)
+## - on_low_hp  : check réactif dans _on_player_damaged via _check_low_hp()
 ## - on_reload  : weapon.reload_finished
 ## - on_revive  : player.revive_completed (émis quand le player relève un allié)
 ## - coop       : poll toutes les 0.2 s (state allié + distance)
@@ -65,8 +65,8 @@ func attach_signals() -> void:
 		hc.damaged.connect(_on_player_damaged)
 	if _player.has_signal(&"dash_started") and not _player.dash_started.is_connected(_on_player_dash):
 		_player.dash_started.connect(_on_player_dash)
-	# low_hp_crossed est vérifié réactivement dans _on_player_damaged via
-	# _check_low_hp(), inutile d'écouter un signal séparé.
+	# on_low_hp est vérifié réactivement dans _on_player_damaged via
+	# _check_low_hp(), inutile d'un signal séparé.
 	if _player.has_signal(&"revive_completed") and not _player.revive_completed.is_connected(_on_player_revive):
 		_player.revive_completed.connect(_on_player_revive)
 	# Arme courante (le player émet weapon_equipped quand ramassage)

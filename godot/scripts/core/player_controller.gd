@@ -68,8 +68,6 @@ signal minimap_toggle_requested()
 signal inventory_toggle_requested()
 ## Émis quand un dash démarre (consommé par RelicEffectResolver pour on_dash).
 signal dash_started()
-## Émis quand HP traverse à la baisse un seuil (consommé pour on_low_hp).
-signal low_hp_crossed()
 ## Émis quand le joueur termine un revive sur un allié (consommé pour on_revive).
 signal revive_completed(target: PlayerController)
 
