@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_undine_armband"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_undine_armband"
+display_name = "Brassard d'ondine"
+description = "+30 % HP max, mais −10 % damage."
+flavor = "Tu vis plus longtemps. Tu frappes plus mou. Choisis."
+tier = 1
+effect_type = 0
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"max_hp_mult": 0.3,
+    &"damage_mult": -0.1
+}

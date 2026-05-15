@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_feather_vortex"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_feather_vortex"
+display_name = "Vortex de plumes"
+description = "Le dash aspire les ennemis dans un rayon de 5 m."
+flavor = "Au-dessus de vous, un courant d'air ne s'arrête plus."
+tier = 2
+effect_type = 3
+trigger = 3
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"pull_radius_m": 5.0,
+    &"pull_strength": 6.0
+}

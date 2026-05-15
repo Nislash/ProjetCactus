@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_phoenix_heart"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_phoenix_heart"
+display_name = "Cœur du Phénix"
+description = "Ressuscite seul à 50 % HP. Une fois par run."
+flavor = "Bat. S'arrête. Bat à nouveau. Toujours surprenant."
+tier = 3
+effect_type = 5
+trigger = 5
+drop_pool = 2
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"auto_revive_per_run": 1,
+    &"revive_hp_pct": 0.5
+}

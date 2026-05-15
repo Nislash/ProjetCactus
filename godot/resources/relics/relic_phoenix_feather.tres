@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_phoenix_feather"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_phoenix_feather"
+display_name = "Plume de phénix"
+description = "Sous 20 % HP : 2 s d'invulnérabilité. Cooldown 90 s."
+flavor = "Tombe quand elle veut. Toujours juste à temps."
+tier = 1
+effect_type = 5
+trigger = 5
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"threshold_pct": 0.2,
+    &"invuln_duration_sec": 2.0,
+    &"cooldown_sec": 90
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_cracked_cameo"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_cracked_cameo"
+display_name = "Camée fissuré"
+description = "L'allié relevé revient avec 100 % HP au lieu de 50 %."
+flavor = "Le visage gravé a changé. Personne n'ose vérifier."
+tier = 1
+effect_type = 6
+trigger = 6
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"revive_hp_pct": 1.0
+}

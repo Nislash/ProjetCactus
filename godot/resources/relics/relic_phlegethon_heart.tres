@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_phlegethon_heart"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_phlegethon_heart"
+display_name = "Cœur de Phlégéton"
+description = "Toutes les armes laissent une traînée de flammes (3 dmg/s, 2 s)."
+flavor = "Bat encore. Saigne du feu."
+tier = 2
+effect_type = 8
+trigger = 1
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"flame_trail_dps": 3,
+    &"trail_duration_sec": 2.0
+}

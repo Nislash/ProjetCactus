@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_ice_sun"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_ice_sun"
+display_name = "Soleil de glace"
+description = "Les ennemis gelés explosent en 4 éclats (8 dmg, 4 m)."
+flavor = "Brille sans chauffer. Froid sans s'éteindre."
+tier = 2
+effect_type = 8
+trigger = 0
+drop_pool = 1
+weapon_filter = &""
+school_filter = &"ice"
+magnitude = {
+    &"shard_count": 4,
+    &"shard_damage": 8,
+    &"shard_range_m": 4.0
+}

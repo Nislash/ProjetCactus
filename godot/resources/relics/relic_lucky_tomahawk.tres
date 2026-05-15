@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_lucky_tomahawk"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_lucky_tomahawk"
+display_name = "Tomahawk porte-bonheur"
+description = "10 % de chance de ricocher vers un ennemi proche (60 % damage)."
+flavor = "Toujours retombe pointe en l'air. Allez savoir."
+tier = 1
+effect_type = 1
+trigger = 1
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"proc_chance": 0.1,
+    &"ricochet_range_m": 8.0,
+    &"ricochet_damage_mult": 0.6
+}

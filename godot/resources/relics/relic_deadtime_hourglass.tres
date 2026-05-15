@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_deadtime_hourglass"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_deadtime_hourglass"
+display_name = "Sablier du Temps Mort"
+description = "Quand vous êtes touché : ralentit les ennemis à 30 % pendant 1.5 s. CD 25 s."
+flavor = "Le sable tombe vers le haut. Personne ne pose de questions."
+tier = 3
+effect_type = 4
+trigger = 4
+drop_pool = 2
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"enemy_time_scale": 0.3,
+    &"duration_sec": 1.5,
+    &"cooldown_sec": 25
+}

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_sergeant_shield"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_sergeant_shield"
+display_name = "Bouclier du sergent"
+description = "−75 % dégâts amis reçus. 25 % retournés en heal à l'allié tireur."
+flavor = "« On reste groupé. » C'était son ordre. C'est son blason."
+tier = 2
+effect_type = 9
+trigger = 4
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"friendly_fire_damage_reduction_pct": 0.75,
+    &"reflect_as_heal_pct": 0.25
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_eternal_icicle"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_eternal_icicle"
+display_name = "Glaçon éternel"
+description = "Le gel dure 50 % plus longtemps."
+flavor = "Aucune main ne le brise. Aucun feu non plus."
+tier = 1
+effect_type = 8
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &"ice"
+magnitude = {
+    &"freeze_duration_mult": 1.5
+}

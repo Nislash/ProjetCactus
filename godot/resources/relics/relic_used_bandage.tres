@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_used_bandage"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_used_bandage"
+display_name = "Bandage usagé"
+description = "Soigne 2 HP par kill (max 1×/s)."
+flavor = "Quelqu'un l'a déjà utilisé. Marchera quand même."
+tier = 0
+effect_type = 2
+trigger = 2
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"heal_amount": 2,
+    &"max_per_sec": 1
+}

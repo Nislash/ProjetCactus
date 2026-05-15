@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_polished_rock"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_polished_rock"
+display_name = "Roc poli"
+description = "8 % de chance de réduire les dégâts reçus de 50 %."
+flavor = "Doux comme un galet. Dur comme... un galet."
+tier = 0
+effect_type = 4
+trigger = 4
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"proc_chance": 0.08,
+    &"damage_reduction_pct": 0.5
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_war_drum"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_war_drum"
+display_name = "Tambour de guerre"
+description = "+10 % damage par allié vivant."
+flavor = "Bat tout seul quand l'équipe avance."
+tier = 2
+effect_type = 9
+trigger = 0
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"damage_mult_per_ally_alive": 0.1
+}

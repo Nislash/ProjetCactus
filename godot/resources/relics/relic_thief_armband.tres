@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_thief_armband"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_thief_armband"
+display_name = "Brassard du voleur"
+description = "+1 % vitesse 3 s par kill (max 5 stacks)."
+flavor = "Vif sur ses pieds. Plus vite avec un cadavre derrière."
+tier = 0
+effect_type = 2
+trigger = 2
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"move_speed_mult_per_stack": 0.01,
+    &"duration_sec": 3,
+    &"max_stacks": 5
+}

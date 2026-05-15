@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_odin_spear"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_odin_spear"
+display_name = "Lance d'Odin"
+description = "Chaque 10e tir invoque une lance de foudre (200 dmg AoE 4 m)."
+flavor = "Vibre quand le ciel pense à pleuvoir."
+tier = 3
+effect_type = 1
+trigger = 1
+drop_pool = 2
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"every_n_shots": 10,
+    &"lightning_damage": 200,
+    &"lightning_radius_m": 4.0
+}

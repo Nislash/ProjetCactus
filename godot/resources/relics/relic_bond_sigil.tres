@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_bond_sigil"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_bond_sigil"
+display_name = "Sigille du lien"
+description = "Régénère 1 HP/s à vous et à l'allié à moins de 5 m."
+flavor = "Le sceau brille au même rythme que deux cœurs."
+tier = 1
+effect_type = 9
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"hp_regen_per_sec": 1.0,
+    &"range_m": 5.0
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_shooter_gloves"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_shooter_gloves"
+display_name = "Gants du tireur"
+description = "Cadence de tir +15 %."
+flavor = "Le cuir a séché autour de la gâchette."
+tier = 0
+effect_type = 0
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"fire_rate_mult": 0.15
+}

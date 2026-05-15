@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://dq6tj5wihdtuw"]
+[gd_scene load_steps=5 format=3 uid="uid://dq6tj5wihdtuw"]
 
 [ext_resource type="Script" uid="uid://cnfq3jtbf0dr6" path="res://scripts/core/player_hud.gd" id="1_6k60i"]
 [ext_resource type="Script" path="res://scripts/core/minimap_camera.gd" id="2_minimap"]
+[ext_resource type="PackedScene" uid="uid://relics_row_m2" path="res://scenes/ui/hud/relics_row.tscn" id="3_relics_row"]
+[ext_resource type="PackedScene" uid="uid://relic_reveal_panel_m2" path="res://scenes/ui/hud/relic_reveal_panel.tscn" id="4_reveal"]
 
 [node name="PlayerHUD" type="Control"]
 layout_mode = 3
@@ -12,6 +14,22 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_6k60i")
+
+; ─── BAS-GAUCHE : RELIQUES (row au-dessus de HpPanel) ────────────────
+[node name="RelicsRow" parent="." instance=ExtResource("3_relics_row")]
+unique_name_in_owner = true
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -180.0
+offset_right = 344.0
+offset_bottom = -120.0
+
+; ─── CENTRE-HAUT : POPUP RELIQUE (révèle) ────────────────────────────
+[node name="RelicRevealPanel" parent="." instance=ExtResource("4_reveal")]
+unique_name_in_owner = true
 
 ; ─── BAS-GAUCHE : HP ───────────────────────────────────────────────────
 [node name="HpPanel" type="Control" parent="."]

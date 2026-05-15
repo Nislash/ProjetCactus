@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_tesla_coil"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_tesla_coil"
+display_name = "Bobine de Tesla"
+description = "Les éclairs en chaîne rebondissent sur 1 cible supplémentaire."
+flavor = "Crépite quand vous y pensez."
+tier = 1
+effect_type = 8
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &"thunder"
+magnitude = {
+    &"chain_targets_bonus": 1
+}

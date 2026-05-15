@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_battle_horn"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_battle_horn"
+display_name = "Cor de bataille"
+description = "Relever un allié soigne toute l'équipe de 50 % HP max."
+flavor = "Le son qu'il fait n'est entendu que par les vivants."
+tier = 2
+effect_type = 6
+trigger = 6
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"team_heal_pct": 0.5
+}

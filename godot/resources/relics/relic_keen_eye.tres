@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_keen_eye"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_keen_eye"
+display_name = "Œil affûté"
+description = "+8 % de chance de coup critique."
+flavor = "Vous voyez les choses... un peu plus loin."
+tier = 0
+effect_type = 0
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"crit_chance": 0.08
+}

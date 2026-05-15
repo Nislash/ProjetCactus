@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_little_guardian_angel"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_little_guardian_angel"
+display_name = "Petit ange gardien"
+description = "Quand un allié est à terre : +25 % damage pendant 8 s."
+flavor = "L'auréole vacille. La rage tient bon."
+tier = 1
+effect_type = 9
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"damage_mult_when_ally_down": 0.25,
+    &"duration_sec": 8
+}

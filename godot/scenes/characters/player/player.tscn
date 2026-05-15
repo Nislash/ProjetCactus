@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://db7hs4bcs45ro"]
+[gd_scene load_steps=12 format=3 uid="uid://db7hs4bcs45ro"]
 
 [ext_resource type="Script" uid="uid://kvn1yabbqf8b" path="res://scripts/core/player_controller.gd" id="1_7uws0"]
 [ext_resource type="Script" uid="uid://dky7nmxy5s4ut" path="res://scripts/core/weapon_hitscan.gd" id="2_t61fv"]
@@ -7,6 +7,8 @@
 [ext_resource type="Script" uid="uid://brv06do14214r" path="res://scripts/core/revive_interactable.gd" id="5_hss88"]
 [ext_resource type="Script" path="res://scripts/core/weapon_melee.gd" id="6_melee"]
 [ext_resource type="Resource" uid="uid://weapon_melee_sword_m2" path="res://resources/weapons/melee_sword.tres" id="7_sword"]
+[ext_resource type="Script" path="res://scripts/core/relic_inventory.gd" id="8_relic_inv"]
+[ext_resource type="Script" path="res://scripts/core/relic_effect_resolver.gd" id="9_relic_res"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_7uws0"]
 radius = 0.4
@@ -80,3 +82,9 @@ script = ExtResource("5_hss88")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="RevivePoint" unique_id=1034619293]
 shape = SubResource("SphereShape3D_revive")
+
+[node name="RelicInventory" type="Node" parent="."]
+script = ExtResource("8_relic_inv")
+
+[node name="RelicEffectResolver" type="Node" parent="."]
+script = ExtResource("9_relic_res")
