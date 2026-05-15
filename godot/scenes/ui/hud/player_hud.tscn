@@ -1,11 +1,12 @@
-[gd_scene load_steps=5 format=3 uid="uid://dq6tj5wihdtuw"]
+[gd_scene format=3 uid="uid://dq6tj5wihdtuw"]
 
 [ext_resource type="Script" uid="uid://cnfq3jtbf0dr6" path="res://scripts/core/player_hud.gd" id="1_6k60i"]
-[ext_resource type="Script" path="res://scripts/core/minimap_camera.gd" id="2_minimap"]
-[ext_resource type="PackedScene" uid="uid://relics_row_m2" path="res://scenes/ui/hud/relics_row.tscn" id="3_relics_row"]
-[ext_resource type="PackedScene" uid="uid://relic_reveal_panel_m2" path="res://scenes/ui/hud/relic_reveal_panel.tscn" id="4_reveal"]
+[ext_resource type="Script" uid="uid://qu54i8ry4x7u" path="res://scripts/core/minimap_camera.gd" id="2_minimap"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/relics_row.tscn" id="3_relics_row"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/relic_reveal_panel.tscn" id="4_reveal"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud/relic_inventory_screen.tscn" id="5_inv_screen"]
 
-[node name="PlayerHUD" type="Control"]
+[node name="PlayerHUD" type="Control" unique_id=877536612]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,28 +16,41 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_6k60i")
 
-; ─── BAS-GAUCHE : RELIQUES (row au-dessus de HpPanel) ────────────────
-[node name="RelicsRow" parent="." instance=ExtResource("3_relics_row")]
+[node name="RelicsRow" parent="." unique_id=226847019 instance=ExtResource("3_relics_row")]
 unique_name_in_owner = true
-anchor_left = 0.0
+anchors_preset = 0
 anchor_top = 1.0
-anchor_right = 0.0
 anchor_bottom = 1.0
 offset_left = 24.0
 offset_top = -180.0
 offset_right = 344.0
 offset_bottom = -120.0
 
-; ─── CENTRE-HAUT : POPUP RELIQUE (révèle) ────────────────────────────
-[node name="RelicRevealPanel" parent="." instance=ExtResource("4_reveal")]
+[node name="RelicRevealPanel" parent="." unique_id=1751311560 instance=ExtResource("4_reveal")]
 unique_name_in_owner = true
-
-; ─── BAS-GAUCHE : HP ───────────────────────────────────────────────────
-[node name="HpPanel" type="Control" parent="."]
 layout_mode = 0
 anchor_left = 0.0
-anchor_top = 1.0
 anchor_right = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 480.0
+offset_bottom = 240.0
+
+[node name="RelicInventoryScreen" parent="." unique_id=562001534 instance=ExtResource("5_inv_screen")]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 640.0
+offset_bottom = 520.0
+
+[node name="HpPanel" type="Control" parent="." unique_id=556888643]
+anchors_preset = 0
+anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
 offset_top = -110.0
@@ -44,7 +58,7 @@ offset_right = 320.0
 offset_bottom = -24.0
 mouse_filter = 2
 
-[node name="HpLabel" type="Label" parent="HpPanel"]
+[node name="HpLabel" type="Label" parent="HpPanel" unique_id=1683724879]
 unique_name_in_owner = true
 layout_mode = 0
 anchor_right = 1.0
@@ -52,32 +66,26 @@ offset_bottom = 28.0
 theme_override_font_sizes/font_size = 22
 text = "HP 100 / 100"
 
-[node name="HpBar" type="ProgressBar" parent="HpPanel"]
+[node name="HpBar" type="ProgressBar" parent="HpPanel" unique_id=336187772]
 unique_name_in_owner = true
 layout_mode = 0
-offset_top = 36.0
 anchor_right = 1.0
+offset_top = 36.0
 offset_bottom = 60.0
 value = 100.0
-max_value = 100.0
 show_percentage = false
 
-[node name="DeathsLabel" type="Label" parent="HpPanel"]
+[node name="DeathsLabel" type="Label" parent="HpPanel" unique_id=1232752071]
 unique_name_in_owner = true
 layout_mode = 0
-offset_top = 64.0
 anchor_right = 1.0
+offset_top = 64.0
 offset_bottom = 86.0
 theme_override_font_sizes/font_size = 16
 text = "Morts : 0"
 
-; ─── BAS-DROITE : ARME (icône + nom + ammo) ──────────────────────────
-; Layout (de bas en haut) :
-;   Icône d'arme (96x96) à droite
-;   Nom de l'arme à gauche de l'icône
-;   Ammo + reload sous le nom
-[node name="WeaponPanel" type="Control" parent="."]
-layout_mode = 0
+[node name="WeaponPanel" type="Control" parent="." unique_id=1192058628]
+anchors_preset = 0
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
@@ -88,19 +96,17 @@ offset_right = -24.0
 offset_bottom = -24.0
 mouse_filter = 2
 
-[node name="Background" type="ColorRect" parent="WeaponPanel"]
+[node name="Background" type="ColorRect" parent="WeaponPanel" unique_id=929484719]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0, 0, 0, 0.35)
 
-[node name="WeaponIcon" type="TextureRect" parent="WeaponPanel"]
+[node name="WeaponIcon" type="TextureRect" parent="WeaponPanel" unique_id=2056969862]
 unique_name_in_owner = true
 layout_mode = 0
 anchor_left = 1.0
-anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = -110.0
 offset_top = 8.0
 offset_right = -10.0
@@ -108,28 +114,22 @@ offset_bottom = 108.0
 expand_mode = 1
 stretch_mode = 5
 
-[node name="WeaponLabel" type="Label" parent="WeaponPanel"]
+[node name="WeaponLabel" type="Label" parent="WeaponPanel" unique_id=586958804]
 unique_name_in_owner = true
 layout_mode = 0
-anchor_left = 0.0
-anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = 12.0
 offset_top = 8.0
 offset_right = -120.0
 offset_bottom = 38.0
-theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.95, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 22
 text = "Sans arme"
 
-[node name="AmmoLabel" type="Label" parent="WeaponPanel"]
+[node name="AmmoLabel" type="Label" parent="WeaponPanel" unique_id=1902857798]
 unique_name_in_owner = true
 layout_mode = 0
-anchor_left = 0.0
-anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = 12.0
 offset_top = 44.0
 offset_right = -120.0
@@ -137,24 +137,19 @@ offset_bottom = 84.0
 theme_override_font_sizes/font_size = 32
 text = "—"
 
-[node name="ReloadLabel" type="Label" parent="WeaponPanel"]
+[node name="ReloadLabel" type="Label" parent="WeaponPanel" unique_id=1756926298]
 unique_name_in_owner = true
 layout_mode = 0
-anchor_left = 0.0
-anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = 12.0
 offset_top = 86.0
 offset_right = -120.0
 offset_bottom = 106.0
-theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
-text = ""
+theme_override_font_sizes/font_size = 14
 
-; ─── BAS-CENTRE : SORT ÉQUIPÉ / PROMPT INTERACTION ───────────────────
-[node name="SpellPanel" type="Control" parent="."]
-layout_mode = 0
+[node name="SpellPanel" type="Control" parent="." unique_id=1015401203]
+anchors_preset = 0
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
@@ -165,44 +160,39 @@ offset_right = 140.0
 offset_bottom = -24.0
 mouse_filter = 2
 
-[node name="Background" type="ColorRect" parent="SpellPanel"]
+[node name="Background" type="ColorRect" parent="SpellPanel" unique_id=1017731057]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0, 0, 0, 0.35)
 
-[node name="SpellLabel" type="Label" parent="SpellPanel"]
+[node name="SpellLabel" type="Label" parent="SpellPanel" unique_id=1915773275]
 unique_name_in_owner = true
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-horizontal_alignment = 1
-vertical_alignment = 1
 theme_override_font_sizes/font_size = 18
 text = "Sort : —"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-; ─── HAUT-DROITE : MINI-MAP ────────────────────────────────────────────
-; SubViewport partage le world_3d du root (set au _ready par le HUD), une
-; Camera3D orthographique top-down suit la position du joueur.
-[node name="MinimapPanel" type="Control" parent="."]
-layout_mode = 0
+[node name="MinimapPanel" type="Control" parent="." unique_id=1369431491]
+anchors_preset = 0
 anchor_left = 1.0
-anchor_top = 0.0
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = -184.0
 offset_top = 24.0
 offset_right = -24.0
 offset_bottom = 184.0
 mouse_filter = 2
 
-[node name="Background" type="ColorRect" parent="MinimapPanel"]
+[node name="Background" type="ColorRect" parent="MinimapPanel" unique_id=1806659399]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.05, 0.06, 0.08, 0.85)
 
-[node name="MinimapViewportContainer" type="SubViewportContainer" parent="MinimapPanel"]
+[node name="MinimapViewportContainer" type="SubViewportContainer" parent="MinimapPanel" unique_id=168482404]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 4.0
@@ -212,21 +202,19 @@ offset_bottom = 156.0
 mouse_filter = 2
 stretch = true
 
-[node name="MinimapViewport" type="SubViewport" parent="MinimapPanel/MinimapViewportContainer"]
+[node name="MinimapViewport" type="SubViewport" parent="MinimapPanel/MinimapViewportContainer" unique_id=642328396]
 unique_name_in_owner = true
 handle_input_locally = false
 size = Vector2i(152, 152)
 render_target_update_mode = 4
 
-[node name="MinimapCamera" type="Camera3D" parent="MinimapPanel/MinimapViewportContainer/MinimapViewport"]
+[node name="MinimapCamera" type="Camera3D" parent="MinimapPanel/MinimapViewportContainer/MinimapViewport" unique_id=1087276009]
 unique_name_in_owner = true
 projection = 1
 size = 32.0
 script = ExtResource("2_minimap")
 
-; Petit point rouge fixe au centre = position du joueur. La caméra suit
-; toujours le joueur, donc le centre du viewport = sa position.
-[node name="PlayerDot" type="ColorRect" parent="MinimapPanel"]
+[node name="PlayerDot" type="ColorRect" parent="MinimapPanel" unique_id=799722423]
 layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
@@ -236,11 +224,10 @@ offset_left = -3.0
 offset_top = -3.0
 offset_right = 3.0
 offset_bottom = 3.0
-color = Color(1, 0.4, 0.3, 1)
 mouse_filter = 2
+color = Color(1, 0.4, 0.3, 1)
 
-; ─── CENTRE : CROSSHAIR ────────────────────────────────────────────────
-[node name="Crosshair" type="Control" parent="."]
+[node name="Crosshair" type="Control" parent="." unique_id=1417546060]
 anchors_preset = 0
 anchor_left = 0.5
 anchor_top = 0.5
@@ -252,7 +239,7 @@ offset_right = 16.0
 offset_bottom = 16.0
 mouse_filter = 2
 
-[node name="Top" type="ColorRect" parent="Crosshair"]
+[node name="Top" type="ColorRect" parent="Crosshair" unique_id=1285722426]
 layout_mode = 0
 offset_left = 14.0
 offset_top = 4.0
@@ -260,7 +247,7 @@ offset_right = 18.0
 offset_bottom = 14.0
 color = Color(1, 1, 1, 0.85)
 
-[node name="Bottom" type="ColorRect" parent="Crosshair"]
+[node name="Bottom" type="ColorRect" parent="Crosshair" unique_id=324076327]
 layout_mode = 0
 offset_left = 14.0
 offset_top = 18.0
@@ -268,7 +255,7 @@ offset_right = 18.0
 offset_bottom = 28.0
 color = Color(1, 1, 1, 0.85)
 
-[node name="Left" type="ColorRect" parent="Crosshair"]
+[node name="Left" type="ColorRect" parent="Crosshair" unique_id=2041089868]
 layout_mode = 0
 offset_left = 4.0
 offset_top = 14.0
@@ -276,7 +263,7 @@ offset_right = 14.0
 offset_bottom = 18.0
 color = Color(1, 1, 1, 0.85)
 
-[node name="Right" type="ColorRect" parent="Crosshair"]
+[node name="Right" type="ColorRect" parent="Crosshair" unique_id=1431961099]
 layout_mode = 0
 offset_left = 18.0
 offset_top = 14.0
@@ -284,10 +271,128 @@ offset_right = 28.0
 offset_bottom = 18.0
 color = Color(1, 1, 1, 0.85)
 
-[node name="Dot" type="ColorRect" parent="Crosshair"]
+[node name="Dot" type="ColorRect" parent="Crosshair" unique_id=1480099394]
 layout_mode = 0
 offset_left = 15.0
 offset_top = 15.0
 offset_right = 17.0
 offset_bottom = 17.0
 color = Color(1, 0.3, 0.2, 1)
+
+[node name="StatsPanel" type="Control" parent="." unique_id=1911064090]
+anchors_preset = 0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 220.0
+offset_bottom = 180.0
+mouse_filter = 2
+
+[node name="Background" type="ColorRect" parent="StatsPanel" unique_id=41491263]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0.4)
+
+[node name="Title" type="Label" parent="StatsPanel" unique_id=1037368194]
+layout_mode = 0
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 4.0
+offset_right = -8.0
+offset_bottom = 22.0
+theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
+theme_override_font_sizes/font_size = 12
+text = "STATS"
+
+[node name="Grid" type="GridContainer" parent="StatsPanel" unique_id=1868533535]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 26.0
+offset_right = -10.0
+offset_bottom = -6.0
+mouse_filter = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="KeySpd" type="Label" parent="StatsPanel/Grid" unique_id=298579398]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "SPD"
+
+[node name="StatSpd" type="Label" parent="StatsPanel/Grid" unique_id=724133035]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"
+
+[node name="KeyDmg" type="Label" parent="StatsPanel/Grid" unique_id=2002983647]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "DMG"
+
+[node name="StatDmg" type="Label" parent="StatsPanel/Grid" unique_id=23535034]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"
+
+[node name="KeyCrt" type="Label" parent="StatsPanel/Grid" unique_id=594390277]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "CRT"
+
+[node name="StatCrt" type="Label" parent="StatsPanel/Grid" unique_id=1356867290]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"
+
+[node name="KeyFr" type="Label" parent="StatsPanel/Grid" unique_id=888463821]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "FR"
+
+[node name="StatFr" type="Label" parent="StatsPanel/Grid" unique_id=1362768562]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"
+
+[node name="KeyHp" type="Label" parent="StatsPanel/Grid" unique_id=853281467]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "HP"
+
+[node name="StatHp" type="Label" parent="StatsPanel/Grid" unique_id=91160642]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"
+
+[node name="KeyReg" type="Label" parent="StatsPanel/Grid" unique_id=649475812]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "REG"
+
+[node name="StatReg" type="Label" parent="StatsPanel/Grid" unique_id=1558907296]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "—"

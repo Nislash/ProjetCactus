@@ -62,6 +62,10 @@ signal weapon_equipped(weapon_kind: StringName)
 ## Émis quand le joueur appuie D-pad up pour cycler l'état de SA minimap.
 ## Le HUD écoute et bascule MINI → FULL → HIDDEN → MINI.
 signal minimap_toggle_requested()
+## Émis quand le joueur appuie Y (toggle_inventory). Le HUD ouvre/ferme la
+## fiche d'inventaire de reliques dans SON SubViewport (les autres joueurs
+## ne sont pas impactés).
+signal inventory_toggle_requested()
 ## Émis quand un dash démarre (consommé par RelicEffectResolver pour on_dash).
 signal dash_started()
 ## Émis quand HP traverse à la baisse un seuil (consommé pour on_low_hp).
@@ -261,6 +265,9 @@ func _physics_process(delta: float) -> void:
 	# Toggle minimap (cycle MINI/FULL/HIDDEN). Disponible meme quand DOWNED.
 	if InputRouter.is_action_just_pressed(player_id, &"toggle_map"):
 		minimap_toggle_requested.emit()
+	# Toggle écran inventaire reliques (Y). Disponible meme quand DOWNED.
+	if InputRouter.is_action_just_pressed(player_id, &"toggle_inventory"):
+		inventory_toggle_requested.emit()
 
 	if state == PlayerState.DOWNED:
 		_update_downed_movement(delta)
