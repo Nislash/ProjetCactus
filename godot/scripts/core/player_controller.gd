@@ -26,6 +26,23 @@ extends CharacterBody3D
 @export var dash_duration: float = 0.15
 @export var dash_cooldown: float = 0.8
 
+@export_group("Garde-fou")
+## Altitude (Y) en dessous de laquelle on considère que le joueur est tombé
+## dans le vide → respawn auto au spawn point (compte comme une mort).
+@export var fall_threshold_y: float = -10.0
+
+@export_group("Down & Revive")
+## Multiplicateur de vitesse en état DOWNED (rampe lentement, ~ramper).
+@export var downed_speed_multiplier: float = 0.3
+## HP rendu au revive (en % du max_health). Distance + durée portées par le
+## node ReviveInteractable enfant du player (cf player.tscn).
+@export_range(0.1, 1.0) var revive_hp_ratio: float = 0.5
+
+@export_group("Interaction")
+## Distance maxi pour scanner les Interactables. Limite haute — chaque
+## Interactable porte sa propre `interaction_range` plus stricte.
+@export var interaction_scan_range: float = 5.0
+
 @onready var _camera_pivot: Node3D = $CameraPivot
 @onready var _camera: Camera3D = $CameraPivot/Camera3D
 @onready var _camera_remote: RemoteTransform3D = $CameraPivot/CameraRemote
@@ -33,9 +50,15 @@ extends CharacterBody3D
 @onready var _health: HealthComponent = $Health
 
 signal died(source: Node)
+signal downed()
+signal revived()
 signal respawned()
 signal death_count_changed(count: int)
+signal interaction_progress_changed(prompt: String, progress: float)
 
+enum PlayerState { ALIVE, DOWNED }
+
+var state: PlayerState = PlayerState.ALIVE
 var death_count: int = 0
 var _spawn_position: Vector3 = Vector3.ZERO
 var _yaw: float = 0.0
@@ -43,10 +66,15 @@ var _pitch: float = 0.0
 var _dash_time_left: float = 0.0
 var _dash_cooldown_left: float = 0.0
 var _dash_direction: Vector3 = Vector3.ZERO
+var _interact_target: Interactable = null
+var _interact_progress: float = 0.0
 
 
 func _ready() -> void:
 	_health.died.connect(_on_died)
+	# Permet aux ennemis (et autres systèmes) de retrouver les joueurs via
+	# get_tree().get_nodes_in_group("players").
+	add_to_group("players")
 
 
 ## Doit être appelé par celui qui spawn le player (SplitScreenManager) après
@@ -64,11 +92,24 @@ func get_weapon() -> WeaponHitscan:
 	return _weapon
 
 
+## À 0 HP : on passe en état DOWNED (cf CLAUDE.md "Friendly fire & revive").
+## Le joueur peut ramper mais pas tirer ; un allié peut le relever en
+## maintenant `interact` à proximité. Le kill plane reste géré séparément
+## (chute = respawn full HP, ne passe pas par downed).
 func _on_died(source: Node) -> void:
+	if state == PlayerState.DOWNED:
+		return
+	state = PlayerState.DOWNED
+	velocity = Vector3.ZERO
+	_dash_time_left = 0.0
 	died.emit(source)
-	# Respawn immédiat au spawn point d'origine. La PJ ne meurt pas vraiment :
-	# on téléporte, on remet full HP, on incrémente le compteur (M2 ajoutera
-	# le downed + revive proprement).
+	downed.emit()
+
+
+## Téléporte le joueur au spawn point d'origine et réinitialise tout.
+## Utilisé pour la chute (kill plane) où on ne veut PAS passer par downed.
+func _respawn() -> void:
+	state = PlayerState.ALIVE
 	velocity = Vector3.ZERO
 	global_transform.origin = _spawn_position
 	_yaw = 0.0
@@ -81,14 +122,44 @@ func _on_died(source: Node) -> void:
 	respawned.emit()
 
 
+## Relève le joueur (appelé par un allié). HP rendu = revive_hp_ratio * max.
+func revive_by(_reviver: PlayerController) -> void:
+	if state != PlayerState.DOWNED:
+		return
+	state = PlayerState.ALIVE
+	_health.reset()
+	_health.current_health = int(_health.max_health * revive_hp_ratio)
+	_health.health_changed.emit(_health.current_health, _health.max_health)
+	revived.emit()
+
+
+func is_alive() -> bool:
+	return state == PlayerState.ALIVE and not _health.is_dead
+
+
+func is_downed() -> bool:
+	return state == PlayerState.DOWNED
+
+
 func _physics_process(delta: float) -> void:
 	if not InputRouter.is_player_registered(player_id):
 		return
 
+	# Kill plane : chute dans le vide = respawn direct (skip downed).
+	if global_transform.origin.y < fall_threshold_y:
+		_respawn()
+		return
+
 	_update_look(delta)
-	_update_dash_timers(delta)
-	_update_shooting()
-	_apply_movement(delta)
+
+	if state == PlayerState.DOWNED:
+		_update_downed_movement(delta)
+	else:
+		_update_dash_timers(delta)
+		_update_shooting()
+		_update_interact(delta)
+		_apply_movement(delta)
+
 	move_and_slide()
 
 
@@ -96,6 +167,85 @@ func _update_shooting() -> void:
 	# RT en hold : tire à la cadence définie par l'arme (auto-fire).
 	if InputRouter.is_action_pressed(player_id, &"shoot") and _weapon.can_fire():
 		_weapon.shoot()
+
+
+## Boucle d'interaction tenue avec le bouton `interact`. Délègue entièrement
+## au scan du groupe `"interactables"` — un pickup gemme, un levier, un
+## coffre, un shop, ou le revive d'un allié downed (via ReviveInteractable
+## enfant des players DOWNED, cf scenes/characters/player/player.tscn).
+func _update_interact(delta: float) -> void:
+	var holding: bool = InputRouter.is_action_pressed(player_id, &"interact")
+	var candidate: Interactable = _find_interactable_in_range() if holding else null
+
+	if candidate != null:
+		if candidate != _interact_target:
+			_interact_target = candidate
+			_interact_progress = 0.0
+			candidate.interaction_started.emit(self)
+		_interact_progress += delta
+		var ratio: float = _interact_progress / max(_interact_target.hold_duration, 0.001)
+		interaction_progress_changed.emit(_interact_target.prompt_text, ratio)
+		if _interact_progress >= _interact_target.hold_duration:
+			var target: Interactable = _interact_target
+			_interact_target = null
+			_interact_progress = 0.0
+			interaction_progress_changed.emit("", 0.0)
+			target.try_interact(self)
+		return
+
+	# Pas d'interactable courant : reset state + cancel signal.
+	if _interact_target != null:
+		_interact_target.interaction_cancelled.emit()
+		interaction_progress_changed.emit("", 0.0)
+		_interact_target = null
+		_interact_progress = 0.0
+
+
+## Trouve le meilleur Interactable du groupe "interactables" à portée : on
+## filtre par interaction_range propre à chaque objet, puis on choisit la
+## priorité la plus haute (selection_priority), et en cas d'égalité le plus
+## proche. can_interact() permet aux sous-classes de se cacher (gemme déjà
+## ramassée, allié non-downed pour un futur ReviveInteractable, etc.).
+func _find_interactable_in_range() -> Interactable:
+	var scan_range_sq: float = interaction_scan_range * interaction_scan_range
+	var best: Interactable = null
+	var best_priority: int = -2147483648
+	var best_dist: float = INF
+	for node in get_tree().get_nodes_in_group("interactables"):
+		if not (node is Interactable):
+			continue
+		var inter: Interactable = node
+		if not inter.can_interact(self):
+			continue
+		var d: float = (inter.global_position - global_position).length_squared()
+		if d > scan_range_sq:
+			continue
+		var inter_range_sq: float = inter.interaction_range * inter.interaction_range
+		if d > inter_range_sq:
+			continue
+		if inter.selection_priority > best_priority or (inter.selection_priority == best_priority and d < best_dist):
+			best_priority = inter.selection_priority
+			best_dist = d
+			best = inter
+	return best
+
+
+
+## Mouvement en état DOWNED : le joueur peut ramper lentement mais ne peut ni
+## tirer ni dash ni sauter. La gravité s'applique normalement.
+func _update_downed_movement(delta: float) -> void:
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	var input_2d: Vector2 = InputRouter.get_move_vector(player_id)
+	var direction: Vector3 = (transform.basis * Vector3(input_2d.x, 0.0, input_2d.y)).normalized()
+	var horizontal: Vector2 = Vector2(velocity.x, velocity.z)
+	if direction.length() > 0.0:
+		var target: Vector2 = Vector2(direction.x, direction.z) * move_speed * downed_speed_multiplier
+		horizontal = horizontal.move_toward(target, acceleration * delta)
+	else:
+		horizontal = horizontal.move_toward(Vector2.ZERO, friction * delta)
+	velocity.x = horizontal.x
+	velocity.z = horizontal.y
 
 
 func _update_look(delta: float) -> void:

@@ -15,6 +15,10 @@ extends Node
 ## est interdit (cf CLAUDE.md "Anti-patterns interdits").
 
 const MAX_PLAYERS: int = 4
+## Deadzone uniforme appliquée à toutes les manettes. Voir
+## `docs/tech/input_drift_investigation.md` pour le contexte du drift Switch
+## Pro Controller observé pendant le M1 — la solution n'est PAS dans cette
+## constante, à investiguer séparément.
 const DEADZONE: float = 0.2
 
 const _BUTTON: StringName = &"button"

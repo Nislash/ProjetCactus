@@ -1,88 +1,245 @@
-[gd_scene format=3 uid="uid://ccdatahejmote"]
+[gd_scene load_steps=3 format=3 uid="uid://ccdatahejmote"]
 
 [ext_resource type="Script" uid="uid://cmee4rul4his4" path="res://scripts/core/lobby_controller.gd" id="1_8k3pl"]
 [ext_resource type="Script" uid="uid://bfho4p76etopv" path="res://scripts/core/lobby_slot_ui.gd" id="2_52wvy"]
 
-[node name="Lobby" type="Control" unique_id=37299850]
+[node name="Lobby" type="Control"]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource("1_8k3pl")
 
-[node name="Background" type="ColorRect" parent="." unique_id=238840499]
-layout_mode = 0
-color = Color(0, 0, 0, 1)
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.06, 0.08, 1)
 
-[node name="Layout" type="VBoxContainer" parent="." unique_id=1953856367]
-layout_mode = 0
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 64.0
-offset_top = 64.0
+offset_top = 48.0
 offset_right = -64.0
-offset_bottom = -64.0
-theme_override_constants/separation = 32
+offset_bottom = -48.0
+theme_override_constants/separation = 24
 
-[node name="Title" type="Label" parent="Layout" unique_id=561108584]
+[node name="Title" type="Label" parent="Layout"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "ProjetCactus — Lobby"
+theme_override_font_sizes/font_size = 56
+text = "ProjetCactus"
 horizontal_alignment = 1
 
-[node name="Slots" type="HBoxContainer" parent="Layout" unique_id=1301070787]
+[node name="Slots" type="HBoxContainer" parent="Layout"]
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 24
 alignment = 1
 
-[node name="Slot0" type="PanelContainer" parent="Layout/Slots" unique_id=2012101945]
+[node name="Slot0" type="PanelContainer" parent="Layout/Slots"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 120)
 layout_mode = 2
 script = ExtResource("2_52wvy")
 
-[node name="Label" type="Label" parent="Layout/Slots/Slot0" unique_id=765456203]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="Slot1" type="PanelContainer" parent="Layout/Slots" unique_id=14415432]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_52wvy")
-
-[node name="Label" type="Label" parent="Layout/Slots/Slot1" unique_id=1104069111]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="Slot2" type="PanelContainer" parent="Layout/Slots" unique_id=2125194915]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_52wvy")
-
-[node name="Label" type="Label" parent="Layout/Slots/Slot2" unique_id=1353022097]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="Slot3" type="PanelContainer" parent="Layout/Slots" unique_id=1849741374]
-unique_name_in_owner = true
-layout_mode = 2
-script = ExtResource("2_52wvy")
-
-[node name="Label" type="Label" parent="Layout/Slots/Slot3" unique_id=197418383]
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-horizontal_alignment = 1
-vertical_alignment = 1
-autowrap_mode = 2
-
-[node name="StatusLabel" type="Label" parent="Layout" unique_id=79691014]
-unique_name_in_owner = true
+[node name="Label" type="Label" parent="Layout/Slots/Slot0"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Slot1" type="PanelContainer" parent="Layout/Slots"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 120)
+layout_mode = 2
+script = ExtResource("2_52wvy")
+
+[node name="Label" type="Label" parent="Layout/Slots/Slot1"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Slot2" type="PanelContainer" parent="Layout/Slots"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 120)
+layout_mode = 2
+script = ExtResource("2_52wvy")
+
+[node name="Label" type="Label" parent="Layout/Slots/Slot2"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Slot3" type="PanelContainer" parent="Layout/Slots"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 120)
+layout_mode = 2
+script = ExtResource("2_52wvy")
+
+[node name="Label" type="Label" parent="Layout/Slots/Slot3"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="MenuPanel" type="VBoxContainer" parent="Layout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+
+; ── 2 gros boutons côte à côte : Tuto / Lancer le Run ──
+[node name="MainButtons" type="HBoxContainer" parent="Layout/MenuPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="BtnTuto" type="Button" parent="Layout/MenuPanel/MainButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Tuto"
+
+[node name="BtnRun" type="Button" parent="Layout/MenuPanel/MainButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Lancer le Run"
+
+; ── Dropdown discret pour choisir le level lancé par "Lancer le Run" ──
+[node name="LevelSelectRow" type="HBoxContainer" parent="Layout/MenuPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="LevelLabel" type="Label" parent="Layout/MenuPanel/LevelSelectRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Level :"
+
+[node name="LevelDropdown" type="OptionButton" parent="Layout/MenuPanel/LevelSelectRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+; ── Boutons secondaires en petit ──
+[node name="SecondaryButtons" type="HBoxContainer" parent="Layout/MenuPanel"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnLeaderboard" type="Button" parent="Layout/MenuPanel/SecondaryButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Leaderboard"
+
+[node name="BtnSettings" type="Button" parent="Layout/MenuPanel/SecondaryButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Settings"
+
+[node name="StatusLabel" type="Label" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
 text = "Appuyez sur Start pour rejoindre."
+horizontal_alignment = 1
+
+[node name="LeaderboardPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -180.0
+offset_right = 300.0
+offset_bottom = 180.0
+
+[node name="VBox" type="VBoxContainer" parent="LeaderboardPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="LeaderboardPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Leaderboard"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="LeaderboardPanel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 20
+text = "Coming soon — pas encore de scores enregistrés.\n\nLe leaderboard local par run viendra avec le système de score (M3+)."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Hint" type="Label" parent="LeaderboardPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Back (B) pour revenir"
+horizontal_alignment = 1
+
+[node name="SettingsPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -180.0
+offset_right = 300.0
+offset_bottom = 180.0
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="SettingsPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="Body" type="Label" parent="SettingsPanel/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 20
+text = "Coming soon — réglages audio / vidéo / contrôles à venir.\n\nEn attendant, voir docs/tech/input_system.md pour les bindings manettes."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Hint" type="Label" parent="SettingsPanel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Back (B) pour revenir"
 horizontal_alignment = 1

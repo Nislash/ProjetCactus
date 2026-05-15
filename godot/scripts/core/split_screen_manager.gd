@@ -20,9 +20,12 @@ const PLAYER_HUD_PATH := "res://scenes/ui/hud/player_hud.tscn"
 const MAX_PLAYERS: int = 4
 
 @export var world_path: NodePath
-@export var spawn_points: Array[NodePath] = []
 @export var player_scene: PackedScene = preload(PLAYER_SCENE_PATH)
 @export var player_hud_scene: PackedScene = preload(PLAYER_HUD_PATH)
+
+## Group ou nom du groupe Node3D contenant les spawn points (Marker3D nommés
+## "Spawn0", "Spawn1", ...). Auto-découvert dans le World si pas explicite.
+const SPAWN_POINTS_NODE_NAME := "PlayerSpawnPoints"
 
 var _world: Node3D
 var _grid: GridContainer
@@ -126,10 +129,16 @@ func _find_slot(player_id: int) -> Dictionary:
 
 
 func _get_spawn_position(player_id: int) -> Vector3:
-	if player_id < spawn_points.size():
-		var sp: Node3D = get_node_or_null(spawn_points[player_id]) as Node3D
-		if sp != null:
-			return sp.global_transform.origin
+	# Auto-discover : on cherche dans le World un Node3D nommé
+	# "PlayerSpawnPoints" qui contient des enfants "Spawn0", "Spawn1", etc.
+	# Compatible avec test_arena (anciennement "SpawnPoints") et level_01_poc.
+	var spawn_root: Node = _world.find_child(SPAWN_POINTS_NODE_NAME, true, false)
+	if spawn_root == null:
+		spawn_root = _world.find_child("SpawnPoints", true, false)
+	if spawn_root != null:
+		var marker: Node3D = spawn_root.get_node_or_null("Spawn%d" % player_id) as Node3D
+		if marker != null:
+			return marker.global_transform.origin
 	# Fallback : positions par défaut autour de l'origine.
 	var fallbacks: Array = [
 		Vector3(-2, 1, 0),

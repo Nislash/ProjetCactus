@@ -16,7 +16,15 @@ signal fired(hit: bool, hit_position: Vector3, target: Node)
 signal ammo_changed(current: int, max: int)
 signal reload_started()
 signal reload_finished()
+signal weapon_name_changed(new_name: String)
 
+## Source de vérité des stats. Si défini (cf player.tscn → pistol.tres), les
+## valeurs @export ci-dessous sont écrasées au _ready. Si null, on retombe sur
+## les defaults @export — pratique pour créer une WeaponHitscan en code sans
+## data ou pour les tests.
+@export var data: WeaponData
+
+@export var base_weapon_name: String = "Pistolet"
 @export var max_range: float = 50.0
 @export var damage: int = 10
 @export var fire_rate: float = 4.0  ## Tirs par seconde
@@ -26,6 +34,16 @@ signal reload_finished()
 @export_group("Ammo")
 @export var max_ammo: int = 12
 @export var reload_time: float = 1.5
+
+@export_group("Combo")
+## Si défini, le tir spawne ce projectile au lieu du raycast hitscan.
+## Habituellement assigné dynamiquement par equip_spell() au runtime quand le
+## joueur ramasse un parchemin / gemme.
+@export var combo_projectile_scene: PackedScene
+
+# Nom du sort équipé (vide = arme nue, ex: "Feu", "Glace"). Détermine le nom
+# affiché dans le HUD : "Pistolet × Feu" si spell équipé, sinon "Pistolet".
+var equipped_spell_name: String = ""
 
 ## Node propriétaire de l'arme (typiquement le player). Sert à exclure son
 ## propre collider pour ne pas se tirer dessus, et à transmettre `source` au
@@ -37,8 +55,58 @@ var is_reloading: bool = false
 
 
 func _ready() -> void:
+	_apply_data()
 	current_ammo = max_ammo
 	ammo_changed.emit(current_ammo, max_ammo)
+	weapon_name_changed.emit(get_display_name())
+
+
+## Copie les stats de data vers les vars internes. Idempotent. Appelable
+## à tout moment (ex: si on hot-swap d'arme en runtime via le coffre).
+func _apply_data() -> void:
+	if data == null:
+		return
+	damage = data.damage_base
+	fire_rate = data.fire_rate
+	max_range = data.max_range
+	max_ammo = data.max_ammo
+	reload_time = data.reload_time
+	if not data.weapon_name_display.is_empty():
+		base_weapon_name = data.weapon_name_display
+
+
+## Change l'arme à chaud. Met à jour stats + nom HUD. Reset l'ammo au full
+## de la nouvelle arme. Ne touche pas au combo / sort équipé (le sort suit
+## le joueur, pas l'arme).
+func set_data(new_data: WeaponData) -> void:
+	data = new_data
+	_apply_data()
+	current_ammo = max_ammo
+	is_reloading = false
+	ammo_changed.emit(current_ammo, max_ammo)
+	weapon_name_changed.emit(get_display_name())
+
+
+## Nom à afficher dans le HUD : "Pistolet" en base, "Pistolet × Feu" si
+## un sort est équipé.
+func get_display_name() -> String:
+	if equipped_spell_name.is_empty():
+		return base_weapon_name
+	return "%s × %s" % [base_weapon_name, equipped_spell_name]
+
+
+## Équipe un sort (combo). Set le projectile à spawn + le nom affiché.
+func equip_spell(spell_name: String, projectile_scene: PackedScene) -> void:
+	equipped_spell_name = spell_name
+	combo_projectile_scene = projectile_scene
+	weapon_name_changed.emit(get_display_name())
+
+
+## Retire le sort équipé. L'arme redevient hitscan classique.
+func unequip_spell() -> void:
+	equipped_spell_name = ""
+	combo_projectile_scene = null
+	weapon_name_changed.emit(get_display_name())
 
 
 func can_fire() -> bool:
@@ -73,6 +141,12 @@ func shoot() -> void:
 	if current_ammo == 0:
 		reload()
 
+	# Combo Pistolet × Feu : on bypass le hitscan et on spawn un projectile
+	# qui vole + applique burn à l'impact (cf #17).
+	if combo_projectile_scene != null:
+		_shoot_combo_projectile()
+		return
+
 	var space_state := get_world_3d().direct_space_state
 	var origin: Vector3 = global_transform.origin
 	# La direction "forward" d'un Node3D dans Godot est -Z basis vector.
@@ -104,6 +178,20 @@ var _cooldown_left: float = 0.0
 func _process(delta: float) -> void:
 	if _cooldown_left > 0.0:
 		_cooldown_left -= delta
+
+
+func _shoot_combo_projectile() -> void:
+	var origin: Vector3 = global_transform.origin
+	var direction: Vector3 = -global_transform.basis.z.normalized()
+	# Spawn un peu en avant de la caméra pour ne pas exploser à la face.
+	var spawn_pos: Vector3 = origin + direction * 0.5
+	var projectile: Node = combo_projectile_scene.instantiate()
+	get_tree().current_scene.add_child(projectile)
+	# La fireball expose setup(start_pos, dir, owner_to_exclude).
+	if projectile.has_method(&"setup"):
+		var owner_node: Node = get_node_or_null(owner_body)
+		projectile.call(&"setup", spawn_pos, direction, owner_node)
+	fired.emit(false, spawn_pos, null)
 
 
 func _find_health_component(node: Node) -> HealthComponent:
