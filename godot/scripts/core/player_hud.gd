@@ -40,12 +40,23 @@ const SPELL_NAME_TO_ELEMENT: Dictionary = {
 @onready var _weapon_icon: TextureRect = %WeaponIcon
 @onready var _relics_row: RelicsRow = %RelicsRow if has_node("%RelicsRow") else null
 @onready var _relic_reveal: RelicRevealPanel = %RelicRevealPanel if has_node("%RelicRevealPanel") else null
+@onready var _relic_inventory_screen: RelicInventoryScreen = %RelicInventoryScreen if has_node("%RelicInventoryScreen") else null
 @onready var _minimap_panel: Control = $MinimapPanel
 @onready var _minimap_background: ColorRect = $MinimapPanel/Background
-@onready var _minimap_player_dot: ColorRect = $MinimapPanel/PlayerDot
 @onready var _minimap_container: SubViewportContainer = %MinimapViewportContainer
 @onready var _minimap_viewport: SubViewport = %MinimapViewport
 @onready var _minimap_camera: MinimapCamera = %MinimapCamera
+
+# Panel STATS (haut-gauche) : labels mis à jour à chaque inventory_changed
+# et toutes les STATS_REFRESH_SEC pour capter les buffs temporaires.
+@onready var _stat_spd: Label = $StatsPanel/Grid/StatSpd
+@onready var _stat_dmg: Label = $StatsPanel/Grid/StatDmg
+@onready var _stat_crt: Label = $StatsPanel/Grid/StatCrt
+@onready var _stat_fr: Label = $StatsPanel/Grid/StatFr
+@onready var _stat_hp: Label = $StatsPanel/Grid/StatHp
+@onready var _stat_reg: Label = $StatsPanel/Grid/StatReg
+const STATS_REFRESH_SEC: float = 0.25
+var _stats_refresh_accum: float = 0.0
 
 enum MinimapState { MINI, FULL, HIDDEN }
 var _minimap_state: MinimapState = MinimapState.MINI
@@ -79,14 +90,49 @@ func bind_to_player(player: PlayerController) -> void:
 	_set_no_weapon_state()
 	_spell_label.text = "Sort : —"
 
-	# Bind des éléments reliques (rangée + popup d'annonce).
+	# Bind des éléments reliques (rangée + popup d'annonce + écran inventaire).
 	if _relics_row != null and player.relic_inventory != null:
 		_relics_row.bind(player.relic_inventory)
 	if _relic_reveal != null and player.relic_inventory != null:
 		_relic_reveal.bind(player.relic_inventory)
 		player.relic_inventory.inventory_full_attempt.connect(_on_inventory_full_attempt)
+	if _relic_inventory_screen != null:
+		_relic_inventory_screen.bind(player)
+
+	# Refresh immédiat sur changement d'inventaire (ajout/perte de relique).
+	# Le _process se charge des buffs temporaires entre deux events.
+	if player.relic_inventory != null \
+		and not player.relic_inventory.inventory_changed.is_connected(_refresh_stats):
+		player.relic_inventory.inventory_changed.connect(_refresh_stats)
+	_refresh_stats()
 
 	_setup_minimap(player)
+
+
+func _process(delta: float) -> void:
+	if _bound_player == null:
+		return
+	_stats_refresh_accum += delta
+	if _stats_refresh_accum >= STATS_REFRESH_SEC:
+		_stats_refresh_accum = 0.0
+		_refresh_stats()
+
+
+## Pull-stats du joueur → labels du StatsPanel. Format compact pour rester
+## lisible en 4-split. DMG/FR sont des multiplicateurs (1.0 = base) affichés
+## en delta (+X%). CRT en pourcentage absolu. SPD/HP/REG en valeurs absolues.
+func _refresh_stats() -> void:
+	if _bound_player == null:
+		return
+	_stat_spd.text = "%.1f" % _bound_player.get_move_speed()
+	var dmg_delta: float = (_bound_player.get_damage_mult() - 1.0) * 100.0
+	_stat_dmg.text = "%+d%%" % roundi(dmg_delta) if dmg_delta != 0.0 else "+0%"
+	_stat_crt.text = "%d%%" % roundi(_bound_player.get_crit_chance() * 100.0)
+	var fr_delta: float = (_bound_player.get_fire_rate_mult() - 1.0) * 100.0
+	_stat_fr.text = "%+d%%" % roundi(fr_delta) if fr_delta != 0.0 else "+0%"
+	_stat_hp.text = "%d" % _bound_player.get_max_hp()
+	var reg: float = _bound_player.get_hp_regen_per_sec()
+	_stat_reg.text = "%.1f/s" % reg if reg > 0.0 else "—"
 
 
 ## Branche le SubViewport minimap sur le world_3d partagé et fait suivre
@@ -142,7 +188,7 @@ func _apply_minimap_layout() -> void:
 			_minimap_container.set_deferred("offset_top", 4.0)
 			_minimap_container.set_deferred("offset_right", 156.0)
 			_minimap_container.set_deferred("offset_bottom", 156.0)
-			_minimap_viewport.size = Vector2i(152, 152)
+			# Le SubViewport.size suit automatiquement le container (stretch=true).
 			_minimap_camera.size = MINIMAP_ORTHO_MINI
 		MinimapState.FULL:
 			_minimap_panel.visible = true
@@ -166,7 +212,7 @@ func _apply_minimap_layout() -> void:
 			_minimap_container.set_deferred("offset_top", 4.0)
 			_minimap_container.set_deferred("offset_right", w - 4.0)
 			_minimap_container.set_deferred("offset_bottom", h - 4.0)
-			_minimap_viewport.size = Vector2i(int(w - 8), int(h - 8))
+			# Le SubViewport.size suit automatiquement le container (stretch=true).
 			_minimap_camera.size = MINIMAP_ORTHO_FULL
 
 
@@ -311,8 +357,8 @@ func _kind_to_string(kind: StringName) -> String:
 ## retourne toujours "default".
 func _current_element_key() -> String:
 	if _bound_weapon is WeaponHitscan:
-		var name: String = (_bound_weapon as WeaponHitscan).equipped_spell_name
-		return SPELL_NAME_TO_ELEMENT.get(name, "default")
+		var spell_name: String = (_bound_weapon as WeaponHitscan).equipped_spell_name
+		return SPELL_NAME_TO_ELEMENT.get(spell_name, "default")
 	return "default"
 
 

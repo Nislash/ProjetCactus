@@ -50,17 +50,17 @@ func _scan_pool() -> void:
 		push_warning("[RelicLootTable] Dossier inaccessible : %s" % RELICS_DIR)
 		return
 	dir.list_dir_begin()
-	var name := dir.get_next()
-	while name != "":
-		if not dir.current_is_dir() and name.ends_with(".tres"):
-			var path := "%s/%s" % [RELICS_DIR, name]
+	var entry := dir.get_next()
+	while entry != "":
+		if not dir.current_is_dir() and entry.ends_with(".tres"):
+			var path := "%s/%s" % [RELICS_DIR, entry]
 			var res: Resource = load(path)
 			if res is RelicData:
 				var data: RelicData = res
 				all_relics.append(data)
 				var pool: Array = tier_pools[data.tier]
 				pool.append(data)
-		name = dir.get_next()
+		entry = dir.get_next()
 	dir.list_dir_end()
 
 

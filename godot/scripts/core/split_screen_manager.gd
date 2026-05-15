@@ -186,9 +186,9 @@ func _refresh_layout() -> void:
 func _set_slot_size(container: SubViewportContainer, slot_size: Vector2) -> void:
 	container.custom_minimum_size = slot_size
 	container.size = slot_size
-	var viewport: SubViewport = container.get_child(0) as SubViewport
-	if viewport != null:
-		viewport.size = Vector2i(int(slot_size.x), int(slot_size.y))
+	# Le SubViewport.size suit automatiquement le container (stretch=true sur
+	# SubViewportContainer) — pas besoin de le forcer manuellement, sinon
+	# Godot 4.6 émet "Can't change the size of a SubViewport...".
 
 
 func _notification(what: int) -> void:

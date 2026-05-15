@@ -7,7 +7,6 @@ extends Node3D
 ##
 ## Usage : ajouter en enfant de l'entité + appeler `bind_to(health_component)`.
 
-@onready var _bg: MeshInstance3D = $Background
 @onready var _fill: MeshInstance3D = $Fill
 
 const FULL_WIDTH: float = 1.0
