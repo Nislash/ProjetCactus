@@ -34,6 +34,14 @@ var is_running: bool = false
 var selected_level_path: String = ""
 
 
+func _ready() -> void:
+	# Seed le RNG global avec le temps système, sinon Godot part avec seed 0
+	# à chaque process → mêmes tirages à chaque run (coffres, drops, IA…).
+	# RunState est l'autoload #3, exécuté avant RelicLootTable et les systèmes
+	# de gameplay : tous les randf()/randi() qui suivent sont donc aléatoires.
+	randomize()
+
+
 ## Démarre un nouveau run avec les loadouts initiaux. Appelé par le coffre
 ## de début de run (#38) après que chaque joueur ait validé.
 ##
