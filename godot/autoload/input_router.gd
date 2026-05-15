@@ -34,6 +34,7 @@ const _BINDINGS: Dictionary = {
 	&"jump":             [{&"type": _BUTTON, &"button": JOY_BUTTON_A}],
 	&"dash":             [{&"type": _BUTTON, &"button": JOY_BUTTON_B}],
 	&"interact":         [{&"type": _BUTTON, &"button": JOY_BUTTON_X}],
+	&"toggle_map":       [{&"type": _BUTTON, &"button": JOY_BUTTON_DPAD_UP}],
 	&"pause":            [{&"type": _BUTTON, &"button": JOY_BUTTON_START}],
 	&"lobby_join":       [{&"type": _BUTTON, &"button": JOY_BUTTON_START}],
 	&"lobby_leave":      [{&"type": _BUTTON, &"button": JOY_BUTTON_BACK}],

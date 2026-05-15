@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SpellData" load_steps=2 format=3 uid="uid://spell_poison_m2"]
+
+[ext_resource type="Script" path="res://scripts/core/data/spell_data.gd" id="1_spell"]
+
+[resource]
+script = ExtResource("1_spell")
+spell_name_display = "Poison"
+description = "Magie toxique. Empoisonnement empilable, dégâts persistants."
+school = 3
+damage_modifier = 0.9
+status_effect_id = &"poison"
+status_duration = 5.0
+status_dps = 4.0
+element_color = Color(0.45, 0.95, 0.4, 1)

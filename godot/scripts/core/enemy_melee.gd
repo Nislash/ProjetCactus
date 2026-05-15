@@ -14,6 +14,12 @@ func _enemy_tick(delta: float) -> void:
 	if _attack_cooldown_left > 0.0:
 		_attack_cooldown_left -= delta
 
+	# Status freeze/stun → pas de mouvement, pas d'attaque
+	var speed_mult: float = get_speed_multiplier()
+	if speed_mult <= 0.0:
+		_apply_horizontal_velocity(Vector3.ZERO, delta)
+		return
+
 	var target: PlayerController = _find_closest_player()
 	if target == null:
 		_apply_horizontal_velocity(Vector3.ZERO, delta)
@@ -24,12 +30,12 @@ func _enemy_tick(delta: float) -> void:
 	var dist: float = to_target.length()
 
 	if dist > attack_range:
-		# Poursuite : tend la vélocité vers le joueur.
-		_apply_horizontal_velocity(to_target, delta)
+		# Poursuite : applique speed_mult (slow ralenti la poursuite)
+		_apply_horizontal_velocity(to_target * speed_mult, delta)
 	else:
 		# À portée : on freeze le mouvement horizontal et on tape.
 		_apply_horizontal_velocity(Vector3.ZERO, delta)
-		if _attack_cooldown_left <= 0.0:
+		if _attack_cooldown_left <= 0.0 and can_act():
 			_attack_cooldown_left = attack_cooldown
 			target.get_health().take_damage(attack_damage, self)
 

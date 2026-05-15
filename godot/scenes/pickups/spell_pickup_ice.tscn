@@ -1,0 +1,46 @@
+[gd_scene load_steps=6 format=3 uid="uid://spell_pickup_ice_m2"]
+
+[ext_resource type="Script" path="res://scripts/core/spell_pickup.gd" id="1_pickup"]
+[ext_resource type="PackedScene" uid="uid://combo_ice_orb_m2" path="res://scenes/combos/ice_orb.tscn" id="2_orb"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_pickup"]
+radius = 0.6
+
+[sub_resource type="SphereMesh" id="SphereMesh_pickup"]
+radius = 0.35
+height = 0.9
+radial_segments = 6
+rings = 3
+
+[sub_resource type="StandardMaterial3D" id="Mat_pickup"]
+albedo_color = Color(0.4, 0.75, 1, 1)
+shading_mode = 2
+emission_enabled = true
+emission = Color(0.4, 0.75, 1, 1)
+emission_energy_multiplier = 3.5
+rim_enabled = true
+rim = 1.0
+rim_tint = 1.0
+
+[node name="SpellPickupIce" type="Area3D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_pickup")
+spell_name = "Glace"
+projectile_scene = ExtResource("2_orb")
+element_color = Color(0.4, 0.75, 1, 1)
+float_amplitude = 0.25
+float_speed = 2.0
+rotation_speed = 1.5
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_pickup")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_pickup")
+material_override = SubResource("Mat_pickup")
+
+[node name="Light" type="OmniLight3D" parent="."]
+light_color = Color(0.4, 0.75, 1, 1)
+light_energy = 2.5
+omni_range = 5.0

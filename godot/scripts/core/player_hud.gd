@@ -1,15 +1,34 @@
 extends Control
 
-## HUD d'un joueur (M1). Affiche HP, ammo, sort équipé, compteur morts,
-## mini-map placeholder. Instancié dans le SubViewport du joueur par
+## HUD d'un joueur. Instancié dans le SubViewport du joueur par
 ## SplitScreenManager._spawn_slot().
 ##
 ## Layout :
-## - Bas-gauche  : HP (bar + label) + compteur morts
-## - Bas-droite  : ammo + indicateur RELOAD
-## - Bas-centre  : sort équipé (placeholder M1)
-## - Haut-droite : mini-map (placeholder M1)
-## - Centre      : crosshair (4 traits + dot)
+## - Bas-gauche  : HP bar + label + compteur morts
+## - Bas-droite  : icône d'arme + nom + ammo + reload
+## - Bas-centre  : sort équipé / prompt d'interaction
+## - Haut-droite : mini-map (placeholder)
+## - Centre      : crosshair
+##
+## L'icône d'arme est chargée dynamiquement depuis :
+##   res://assets/textures/weapons/{kind}_{element}.png
+## kind = "gun" ou "sword"
+## element = "default" / "fire" / "ice" / "thunder" / "poison"
+##
+## Si le PNG n'existe pas (asset pas encore généré) le HUD ne plante pas —
+## TextureRect reste vide, le label texte sert de fallback.
+
+const WEAPON_ICON_DIR := "res://assets/textures/weapons/"
+
+# Mapping nom de gemme affiché → element key utilisée dans le path d'asset.
+# Si la gemme équipée n'est pas dans ce dict, on tombe sur "default".
+const SPELL_NAME_TO_ELEMENT: Dictionary = {
+	"": "default",
+	"Feu": "fire",
+	"Glace": "ice",
+	"Foudre": "thunder",
+	"Poison": "poison",
+}
 
 @onready var _hp_bar: ProgressBar = %HpBar
 @onready var _hp_label: Label = %HpLabel
@@ -18,51 +37,142 @@ extends Control
 @onready var _reload_label: Label = %ReloadLabel
 @onready var _spell_label: Label = %SpellLabel
 @onready var _weapon_label: Label = %WeaponLabel
+@onready var _weapon_icon: TextureRect = %WeaponIcon
+@onready var _minimap_panel: Control = $MinimapPanel
+@onready var _minimap_background: ColorRect = $MinimapPanel/Background
+@onready var _minimap_player_dot: ColorRect = $MinimapPanel/PlayerDot
+@onready var _minimap_container: SubViewportContainer = %MinimapViewportContainer
+@onready var _minimap_viewport: SubViewport = %MinimapViewport
+@onready var _minimap_camera: MinimapCamera = %MinimapCamera
 
-var _bound_player: PlayerController
+enum MinimapState { MINI, FULL, HIDDEN }
+var _minimap_state: MinimapState = MinimapState.MINI
+
+# Tailles ortho de la caméra par état (plus grand = plus zoom-out).
+const MINIMAP_ORTHO_MINI: float = 32.0
+const MINIMAP_ORTHO_FULL: float = 80.0
+
+var _bound_player: PlayerController = null
+## Arme actuellement écoutée pour ammo/reload/name. Évite de double-bind
+## les signaux à chaque switch d'arme.
+var _bound_weapon: Node = null
 
 
 func bind_to_player(player: PlayerController) -> void:
 	_bound_player = player
+
 	var hc: HealthComponent = player.get_health()
 	hc.health_changed.connect(_on_health_changed)
 	player.death_count_changed.connect(_on_death_count_changed)
 	player.downed.connect(_on_downed)
 	player.revived.connect(_on_revived)
 	player.interaction_progress_changed.connect(_on_interaction_progress_changed)
+	player.weapon_equipped.connect(_on_weapon_equipped)
 	_on_health_changed(hc.current_health, hc.max_health)
 	_on_death_count_changed(player.death_count)
 
-	var weapon: WeaponHitscan = player.get_weapon()
-	if weapon != null:
-		weapon.ammo_changed.connect(_on_ammo_changed)
-		weapon.reload_started.connect(_on_reload_started)
-		weapon.reload_finished.connect(_on_reload_finished)
-		weapon.weapon_name_changed.connect(_on_weapon_name_changed)
-		_on_ammo_changed(weapon.current_ammo, weapon.max_ammo)
-		_on_weapon_name_changed(weapon.get_display_name())
-		_reload_label.text = ""
-
-	# M1 : pas de sort équipé. Slot placeholder qu'on remplira en M2
-	# quand les `SpellData.tres` arriveront.
+	# État initial : aucune arme équipée tant que le joueur n'a pas ramassé
+	# un WeaponPickup. equip_weapon_kind() émettra weapon_equipped quand
+	# c'est fait.
+	_set_no_weapon_state()
 	_spell_label.text = "Sort : —"
+
+	_setup_minimap(player)
+
+
+## Branche le SubViewport minimap sur le world_3d partagé et fait suivre
+## la caméra orthographique sur ce joueur. Appelé une fois au bind.
+func _setup_minimap(player: PlayerController) -> void:
+	# Le SubViewport doit partager le World3D du root (sinon il rend dans
+	# un monde vide). Cf SplitScreenManager qui fait le même setup pour
+	# les viewports principaux.
+	_minimap_viewport.world_3d = get_tree().root.world_3d
+	_minimap_camera.set_follow_target(player)
+	# D-pad up cycle l'état de la minimap (MINI → FULL → HIDDEN → MINI).
+	player.minimap_toggle_requested.connect(_cycle_minimap_state)
+	# Le viewport doit pouvoir s'ajuster aux resizes du HUD (split-screen
+	# layout change quand un joueur join/quit).
+	resized.connect(_apply_minimap_layout)
+	_apply_minimap_layout()
+
+
+func _cycle_minimap_state() -> void:
+	match _minimap_state:
+		MinimapState.MINI:
+			_minimap_state = MinimapState.FULL
+		MinimapState.FULL:
+			_minimap_state = MinimapState.HIDDEN
+		MinimapState.HIDDEN:
+			_minimap_state = MinimapState.MINI
+	_apply_minimap_layout()
+
+
+## Met à jour position/taille du panel + size du SubViewport + opacité du
+## background selon l'état courant. La taille FULL est calculée depuis la
+## taille du HUD (qui suit son SubViewport en split-screen — chaque joueur
+## a sa propre échelle).
+func _apply_minimap_layout() -> void:
+	if _minimap_panel == null:
+		return
+	match _minimap_state:
+		MinimapState.HIDDEN:
+			_minimap_panel.visible = false
+		MinimapState.MINI:
+			_minimap_panel.visible = true
+			# Coin haut-droite, 160×160
+			_minimap_panel.anchor_left = 1.0
+			_minimap_panel.anchor_top = 0.0
+			_minimap_panel.anchor_right = 1.0
+			_minimap_panel.anchor_bottom = 0.0
+			_minimap_panel.offset_left = -184.0
+			_minimap_panel.offset_top = 24.0
+			_minimap_panel.offset_right = -24.0
+			_minimap_panel.offset_bottom = 184.0
+			_minimap_background.color.a = 0.85
+			_minimap_container.set_deferred("offset_left", 4.0)
+			_minimap_container.set_deferred("offset_top", 4.0)
+			_minimap_container.set_deferred("offset_right", 156.0)
+			_minimap_container.set_deferred("offset_bottom", 156.0)
+			_minimap_viewport.size = Vector2i(152, 152)
+			_minimap_camera.size = MINIMAP_ORTHO_MINI
+		MinimapState.FULL:
+			_minimap_panel.visible = true
+			# Centré, 50% width × 60% height de la taille du HUD courant.
+			# En split-screen, le HUD est dans le SubViewport du joueur,
+			# donc size correspond bien à son quart d'écran.
+			var hud_size: Vector2 = size
+			var w: float = hud_size.x * 0.5
+			var h: float = hud_size.y * 0.6
+			_minimap_panel.anchor_left = 0.5
+			_minimap_panel.anchor_top = 0.5
+			_minimap_panel.anchor_right = 0.5
+			_minimap_panel.anchor_bottom = 0.5
+			_minimap_panel.offset_left = -w * 0.5
+			_minimap_panel.offset_top = -h * 0.5
+			_minimap_panel.offset_right = w * 0.5
+			_minimap_panel.offset_bottom = h * 0.5
+			_minimap_background.color.a = 0.35
+			# Le viewport occupe toute la zone (- 4px de marge cohérence).
+			_minimap_container.set_deferred("offset_left", 4.0)
+			_minimap_container.set_deferred("offset_top", 4.0)
+			_minimap_container.set_deferred("offset_right", w - 4.0)
+			_minimap_container.set_deferred("offset_bottom", h - 4.0)
+			_minimap_viewport.size = Vector2i(int(w - 8), int(h - 8))
+			_minimap_camera.size = MINIMAP_ORTHO_FULL
 
 
 func _on_downed() -> void:
-	# Surcharge le HP label pour signaler clairement l'état downed.
 	_hp_label.text = "▼ À TERRE — Allié : maintenir X pour relever"
 	_hp_label.add_theme_color_override("font_color", Color(1, 0.3, 0.2, 1))
 
 
 func _on_revived() -> void:
 	_hp_label.remove_theme_color_override("font_color")
-	# La valeur HP réelle sera réémise par health_changed lors du reset().
 
 
 func _on_health_changed(current: int, max_hp: int) -> void:
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = current
-	# Si le joueur est downed, on garde le label custom (set par _on_downed).
 	if _bound_player != null and _bound_player.is_downed():
 		return
 	_hp_label.text = "HP %d / %d" % [current, max_hp]
@@ -70,6 +180,68 @@ func _on_health_changed(current: int, max_hp: int) -> void:
 
 func _on_death_count_changed(count: int) -> void:
 	_deaths_label.text = "Morts : %d" % count
+
+
+## Switch d'arme (joueur a ramassé un WeaponPickup). On débranche les
+## signaux de l'ancienne arme et on rebranche sur la nouvelle.
+func _on_weapon_equipped(kind: StringName) -> void:
+	_unbind_current_weapon_signals()
+
+	match kind:
+		&"pistol":
+			_bound_weapon = _bound_player.get_weapon()
+			if _bound_weapon != null:
+				_bind_pistol_signals(_bound_weapon as WeaponHitscan)
+		&"melee":
+			_bound_weapon = _bound_player.get_melee()
+			if _bound_weapon != null:
+				_bind_melee_signals(_bound_weapon as WeaponMelee)
+		_:
+			_bound_weapon = null
+			_set_no_weapon_state()
+
+
+func _unbind_current_weapon_signals() -> void:
+	if _bound_weapon == null:
+		return
+	if _bound_weapon is WeaponHitscan:
+		var w: WeaponHitscan = _bound_weapon as WeaponHitscan
+		if w.ammo_changed.is_connected(_on_ammo_changed):
+			w.ammo_changed.disconnect(_on_ammo_changed)
+		if w.reload_started.is_connected(_on_reload_started):
+			w.reload_started.disconnect(_on_reload_started)
+		if w.reload_finished.is_connected(_on_reload_finished):
+			w.reload_finished.disconnect(_on_reload_finished)
+		if w.weapon_name_changed.is_connected(_on_weapon_name_changed):
+			w.weapon_name_changed.disconnect(_on_weapon_name_changed)
+	elif _bound_weapon is WeaponMelee:
+		var m: WeaponMelee = _bound_weapon as WeaponMelee
+		if m.weapon_name_changed.is_connected(_on_weapon_name_changed):
+			m.weapon_name_changed.disconnect(_on_weapon_name_changed)
+
+
+func _bind_pistol_signals(w: WeaponHitscan) -> void:
+	w.ammo_changed.connect(_on_ammo_changed)
+	w.reload_started.connect(_on_reload_started)
+	w.reload_finished.connect(_on_reload_finished)
+	w.weapon_name_changed.connect(_on_weapon_name_changed)
+	_on_ammo_changed(w.current_ammo, w.max_ammo)
+	_on_weapon_name_changed(w.get_display_name())
+	_reload_label.text = ""
+
+
+func _bind_melee_signals(m: WeaponMelee) -> void:
+	m.weapon_name_changed.connect(_on_weapon_name_changed)
+	_on_weapon_name_changed(m.get_display_name())
+	_ammo_label.text = "—"
+	_reload_label.text = ""
+
+
+func _set_no_weapon_state() -> void:
+	_weapon_label.text = "Sans arme"
+	_ammo_label.text = "—"
+	_reload_label.text = ""
+	_weapon_icon.texture = null
 
 
 func _on_ammo_changed(current: int, max_ammo: int) -> void:
@@ -84,12 +256,58 @@ func _on_reload_finished() -> void:
 	_reload_label.text = ""
 
 
+## Met à jour le nom + l'icône. Le nom passe par get_display_name() de
+## l'arme, qui retourne soit "Pistolet" soit "Pistolet × Feu" selon la
+## gemme équipée.
 func _on_weapon_name_changed(new_name: String) -> void:
 	_weapon_label.text = new_name
+	_refresh_weapon_icon()
+
+
+## Construit le path d'asset selon arme + gemme actuellement équipée et
+## charge la texture si elle existe. Sinon laisse vide (graceful).
+func _refresh_weapon_icon() -> void:
+	if _bound_player == null:
+		_weapon_icon.texture = null
+		return
+	var kind_str: String = _kind_to_string(_bound_player.get_equipped_weapon_kind())
+	if kind_str.is_empty():
+		_weapon_icon.texture = null
+		return
+	var element: String = _current_element_key()
+	var path: String = "%s%s_%s.png" % [WEAPON_ICON_DIR, kind_str, element]
+	if ResourceLoader.exists(path, "Texture2D"):
+		_weapon_icon.texture = load(path) as Texture2D
+	else:
+		# Fallback : essaie l'asset default de la même arme
+		var default_path: String = "%s%s_default.png" % [WEAPON_ICON_DIR, kind_str]
+		if ResourceLoader.exists(default_path, "Texture2D"):
+			_weapon_icon.texture = load(default_path) as Texture2D
+		else:
+			_weapon_icon.texture = null
+
+
+func _kind_to_string(kind: StringName) -> String:
+	match kind:
+		&"pistol":
+			return "gun"
+		&"melee":
+			return "sword"
+		_:
+			return ""
+
+
+## Lit la gemme actuellement équipée sur l'arme courante. Pour le pistolet,
+## c'est `equipped_spell_name`. La melee n'a pas encore de système de gemme,
+## retourne toujours "default".
+func _current_element_key() -> String:
+	if _bound_weapon is WeaponHitscan:
+		var name: String = (_bound_weapon as WeaponHitscan).equipped_spell_name
+		return SPELL_NAME_TO_ELEMENT.get(name, "default")
+	return "default"
 
 
 ## Le slot _spell_label sert aussi de message d'interaction pendant un hold.
-## Quand l'interaction est annulée, on revient au texte "Sort : —".
 func _on_interaction_progress_changed(prompt: String, progress: float) -> void:
 	if progress <= 0.0 or prompt.is_empty():
 		_spell_label.text = "Sort : —"
