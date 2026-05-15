@@ -172,6 +172,7 @@ Détail des dossiers possédés par chaque machine : voir `docs/workflow/machine
 - `docs/design/classes.md` — 4 classes, stats, abilités
 - `docs/design/magic_schools.md` — 5 écoles, effets élémentaires
 - `docs/design/combos_matrix.md` — les 20 combos arme×parchemin
+- `docs/design/relics.yaml` — pool de 50 artefacts/reliques (source de vérité à convertir en `.tres`)
 - `docs/design/puzzle_meta.md` — énigme cross-8-niveaux
 - `docs/design/levels.md` — 8 niveaux : thèmes, mécaniques signature, boss
 - `docs/tech/input_system.md` — mapping manettes, lobby attribution

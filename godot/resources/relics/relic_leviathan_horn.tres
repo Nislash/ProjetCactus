@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_leviathan_horn"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_leviathan_horn"
+display_name = "Cor du Léviathan"
+description = "+1 % damage permanent par kill. Sans cap. Stack à vie."
+flavor = "Plus vous tuez, plus il rugit. Plus il rugit, plus vous tuez."
+tier = 3
+effect_type = 2
+trigger = 2
+drop_pool = 2
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"damage_mult_per_kill": 0.01,
+    &"stack_cap": null
+}

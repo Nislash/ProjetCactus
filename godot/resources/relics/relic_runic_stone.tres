@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_runic_stone"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_runic_stone"
+display_name = "Pierre runique"
+description = "Les impacts Terre ont +50 % de knockback et +1 s de stun."
+flavor = "Symboles d'un alphabet oublié, en colère permanente."
+tier = 1
+effect_type = 8
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &"earth"
+magnitude = {
+    &"knockback_mult": 1.5,
+    &"stun_bonus_sec": 1.0
+}

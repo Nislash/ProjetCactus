@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_heart_aurochs"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_heart_aurochs"
+display_name = "Cœur d'aurochs"
+description = "Augmente la vie maximale de 25."
+flavor = "Le cœur bat fort, même hors du corps."
+tier = 0
+effect_type = 0
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"max_hp": 25
+}

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_shadow_cloak"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_shadow_cloak"
+display_name = "Cape de l'ombre"
+description = "Sous 50 % HP : invisible 3 s. Cooldown 30 s."
+flavor = "Personne ne se souvient de l'avoir cousue."
+tier = 2
+effect_type = 4
+trigger = 4
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"threshold_pct": 0.5,
+    &"invisibility_sec": 3.0,
+    &"cooldown_sec": 30
+}

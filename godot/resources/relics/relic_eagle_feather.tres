@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_eagle_feather"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_eagle_feather"
+display_name = "Plume d'aigle"
+description = "Réduit le cooldown du dash de 20 %."
+flavor = "Toujours chaude au toucher."
+tier = 0
+effect_type = 0
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"dash_cooldown_mult": -0.2
+}

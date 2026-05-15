@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_wolf_fang"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_wolf_fang"
+display_name = "Croc de loup"
+description = "Mêlée : 5 % de chance d'ouvrir une plaie (3 dmg/s pendant 3 s)."
+flavor = "Vous ne demandez pas qui l'a perdu."
+tier = 0
+effect_type = 1
+trigger = 1
+drop_pool = 0
+weapon_filter = &"melee"
+school_filter = &""
+magnitude = {
+    &"proc_chance": 0.05,
+    &"status_id": "bleed",
+    &"status_dps": 3,
+    &"status_duration_sec": 3.0
+}

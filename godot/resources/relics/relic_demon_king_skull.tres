@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_demon_king_skull"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_demon_king_skull"
+display_name = "Crâne du roi-démon"
+description = "+50 % damage, mais HP max divisé par 2."
+flavor = "Il ricane quand vous baissez la garde."
+tier = 2
+effect_type = 0
+trigger = 0
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"damage_mult": 0.5,
+    &"max_hp_mult": -0.5
+}

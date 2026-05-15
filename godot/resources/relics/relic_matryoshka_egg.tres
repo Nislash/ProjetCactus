@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_matryoshka_egg"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_matryoshka_egg"
+display_name = "Œuf gigogne"
+description = "La prochaine balle après recharge inflige ×3 damage."
+flavor = "Chaque coquille en cache une plus colère."
+tier = 2
+effect_type = 7
+trigger = 7
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"next_shot_damage_mult": 3.0
+}

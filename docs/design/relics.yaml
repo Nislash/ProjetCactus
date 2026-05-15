@@ -1,0 +1,789 @@
+# =============================================================================
+# ProjetCactus — Pool d'artefacts (reliques)
+# =============================================================================
+# Source de vérité design pour les 50 reliques. À éditer à la main pour
+# l'équilibrage. Sera converti en .tres (godot/resources/relics/) une fois
+# les valeurs validées en playtest.
+#
+# Schéma (chaque entrée) :
+#   id              : snake_case stable, sera l'id côté .tres
+#   name            : nom affiché (FR)
+#   tier            : common | rare | epic | legendary
+#   effect_type     : stat | on_hit | on_kill | on_dash | on_damaged
+#                     | on_low_hp | on_revive | on_reload | combo_mod | coop
+#   trigger         : passive | on_hit | on_kill | on_dash | on_damaged
+#                     | on_low_hp | on_revive | on_reload
+#                     (pour effect_type=stat, trigger=passive)
+#   magnitude       : map libre de paramètres (dépend du type)
+#   description     : phrase courte qui décrit l'effet ressenti
+#   flavor          : lore court (optionnel)
+#   weapon_filter   : null | pistol | shotgun | rifle | melee
+#                     (l'effet ne se déclenche qu'avec ce type d'arme)
+#   school_filter   : null | fire | ice | thunder | poison | earth
+#                     (l'effet ne s'applique qu'à cette école de magie)
+#   drop_pool       : standard | shop_only | boss_only
+#   inspiration     : référence design (sera retirée à terme)
+#
+# Répartition : 18 communs / 15 rares / 12 épiques / 5 légendaires = 50.
+# =============================================================================
+
+relics:
+
+  # ---------------------------------------------------------------------------
+  # COMMUNS (18) — magnitude faible, drops fréquents
+  # ---------------------------------------------------------------------------
+
+  - id: relic_heart_aurochs
+    name: "Cœur d'aurochs"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      max_hp: 25
+    description: "Augmente la vie maximale de 25."
+    flavor: "Le cœur bat fort, même hors du corps."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Sphène"
+
+  - id: relic_sharpened_fangs
+    name: "Crocs aiguisés"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      damage_mult: 0.12
+    description: "Inflige 12 % de dégâts supplémentaires."
+    flavor: "Quelqu'un les a polis avec patience. Pas vous."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "WoL — Pendentif générique"
+
+  - id: relic_courier_boots
+    name: "Bottes du courrier"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      move_speed_mult: 0.10
+    description: "Vitesse de déplacement +10 %."
+    flavor: "Encore boueuses du dernier marathon."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Paul's Goat Hoof"
+
+  - id: relic_eagle_feather
+    name: "Plume d'aigle"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      dash_cooldown_mult: -0.20
+    description: "Réduit le cooldown du dash de 20 %."
+    flavor: "Toujours chaude au toucher."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "WoL — Spellblade's Greaves"
+
+  - id: relic_keen_eye
+    name: "Œil affûté"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      crit_chance: 0.08
+    description: "+8 % de chance de coup critique."
+    flavor: "Vous voyez les choses... un peu plus loin."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Lens-Maker's Glasses"
+
+  - id: relic_shooter_gloves
+    name: "Gants du tireur"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      fire_rate_mult: 0.15
+    description: "Cadence de tir +15 %."
+    flavor: "Le cuir a séché autour de la gâchette."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Soldier's Syringe"
+
+  - id: relic_bandolier
+    name: "Bandoulière"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      mag_capacity_bonus: 2
+    description: "+2 munitions dans le chargeur de toutes les armes."
+    flavor: "Empestait encore la poudre."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Bandolier"
+
+  - id: relic_boar_blood
+    name: "Sang du sanglier"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      hp_regen_per_sec: 0.5
+    description: "Régénère 0.5 HP par seconde."
+    flavor: "Encore tiède dans la fiole."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Bustling Fungus (light)"
+
+  - id: relic_small_medkit
+    name: "Petit kit médical"
+    tier: common
+    effect_type: on_low_hp
+    trigger: on_low_hp
+    magnitude:
+      threshold_pct: 0.25
+      heal_amount: 15
+      cooldown_sec: 60
+    description: "Sous 25 % HP, soigne 15 HP. Cooldown 60 s."
+    flavor: "Plaies et bosses, 1995. Une autre vie."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Monster Tooth (light)"
+
+  - id: relic_thief_armband
+    name: "Brassard du voleur"
+    tier: common
+    effect_type: on_kill
+    trigger: on_kill
+    magnitude:
+      move_speed_mult_per_stack: 0.01
+      duration_sec: 3
+      max_stacks: 5
+    description: "+1 % vitesse 3 s par kill (max 5 stacks)."
+    flavor: "Vif sur ses pieds. Plus vite avec un cadavre derrière."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Hopoo Feather (light)"
+
+  - id: relic_bitter_lead
+    name: "Plomb amer"
+    tier: common
+    effect_type: on_hit
+    trigger: on_hit
+    magnitude:
+      proc_chance: 0.05
+      status_id: poison
+      status_duration_sec: 2.0
+      status_dps: 4
+    description: "5 % de chance d'empoisonner l'ennemi touché (2 s)."
+    flavor: "Le forgeron sait pourquoi. Vous, non."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "WoL — Pendant of Pestilence (light)"
+
+  - id: relic_crushed_hornet
+    name: "Frelon écrasé"
+    tier: common
+    effect_type: on_dash
+    trigger: on_dash
+    magnitude:
+      damage: 5
+      radius_m: 2.0
+      duration_sec: 1.0
+    description: "Le dash laisse une zone qui inflige 5 dmg (rayon 2 m, 1 s)."
+    flavor: "Encore aigri par le passé."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "WoL — Pendant of Pestilence (dash variant)"
+
+  - id: relic_polished_rock
+    name: "Roc poli"
+    tier: common
+    effect_type: on_damaged
+    trigger: on_damaged
+    magnitude:
+      proc_chance: 0.08
+      damage_reduction_pct: 0.50
+    description: "8 % de chance de réduire les dégâts reçus de 50 %."
+    flavor: "Doux comme un galet. Dur comme... un galet."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Tougher Times (light)"
+
+  - id: relic_raw_quartz
+    name: "Quartz brut"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      shield_max: 10
+      recharge_delay_sec: 4
+    description: "+10 bouclier qui recharge 4 s hors combat."
+    flavor: "Hum électrique faible. Et pourtant."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Personal Shield Generator"
+
+  - id: relic_reinforced_lace
+    name: "Lacet renforcé"
+    tier: common
+    effect_type: on_revive
+    trigger: on_revive
+    magnitude:
+      revive_speed_mult: 1.5
+    description: "Relève un allié 33 % plus vite."
+    flavor: "Mieux vaut nouer que dénouer, dit-on."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "Coop signature"
+
+  - id: relic_used_bandage
+    name: "Bandage usagé"
+    tier: common
+    effect_type: on_kill
+    trigger: on_kill
+    magnitude:
+      heal_amount: 2
+      max_per_sec: 1
+    description: "Soigne 2 HP par kill (max 1×/s)."
+    flavor: "Quelqu'un l'a déjà utilisé. Marchera quand même."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Monster Tooth"
+
+  - id: relic_wolf_fang
+    name: "Croc de loup"
+    tier: common
+    effect_type: on_hit
+    trigger: on_hit
+    magnitude:
+      proc_chance: 0.05
+      status_id: bleed
+      status_dps: 3
+      status_duration_sec: 3.0
+    description: "Mêlée : 5 % de chance d'ouvrir une plaie (3 dmg/s pendant 3 s)."
+    flavor: "Vous ne demandez pas qui l'a perdu."
+    weapon_filter: melee
+    school_filter: null
+    drop_pool: standard
+    inspiration: "WoL — bleed relic"
+
+  - id: relic_slick_skate
+    name: "Patin glissant"
+    tier: common
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      dash_distance_mult: 0.30
+    description: "Le dash parcourt 30 % de distance en plus."
+    flavor: "Patine sur le marbre comme sur la peau."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "WoL — sliding boots"
+
+  # ---------------------------------------------------------------------------
+  # RARES (15) — trigger conditionnel, drop modéré
+  # ---------------------------------------------------------------------------
+
+  - id: relic_salamander_pendant
+    name: "Pendentif du salamandre"
+    tier: rare
+    effect_type: combo_mod
+    trigger: passive
+    magnitude:
+      burn_duration_mult: 1.5
+    description: "Les brûlures durent 50 % plus longtemps."
+    flavor: "Toujours tiède. Toujours hostile."
+    weapon_filter: null
+    school_filter: fire
+    drop_pool: standard
+    inspiration: "WoL — Pyromancer's amulet"
+
+  - id: relic_eternal_icicle
+    name: "Glaçon éternel"
+    tier: rare
+    effect_type: combo_mod
+    trigger: passive
+    magnitude:
+      freeze_duration_mult: 1.5
+    description: "Le gel dure 50 % plus longtemps."
+    flavor: "Aucune main ne le brise. Aucun feu non plus."
+    weapon_filter: null
+    school_filter: ice
+    drop_pool: standard
+    inspiration: "WoL — Frostfang"
+
+  - id: relic_tesla_coil
+    name: "Bobine de Tesla"
+    tier: rare
+    effect_type: combo_mod
+    trigger: passive
+    magnitude:
+      chain_targets_bonus: 1
+    description: "Les éclairs en chaîne rebondissent sur 1 cible supplémentaire."
+    flavor: "Crépite quand vous y pensez."
+    weapon_filter: null
+    school_filter: thunder
+    drop_pool: standard
+    inspiration: "RoR2 — Ukulele"
+
+  - id: relic_green_vial
+    name: "Fiole verdâtre"
+    tier: rare
+    effect_type: combo_mod
+    trigger: passive
+    magnitude:
+      poison_max_stacks_bonus: 2
+    description: "L'empoisonnement cumule 2 stacks supplémentaires."
+    flavor: "Le bouchon ne ferme plus tout à fait."
+    weapon_filter: null
+    school_filter: poison
+    drop_pool: standard
+    inspiration: "RoR2 — Death Mark"
+
+  - id: relic_runic_stone
+    name: "Pierre runique"
+    tier: rare
+    effect_type: combo_mod
+    trigger: passive
+    magnitude:
+      knockback_mult: 1.5
+      stun_bonus_sec: 1.0
+    description: "Les impacts Terre ont +50 % de knockback et +1 s de stun."
+    flavor: "Symboles d'un alphabet oublié, en colère permanente."
+    weapon_filter: null
+    school_filter: earth
+    drop_pool: standard
+    inspiration: "WoL — Earth relic"
+
+  - id: relic_phoenix_feather
+    name: "Plume de phénix"
+    tier: rare
+    effect_type: on_low_hp
+    trigger: on_low_hp
+    magnitude:
+      threshold_pct: 0.20
+      invuln_duration_sec: 2.0
+      cooldown_sec: 90
+    description: "Sous 20 % HP : 2 s d'invulnérabilité. Cooldown 90 s."
+    flavor: "Tombe quand elle veut. Toujours juste à temps."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "WoL — Phoenix relic"
+
+  - id: relic_duelist_gloves
+    name: "Gants du duelliste"
+    tier: rare
+    effect_type: on_kill
+    trigger: on_kill
+    magnitude:
+      instant_reload: true
+    description: "Chaque kill recharge instantanément l'arme."
+    flavor: "Les coutures sentent la rancœur."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Brainstalks"
+
+  - id: relic_jackal_talisman
+    name: "Talisman du chacal"
+    tier: rare
+    effect_type: on_damaged
+    trigger: on_damaged
+    magnitude:
+      reflect_pct: 0.25
+      range_m: 3.0
+    description: "Réfléchit 25 % des dégâts mêlée subis."
+    flavor: "Mord la main qui le porte. Et celle qui frappe."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Razorwire"
+
+  - id: relic_undine_armband
+    name: "Brassard d'ondine"
+    tier: rare
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      max_hp_mult: 0.30
+      damage_mult: -0.10
+    description: "+30 % HP max, mais −10 % damage."
+    flavor: "Tu vis plus longtemps. Tu frappes plus mou. Choisis."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Repulsion Armor Plate (variant)"
+
+  - id: relic_falcon_sigil
+    name: "Sigil du faucon"
+    tier: rare
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      air_jumps_bonus: 1
+    description: "+1 saut aérien."
+    flavor: "Le sceau bat des ailes quand on cligne."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Hopoo Feather"
+
+  - id: relic_mad_spring
+    name: "Ressort fou"
+    tier: rare
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      dash_charges_bonus: 1
+    description: "+1 charge de dash."
+    flavor: "On l'a essayé sur un chien. Le chien court encore."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Hardlight Afterburner"
+
+  - id: relic_lucky_tomahawk
+    name: "Tomahawk porte-bonheur"
+    tier: rare
+    effect_type: on_hit
+    trigger: on_hit
+    magnitude:
+      proc_chance: 0.10
+      ricochet_range_m: 8.0
+      ricochet_damage_mult: 0.6
+    description: "10 % de chance de ricocher vers un ennemi proche (60 % damage)."
+    flavor: "Toujours retombe pointe en l'air. Allez savoir."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Sticky Bomb (variant)"
+
+  - id: relic_cracked_cameo
+    name: "Camée fissuré"
+    tier: rare
+    effect_type: on_revive
+    trigger: on_revive
+    magnitude:
+      revive_hp_pct: 1.0
+    description: "L'allié relevé revient avec 100 % HP au lieu de 50 %."
+    flavor: "Le visage gravé a changé. Personne n'ose vérifier."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "Coop signature"
+
+  - id: relic_little_guardian_angel
+    name: "Petit ange gardien"
+    tier: rare
+    effect_type: coop
+    trigger: passive
+    magnitude:
+      damage_mult_when_ally_down: 0.25
+      duration_sec: 8
+    description: "Quand un allié est à terre : +25 % damage pendant 8 s."
+    flavor: "L'auréole vacille. La rage tient bon."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "Coop signature"
+
+  - id: relic_bond_sigil
+    name: "Sigille du lien"
+    tier: rare
+    effect_type: coop
+    trigger: passive
+    magnitude:
+      hp_regen_per_sec: 1.0
+      range_m: 5.0
+    description: "Régénère 1 HP/s à vous et à l'allié à moins de 5 m."
+    flavor: "Le sceau brille au même rythme que deux cœurs."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: standard
+    inspiration: "RoR2 — Aegis (coop variant)"
+
+  # ---------------------------------------------------------------------------
+  # ÉPIQUES (12) — build-defining
+  # ---------------------------------------------------------------------------
+
+  - id: relic_phlegethon_heart
+    name: "Cœur de Phlégéton"
+    tier: epic
+    effect_type: combo_mod
+    trigger: on_hit
+    magnitude:
+      flame_trail_dps: 3
+      trail_duration_sec: 2.0
+    description: "Toutes les armes laissent une traînée de flammes (3 dmg/s, 2 s)."
+    flavor: "Bat encore. Saigne du feu."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "RoR2 — Will-o-the-Wisp (variant)"
+
+  - id: relic_shadow_cloak
+    name: "Cape de l'ombre"
+    tier: epic
+    effect_type: on_damaged
+    trigger: on_damaged
+    magnitude:
+      threshold_pct: 0.50
+      invisibility_sec: 3.0
+      cooldown_sec: 30
+    description: "Sous 50 % HP : invisible 3 s. Cooldown 30 s."
+    flavor: "Personne ne se souvient de l'avoir cousue."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "RoR2 — Old War Stealthkit"
+
+  - id: relic_demon_king_skull
+    name: "Crâne du roi-démon"
+    tier: epic
+    effect_type: stat
+    trigger: passive
+    magnitude:
+      damage_mult: 0.50
+      max_hp_mult: -0.50
+    description: "+50 % damage, mais HP max divisé par 2."
+    flavor: "Il ricane quand vous baissez la garde."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "RoR2 — Glass (variant)"
+
+  - id: relic_feather_vortex
+    name: "Vortex de plumes"
+    tier: epic
+    effect_type: on_dash
+    trigger: on_dash
+    magnitude:
+      pull_radius_m: 5.0
+      pull_strength: 6.0
+    description: "Le dash aspire les ennemis dans un rayon de 5 m."
+    flavor: "Au-dessus de vous, un courant d'air ne s'arrête plus."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "WoL — Cyclone relic"
+
+  - id: relic_apprentice_crown
+    name: "Couronne de l'apprenti"
+    tier: epic
+    effect_type: on_kill
+    trigger: on_kill
+    magnitude:
+      class_spell_cooldown_reduction_sec: 1.0
+      stack: true
+    description: "Chaque kill réduit le cooldown des sorts de classe d'1 s."
+    flavor: "Trop petite pour le maître. Juste pour vous."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "WoL — Twin Crowns"
+
+  - id: relic_ice_sun
+    name: "Soleil de glace"
+    tier: epic
+    effect_type: combo_mod
+    trigger: passive
+    magnitude:
+      shard_count: 4
+      shard_damage: 8
+      shard_range_m: 4.0
+    description: "Les ennemis gelés explosent en 4 éclats (8 dmg, 4 m)."
+    flavor: "Brille sans chauffer. Froid sans s'éteindre."
+    weapon_filter: null
+    school_filter: ice
+    drop_pool: shop_only
+    inspiration: "RoR2 — Glacial elite proc"
+
+  - id: relic_war_drum
+    name: "Tambour de guerre"
+    tier: epic
+    effect_type: coop
+    trigger: passive
+    magnitude:
+      damage_mult_per_ally_alive: 0.10
+    description: "+10 % damage par allié vivant."
+    flavor: "Bat tout seul quand l'équipe avance."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "RoR2 — Berzerker's Pauldron (coop variant)"
+
+  - id: relic_ghost_skull
+    name: "Crâne fantomatique"
+    tier: epic
+    effect_type: on_kill
+    trigger: on_kill
+    magnitude:
+      proc_chance: 0.20
+      spirit_duration_sec: 5
+      spirit_damage_mult: 0.5
+    description: "20 % chance d'invoquer un esprit allié qui tire 5 s (50 % damage)."
+    flavor: "Mâchoire serrée. Il a quelque chose à finir."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "RoR2 — Empathy Cores"
+
+  - id: relic_matryoshka_egg
+    name: "Œuf gigogne"
+    tier: epic
+    effect_type: on_reload
+    trigger: on_reload
+    magnitude:
+      next_shot_damage_mult: 3.0
+    description: "La prochaine balle après recharge inflige ×3 damage."
+    flavor: "Chaque coquille en cache une plus colère."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "RoR2 — Backup Magazine (variant)"
+
+  - id: relic_battle_horn
+    name: "Cor de bataille"
+    tier: epic
+    effect_type: on_revive
+    trigger: on_revive
+    magnitude:
+      team_heal_pct: 0.50
+    description: "Relever un allié soigne toute l'équipe de 50 % HP max."
+    flavor: "Le son qu'il fait n'est entendu que par les vivants."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "Coop signature"
+
+  - id: relic_sergeant_shield
+    name: "Bouclier du sergent"
+    tier: epic
+    effect_type: coop
+    trigger: on_damaged
+    magnitude:
+      friendly_fire_damage_reduction_pct: 0.75
+      reflect_as_heal_pct: 0.25
+    description: "−75 % dégâts amis reçus. 25 % retournés en heal à l'allié tireur."
+    flavor: "« On reste groupé. » C'était son ordre. C'est son blason."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "FF signature"
+
+  - id: relic_devouring_ring
+    name: "Anneau dévorant"
+    tier: epic
+    effect_type: on_kill
+    trigger: on_kill
+    magnitude:
+      proc_chance: 0.05
+      xp_orb_multiplier: 3.0
+    description: "5 % chance de dropper une orbe XP géante (×3)."
+    flavor: "Pince le doigt quand il a faim."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: shop_only
+    inspiration: "WoL — XP relic"
+
+  # ---------------------------------------------------------------------------
+  # LÉGENDAIRES (5) — drop boss uniquement (#64)
+  # ---------------------------------------------------------------------------
+
+  - id: relic_phoenix_heart
+    name: "Cœur du Phénix"
+    tier: legendary
+    effect_type: on_low_hp
+    trigger: on_low_hp
+    magnitude:
+      auto_revive_per_run: 1
+      revive_hp_pct: 0.50
+    description: "Ressuscite seul à 50 % HP. Une fois par run."
+    flavor: "Bat. S'arrête. Bat à nouveau. Toujours surprenant."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: boss_only
+    inspiration: "RoR2 — Dio's Best Friend"
+
+  - id: relic_wizard_god_crown
+    name: "Couronne du Dieu Sorcier"
+    tier: legendary
+    effect_type: combo_mod
+    trigger: on_hit
+    magnitude:
+      cycle_all_schools: true
+      cycle_mode: random_per_shot
+    description: "Chaque tir cycle aléatoirement parmi les 5 écoles de combo."
+    flavor: "Trop lourde pour un mortel. Vous la portez quand même."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: boss_only
+    inspiration: "WoL — Sin's Crown (final boss reward)"
+
+  - id: relic_odin_spear
+    name: "Lance d'Odin"
+    tier: legendary
+    effect_type: on_hit
+    trigger: on_hit
+    magnitude:
+      every_n_shots: 10
+      lightning_damage: 200
+      lightning_radius_m: 4.0
+    description: "Chaque 10e tir invoque une lance de foudre (200 dmg AoE 4 m)."
+    flavor: "Vibre quand le ciel pense à pleuvoir."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: boss_only
+    inspiration: "RoR2 — Shaped Glass / AtG Missile (escalated)"
+
+  - id: relic_deadtime_hourglass
+    name: "Sablier du Temps Mort"
+    tier: legendary
+    effect_type: on_damaged
+    trigger: on_damaged
+    magnitude:
+      enemy_time_scale: 0.30
+      duration_sec: 1.5
+      cooldown_sec: 25
+    description: "Quand vous êtes touché : ralentit les ennemis à 30 % pendant 1.5 s. CD 25 s."
+    flavor: "Le sable tombe vers le haut. Personne ne pose de questions."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: boss_only
+    inspiration: "WoL — Time relic"
+
+  - id: relic_leviathan_horn
+    name: "Cor du Léviathan"
+    tier: legendary
+    effect_type: on_kill
+    trigger: on_kill
+    magnitude:
+      damage_mult_per_kill: 0.01
+      stack_cap: null
+    description: "+1 % damage permanent par kill. Sans cap. Stack à vie."
+    flavor: "Plus vous tuez, plus il rugit. Plus il rugit, plus vous tuez."
+    weapon_filter: null
+    school_filter: null
+    drop_pool: boss_only
+    inspiration: "RoR2 — Brittle Crown (inverted) / Soldier's Syringe (escalated)"

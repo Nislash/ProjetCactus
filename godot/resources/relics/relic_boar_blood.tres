@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_boar_blood"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_boar_blood"
+display_name = "Sang du sanglier"
+description = "Régénère 0.5 HP par seconde."
+flavor = "Encore tiède dans la fiole."
+tier = 0
+effect_type = 0
+trigger = 0
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"hp_regen_per_sec": 0.5
+}

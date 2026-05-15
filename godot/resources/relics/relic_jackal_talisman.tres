@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_jackal_talisman"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_jackal_talisman"
+display_name = "Talisman du chacal"
+description = "Réfléchit 25 % des dégâts mêlée subis."
+flavor = "Mord la main qui le porte. Et celle qui frappe."
+tier = 1
+effect_type = 4
+trigger = 4
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"reflect_pct": 0.25,
+    &"range_m": 3.0
+}

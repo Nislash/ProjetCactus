@@ -49,6 +49,8 @@ extends CharacterBody3D
 @onready var _weapon_hitscan: WeaponHitscan = $CameraPivot/Weapon
 @onready var _weapon_melee: WeaponMelee = $CameraPivot/Melee if has_node("CameraPivot/Melee") else null
 @onready var _health: HealthComponent = $Health
+@onready var relic_inventory: RelicInventory = $RelicInventory if has_node("RelicInventory") else null
+@onready var relic_effects: RelicEffectResolver = $RelicEffectResolver if has_node("RelicEffectResolver") else null
 
 signal died(source: Node)
 signal downed()
@@ -60,6 +62,12 @@ signal weapon_equipped(weapon_kind: StringName)
 ## Émis quand le joueur appuie D-pad up pour cycler l'état de SA minimap.
 ## Le HUD écoute et bascule MINI → FULL → HIDDEN → MINI.
 signal minimap_toggle_requested()
+## Émis quand un dash démarre (consommé par RelicEffectResolver pour on_dash).
+signal dash_started()
+## Émis quand HP traverse à la baisse un seuil (consommé pour on_low_hp).
+signal low_hp_crossed()
+## Émis quand le joueur termine un revive sur un allié (consommé pour on_revive).
+signal revive_completed(target: PlayerController)
 
 enum PlayerState { ALIVE, DOWNED }
 
@@ -86,6 +94,16 @@ func _ready() -> void:
 	# Au start, aucune arme equipee — le joueur doit ramasser un WeaponPickup.
 	_set_weapon_visible(_weapon_hitscan, false)
 	_set_weapon_visible(_weapon_melee, false)
+	# Branche les hooks d'effets de reliques (après que les autoloads et
+	# le HealthComponent sont prêts).
+	if relic_effects != null:
+		relic_effects.attach_signals()
+	# Synchronise max_hp du HealthComponent quand une relique stat avec max_hp
+	# est ajoutée ou retirée. Sans ça, get_max_hp() retournerait une valeur
+	# correcte mais le HUD/health pool ne s'adapterait pas.
+	if relic_inventory != null:
+		relic_inventory.relic_added.connect(_on_relic_added_apply_passive)
+		relic_inventory.relic_removed.connect(_on_relic_removed_apply_passive)
 
 
 ## Equipe une arme par son kind ("pistol" ou "melee"). Cache l'autre arme.
@@ -175,7 +193,7 @@ func _respawn() -> void:
 
 
 ## Relève le joueur (appelé par un allié). HP rendu = revive_hp_ratio * max.
-func revive_by(_reviver: PlayerController) -> void:
+func revive_by(reviver: PlayerController) -> void:
 	if state != PlayerState.DOWNED:
 		return
 	state = PlayerState.ALIVE
@@ -183,6 +201,11 @@ func revive_by(_reviver: PlayerController) -> void:
 	_health.current_health = int(_health.max_health * revive_hp_ratio)
 	_health.health_changed.emit(_health.current_health, _health.max_health)
 	revived.emit()
+	# Notifie le reviver pour les effets on_revive (Camée fissuré, Cor de
+	# bataille, Lacet renforcé — ce dernier modifie en réalité la vitesse
+	# via pull-stat sur ReviveInteractable, pas via ce signal).
+	if reviver != null and reviver != self:
+		reviver.revive_completed.emit(self)
 
 
 func is_alive() -> bool:
@@ -191,6 +214,36 @@ func is_alive() -> bool:
 
 func is_downed() -> bool:
 	return state == PlayerState.DOWNED
+
+
+func _on_relic_added_apply_passive(data: RelicData) -> void:
+	# Stat max_hp : ajuste le pool de vie (ADD direct sur max_health).
+	if data.effect_type == RelicData.EffectType.STAT and data.magnitude.has(&"max_hp"):
+		var bonus: int = int(data.get_magnitude(&"max_hp", 0))
+		_health.max_health += bonus
+		_health.current_health += bonus
+		_health.health_changed.emit(_health.current_health, _health.max_health)
+	# Stat max_hp_mult : applique en %.
+	if data.effect_type == RelicData.EffectType.STAT and data.magnitude.has(&"max_hp_mult"):
+		var pct: float = float(data.get_magnitude(&"max_hp_mult", 0.0))
+		var delta_hp: int = int(round(_health.max_health * pct))
+		_health.max_health += delta_hp
+		_health.current_health = clamp(_health.current_health + delta_hp, 1, _health.max_health)
+		_health.health_changed.emit(_health.current_health, _health.max_health)
+
+
+func _on_relic_removed_apply_passive(data: RelicData) -> void:
+	if data.effect_type == RelicData.EffectType.STAT and data.magnitude.has(&"max_hp"):
+		var bonus: int = int(data.get_magnitude(&"max_hp", 0))
+		_health.max_health = max(1, _health.max_health - bonus)
+		_health.current_health = clamp(_health.current_health, 1, _health.max_health)
+		_health.health_changed.emit(_health.current_health, _health.max_health)
+	if data.effect_type == RelicData.EffectType.STAT and data.magnitude.has(&"max_hp_mult"):
+		var pct: float = float(data.get_magnitude(&"max_hp_mult", 0.0))
+		var delta_hp: int = int(round(_health.max_health * pct / (1.0 + pct)))
+		_health.max_health = max(1, _health.max_health - delta_hp)
+		_health.current_health = clamp(_health.current_health, 1, _health.max_health)
+		_health.health_changed.emit(_health.current_health, _health.max_health)
 
 
 func _physics_process(delta: float) -> void:
@@ -203,6 +256,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_update_look(delta)
+	_physics_process_regen(delta)
 
 	# Toggle minimap (cycle MINI/FULL/HIDDEN). Disponible meme quand DOWNED.
 	if InputRouter.is_action_just_pressed(player_id, &"toggle_map"):
@@ -337,6 +391,7 @@ func _update_dash_timers(delta: float) -> void:
 		_dash_direction = (transform.basis * dir_local).normalized()
 		_dash_time_left = dash_duration
 		_dash_cooldown_left = dash_cooldown
+		dash_started.emit()
 
 
 func _apply_movement(delta: float) -> void:
@@ -384,3 +439,118 @@ func attach_camera_to(viewport: SubViewport) -> void:
 	# Le RemoteTransform3D vit dans le player (CameraPivot) et propage la
 	# transform globale vers la Camera3D maintenant externe.
 	_camera_remote.remote_path = _camera.get_path()
+
+
+# -----------------------------------------------------------------------------
+# Pull-stat getters (combinent base + reliques + buffs temp)
+#
+# Convention : les magnitude keys du YAML sont alignées avec le 2e arg de
+# compute_stat(). Mode.ADD pour les bonus absolus (HP, ammo), Mode.MULT pour
+# les multiplicateurs (damage_mult = +12 % par relique → mult sommé).
+# Les buffs temporaires (move_speed_mult sur kill, damage_mult coop) sont
+# ajoutés via relic_effects.sum_temp(stat_id).
+# -----------------------------------------------------------------------------
+
+func _ri_compute(stat_id: StringName, base: float, mode: int) -> float:
+	if relic_inventory == null:
+		return base
+	var v: float = relic_inventory.compute_stat(stat_id, base, mode)
+	if relic_effects != null:
+		match mode:
+			RelicInventory.Mode.ADD:
+				v += relic_effects.sum_temp(stat_id)
+			RelicInventory.Mode.MULT:
+				v = base * (1.0 + (v / base - 1.0) + relic_effects.sum_temp(stat_id)) \
+					if base != 0.0 else v
+	return v
+
+
+func get_max_hp() -> int:
+	if _health == null:
+		return 0
+	if relic_inventory == null:
+		return _health.max_health
+	return relic_inventory.compute_stat_int(&"max_hp", _health.max_health, RelicInventory.Mode.ADD)
+
+
+func get_move_speed() -> float:
+	return _ri_compute(&"move_speed_mult", move_speed, RelicInventory.Mode.MULT)
+
+
+func get_dash_cooldown() -> float:
+	# dash_cooldown_mult est négatif (−0.20 = −20 %).
+	if relic_inventory == null:
+		return dash_cooldown
+	var mult_sum: float = relic_inventory.compute_stat(&"dash_cooldown_mult", 0.0, RelicInventory.Mode.ADD)
+	return max(0.05, dash_cooldown * (1.0 + mult_sum))
+
+
+func get_damage_mult() -> float:
+	# Reliques + stacks permanents (Léviathan).
+	var base_mult: float = 1.0
+	if relic_inventory != null:
+		var sum: float = relic_inventory.compute_stat(&"damage_mult", 0.0, RelicInventory.Mode.ADD)
+		base_mult += sum
+	if relic_effects != null:
+		base_mult += relic_effects.sum_temp(&"damage_mult")
+		base_mult += relic_effects.get_runtime_damage_mult()
+	return base_mult
+
+
+func get_crit_chance() -> float:
+	if relic_inventory == null:
+		return 0.0
+	return relic_inventory.compute_stat(&"crit_chance", 0.0, RelicInventory.Mode.ADD)
+
+
+func get_fire_rate_mult() -> float:
+	if relic_inventory == null:
+		return 1.0
+	return 1.0 + relic_inventory.compute_stat(&"fire_rate_mult", 0.0, RelicInventory.Mode.ADD)
+
+
+func get_mag_capacity_bonus() -> int:
+	if relic_inventory == null:
+		return 0
+	return relic_inventory.compute_stat_int(&"mag_capacity_bonus", 0, RelicInventory.Mode.ADD)
+
+
+func get_hp_regen_per_sec() -> float:
+	if relic_inventory == null:
+		return 0.0
+	return relic_inventory.compute_stat(&"hp_regen_per_sec", 0.0, RelicInventory.Mode.ADD)
+
+
+func get_dash_distance_mult() -> float:
+	if relic_inventory == null:
+		return 1.0
+	return 1.0 + relic_inventory.compute_stat(&"dash_distance_mult", 0.0, RelicInventory.Mode.ADD)
+
+
+func get_extra_dash_charges() -> int:
+	if relic_inventory == null:
+		return 0
+	return relic_inventory.compute_stat_int(&"dash_charges_bonus", 0, RelicInventory.Mode.ADD)
+
+
+func get_extra_air_jumps() -> int:
+	if relic_inventory == null:
+		return 0
+	return relic_inventory.compute_stat_int(&"air_jumps_bonus", 0, RelicInventory.Mode.ADD)
+
+
+# -----------------------------------------------------------------------------
+# Régénération HP passive (Sang du sanglier, Sigille du lien)
+# -----------------------------------------------------------------------------
+var _regen_accumulator: float = 0.0
+
+
+func _physics_process_regen(delta: float) -> void:
+	var rate: float = get_hp_regen_per_sec()
+	if rate <= 0.0 or _health == null or _health.is_dead:
+		return
+	_regen_accumulator += rate * delta
+	if _regen_accumulator >= 1.0:
+		var n: int = int(floor(_regen_accumulator))
+		_regen_accumulator -= float(n)
+		_health.heal(n)

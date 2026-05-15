@@ -507,3 +507,34 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.1, 74)
 
 [node name="EnemyE2" type="Marker3D" parent="EnemySpawnPoints" unique_id=1169]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, 74)
+
+; ------ SPAWN POINTS COFFRES DE RELIQUES ------
+; 7 markers candidats répartis dans le niveau. run_shell en pioche 4 au
+; lancement et y instancie un relic_chest.tscn. Le group "relic_chest_spawns"
+; permet à run_shell de les retrouver via get_nodes_in_group.
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+
+; Room A (Spawn) — un coffre proche pour incentive immédiat
+[node name="ChestA0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0,-5)
+
+; Room B (Combat1) — coin opposé pour récompenser après combat
+[node name="ChestB0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0,5)
+
+[node name="ChestB1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0,-6)
+
+; Room C (Combat2) — deux positions
+[node name="ChestC0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0,43)
+
+[node name="ChestC1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0,33)
+
+; Room D (Loot) — la salle dédiée aux pickups
+[node name="ChestD0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0,3)
+
+[node name="ChestD1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0,-3)

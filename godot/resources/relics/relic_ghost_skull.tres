@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_ghost_skull"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_ghost_skull"
+display_name = "Crâne fantomatique"
+description = "20 % chance d'invoquer un esprit allié qui tire 5 s (50 % damage)."
+flavor = "Mâchoire serrée. Il a quelque chose à finir."
+tier = 2
+effect_type = 2
+trigger = 2
+drop_pool = 1
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"proc_chance": 0.2,
+    &"spirit_duration_sec": 5,
+    &"spirit_damage_mult": 0.5
+}

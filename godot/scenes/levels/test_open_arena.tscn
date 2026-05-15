@@ -946,3 +946,38 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -2, -48)
 light_color = Color(0.4, 1, 0.5, 1)
 light_energy = 3
 omni_range = 14
+
+; ─── SPAWN POINTS COFFRES DE RELIQUES ────────────────────────
+; 7 markers candidats dans le group "relic_chest_spawns". run_shell en pioche
+; 4 aléatoirement au lancement et y instancie un relic_chest.tscn.
+; Positions évitent les pickups d'armes (z=-25, x=±3) et les gemmes (centres
+; des petites salles, y=1.2).
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+
+; Près du spawn : visibilité immédiate au start, à gauche du pistolet
+[node name="ChestSpawnNear" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -28)
+
+; Salle centrale — coin NW
+[node name="ChestCenterNW" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 12)
+
+; Salle centrale — coin SE
+[node name="ChestCenterSE" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -12)
+
+; Couloir périphérique Est
+[node name="ChestRingE" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 15)
+
+; Couloir périphérique Ouest
+[node name="ChestRingW" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, 15)
+
+; Petite salle Nord (à côté de la gemme Feu)
+[node name="ChestSmallN" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 51)
+
+; Petite salle Est (à côté de la gemme Foudre)
+[node name="ChestSmallE" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 0, 3)

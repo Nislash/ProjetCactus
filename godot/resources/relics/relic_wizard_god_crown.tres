@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_wizard_god_crown"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_wizard_god_crown"
+display_name = "Couronne du Dieu Sorcier"
+description = "Chaque tir cycle aléatoirement parmi les 5 écoles de combo."
+flavor = "Trop lourde pour un mortel. Vous la portez quand même."
+tier = 3
+effect_type = 8
+trigger = 1
+drop_pool = 2
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"cycle_all_schools": true,
+    &"cycle_mode": "random_per_shot"
+}

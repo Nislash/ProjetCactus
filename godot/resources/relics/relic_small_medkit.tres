@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_small_medkit"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_small_medkit"
+display_name = "Petit kit médical"
+description = "Sous 25 % HP, soigne 15 HP. Cooldown 60 s."
+flavor = "Plaies et bosses, 1995. Une autre vie."
+tier = 0
+effect_type = 5
+trigger = 5
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"threshold_pct": 0.25,
+    &"heal_amount": 15,
+    &"cooldown_sec": 60
+}

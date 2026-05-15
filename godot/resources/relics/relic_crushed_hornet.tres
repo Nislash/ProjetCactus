@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_crushed_hornet"]
+
+[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+
+[resource]
+script = ExtResource("1_relic")
+id = &"relic_crushed_hornet"
+display_name = "Frelon écrasé"
+description = "Le dash laisse une zone qui inflige 5 dmg (rayon 2 m, 1 s)."
+flavor = "Encore aigri par le passé."
+tier = 0
+effect_type = 3
+trigger = 3
+drop_pool = 0
+weapon_filter = &""
+school_filter = &""
+magnitude = {
+    &"damage": 5,
+    &"radius_m": 2.0,
+    &"duration_sec": 1.0
+}

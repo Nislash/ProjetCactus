@@ -38,6 +38,8 @@ const SPELL_NAME_TO_ELEMENT: Dictionary = {
 @onready var _spell_label: Label = %SpellLabel
 @onready var _weapon_label: Label = %WeaponLabel
 @onready var _weapon_icon: TextureRect = %WeaponIcon
+@onready var _relics_row: RelicsRow = %RelicsRow if has_node("%RelicsRow") else null
+@onready var _relic_reveal: RelicRevealPanel = %RelicRevealPanel if has_node("%RelicRevealPanel") else null
 @onready var _minimap_panel: Control = $MinimapPanel
 @onready var _minimap_background: ColorRect = $MinimapPanel/Background
 @onready var _minimap_player_dot: ColorRect = $MinimapPanel/PlayerDot
@@ -76,6 +78,13 @@ func bind_to_player(player: PlayerController) -> void:
 	# c'est fait.
 	_set_no_weapon_state()
 	_spell_label.text = "Sort : —"
+
+	# Bind des éléments reliques (rangée + popup d'annonce).
+	if _relics_row != null and player.relic_inventory != null:
+		_relics_row.bind(player.relic_inventory)
+	if _relic_reveal != null and player.relic_inventory != null:
+		_relic_reveal.bind(player.relic_inventory)
+		player.relic_inventory.inventory_full_attempt.connect(_on_inventory_full_attempt)
 
 	_setup_minimap(player)
 
@@ -314,3 +323,21 @@ func _on_interaction_progress_changed(prompt: String, progress: float) -> void:
 		return
 	var pct: int = int(progress * 100.0)
 	_spell_label.text = "%s… %d%%" % [prompt, pct]
+
+
+## Petit toast quand l'inventaire de reliques est plein et que le joueur tente
+## d'ouvrir un coffre. On réutilise le _spell_label pour ne pas ajouter de UI
+## dédiée (auto-clear après 1.5 s).
+var _full_toast_timer: SceneTreeTimer = null
+
+
+func _on_inventory_full_attempt(_data) -> void:
+	_spell_label.text = "Inventaire plein"
+	if _full_toast_timer != null and _full_toast_timer.timeout.is_connected(_clear_full_toast):
+		_full_toast_timer.timeout.disconnect(_clear_full_toast)
+	_full_toast_timer = get_tree().create_timer(1.5)
+	_full_toast_timer.timeout.connect(_clear_full_toast)
+
+
+func _clear_full_toast() -> void:
+	_spell_label.text = "Sort : —"

@@ -21,6 +21,7 @@ config/icon="res://icon.svg"
 InputRouter="*res://autoload/input_router.gd"
 PlayerManager="*res://autoload/player_manager.gd"
 RunState="*res://autoload/run_state.gd"
+RelicLootTable="*res://autoload/relic_loot_table.gd"
 
 [display]
 
