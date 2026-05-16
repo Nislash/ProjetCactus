@@ -249,8 +249,8 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 17.5, -11.5)
 
 [node name="PuzzleGate" type="Node" parent="."]
 script = ExtResource("6_puzzle")
-lever_paths = [NodePath("../P1_Fragment"), NodePath("../P2_Fragment"), NodePath("../P3_Fragment"), NodePath("../P4_Fragment"), NodePath("../P5_Fragment"), NodePath("../P6_Fragment"), NodePath("../P7_Fragment")]
-door_paths = [NodePath("../BossDoor")]
+lever_paths = Array[NodePath]([NodePath("../P1_Fragment"), NodePath("../P2_Fragment"), NodePath("../P3_Fragment"), NodePath("../P4_Fragment"), NodePath("../P5_Fragment"), NodePath("../P6_Fragment"), NodePath("../P7_Fragment")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
 
 [node name="BossFinal" parent="." instance=ExtResource("4_boss")]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 16, 4)

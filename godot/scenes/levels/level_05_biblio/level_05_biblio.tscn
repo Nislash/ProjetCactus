@@ -370,8 +370,8 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 17.5, -11)
 
 [node name="PuzzleGate" type="Node" parent="."]
 script = ExtResource("6_puzzle")
-lever_paths = [NodePath("../P1_Grimoire"), NodePath("../P2_Grimoire"), NodePath("../P3_Grimoire"), NodePath("../P4_Grimoire")]
-door_paths = [NodePath("../BossDoor")]
+lever_paths = Array[NodePath]([NodePath("../P1_Grimoire"), NodePath("../P2_Grimoire"), NodePath("../P3_Grimoire"), NodePath("../P4_Grimoire")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
 
 [node name="BossLiche" parent="." instance=ExtResource("4_boss")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 4)

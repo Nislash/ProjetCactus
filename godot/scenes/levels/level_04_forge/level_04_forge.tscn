@@ -288,8 +288,8 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 13.5, 50)
 
 [node name="PuzzleGate" type="Node" parent="."]
 script = ExtResource("6_puzzle")
-lever_paths = [NodePath("../P1_Forge"), NodePath("../P2_Forge"), NodePath("../P3_Forge"), NodePath("../P4_Forge")]
-door_paths = [NodePath("../BossDoor")]
+lever_paths = Array[NodePath]([NodePath("../P1_Forge"), NodePath("../P2_Forge"), NodePath("../P3_Forge"), NodePath("../P4_Forge")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
 
 ; --- Boss Forgeron infernal ---
 [node name="BossForgeron" parent="." instance=ExtResource("4_boss")]

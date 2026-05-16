@@ -348,8 +348,8 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 0, 67)
 
 [node name="PuzzleGate" type="Node" parent="."]
 script = ExtResource("6_puzzle")
-lever_paths = [NodePath("../P1_Totem"), NodePath("../P2_Totem"), NodePath("../P3_Totem")]
-door_paths = [NodePath("../BossDoor")]
+lever_paths = Array[NodePath]([NodePath("../P1_Totem"), NodePath("../P2_Totem"), NodePath("../P3_Totem")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
 
 ; --- Boss instance (Sangsue géante — placeholder Golem renamed) ---
 [node name="BossSangsue" parent="." instance=ExtResource("4_boss")]

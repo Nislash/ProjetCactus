@@ -262,8 +262,8 @@ transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 25.5, 35)
 
 [node name="PuzzleGate" type="Node" parent="."]
 script = ExtResource("6_puzzle")
-lever_paths = [NodePath("../P1_Idole"), NodePath("../P2_Idole"), NodePath("../P3_Idole")]
-door_paths = [NodePath("../BossDoor")]
+lever_paths = Array[NodePath]([NodePath("../P1_Idole"), NodePath("../P2_Idole"), NodePath("../P3_Idole")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
 
 ; --- Boss (Idole flottante, placeholder) ---
 [node name="BossIdole" parent="." instance=ExtResource("4_boss")]

@@ -312,8 +312,8 @@ transform = Transform3D(0, 0, 1, 0, 1.5, 0, -1, 0, 0, 18, 1.5, 0)
 
 [node name="PuzzleGate" type="Node" parent="."]
 script = ExtResource("6_puzzle")
-lever_paths = [NodePath("../P1_Doppel"), NodePath("../P2_Doppel"), NodePath("../P3_Doppel")]
-door_paths = [NodePath("../BossDoor")]
+lever_paths = Array[NodePath]([NodePath("../P1_Doppel"), NodePath("../P2_Doppel"), NodePath("../P3_Doppel")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
 
 ; Vrai Doppelganger
 [node name="BossDoppelganger" parent="." instance=ExtResource("4_boss")]
