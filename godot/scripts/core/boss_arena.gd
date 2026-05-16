@@ -1,0 +1,95 @@
+class_name BossArena
+extends Node3D
+
+## Lock d'arène boss. Une Area3D détecte les joueurs présents dans la salle.
+## Quand tous les joueurs actifs (PlayerManager.get_active_player_ids) sont
+## dans la zone, on engage le boss + on active un blocker à l'entrée.
+##
+## À la mort du boss (signal boss_defeated), on désactive le blocker pour
+## permettre de ressortir.
+
+@export var boss_path: NodePath
+@export var trigger_zone_path: NodePath = NodePath("TriggerZone")
+@export var entrance_blocker_path: NodePath = NodePath("EntranceBlocker")
+
+var _boss: BossBase
+var _trigger_zone: Area3D
+var _blocker: StaticBody3D
+var _players_inside: Dictionary = {}  # player_id -> bool
+
+
+func _ready() -> void:
+	_boss = get_node_or_null(boss_path) as BossBase
+	if _boss == null:
+		# Fallback : cherche un BossBase parmi les frères (cas où boss_path
+		# n'a pas été set dans l'inspector).
+		var parent: Node = get_parent()
+		if parent != null:
+			for sibling in parent.get_children():
+				if sibling is BossBase:
+					_boss = sibling as BossBase
+					break
+	_trigger_zone = get_node_or_null(trigger_zone_path) as Area3D
+	_blocker = get_node_or_null(entrance_blocker_path) as StaticBody3D
+
+	if _boss == null:
+		push_warning("BossArena: aucun BossBase trouvé (boss_path=%s)" % boss_path)
+	if _trigger_zone == null:
+		push_warning("BossArena: trigger_zone_path non résolu (%s)" % trigger_zone_path)
+		return
+
+	_trigger_zone.body_entered.connect(_on_body_entered)
+	_trigger_zone.body_exited.connect(_on_body_exited)
+
+	if _blocker != null:
+		_set_blocker_active(false)
+
+	if _boss != null:
+		_boss.boss_defeated.connect(_on_boss_defeated)
+
+
+func _on_body_entered(body: Node) -> void:
+	if not (body is PlayerController):
+		return
+	var p: PlayerController = body
+	_players_inside[p.player_id] = true
+	_check_all_in()
+
+
+func _on_body_exited(body: Node) -> void:
+	if not (body is PlayerController):
+		return
+	var p: PlayerController = body
+	_players_inside.erase(p.player_id)
+
+
+func _check_all_in() -> void:
+	if _boss == null or _boss.is_engaged():
+		return
+	var active: Array = PlayerManager.get_active_player_ids()
+	if active.is_empty():
+		return
+	for pid in active:
+		if not _players_inside.has(pid):
+			return
+	# Tous présents → trigger.
+	_set_blocker_active(true)
+	_boss.engage()
+
+
+func _on_boss_defeated(_damage_by_player: Dictionary, _duration: float, _dropped_relic: RelicData) -> void:
+	_set_blocker_active(false)
+
+
+func _set_blocker_active(active: bool) -> void:
+	if _blocker == null:
+		return
+	# Les enable/disable de CollisionShape ne peuvent pas se faire pendant le
+	# flush physics (cas du body_entered → _check_all_in → ici). On passe par
+	# set_deferred pour appliquer au tick suivant.
+	_blocker.set_deferred("collision_layer", 1 if active else 0)
+	for c in _blocker.get_children():
+		if c is CollisionShape3D:
+			(c as CollisionShape3D).set_deferred("disabled", not active)
+		elif c is MeshInstance3D:
+			(c as MeshInstance3D).visible = active

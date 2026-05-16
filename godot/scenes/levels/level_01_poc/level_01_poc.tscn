@@ -1,138 +1,5 @@
 [gd_scene format=3 uid="uid://level01poc0a"]
 
-; Layout (top-down, +Z = South, +X = East)
-;
-;   [D Loot 12x12] --corAD(15m)-- [A Spawn 14x14] --corAB(23m)-- [B Combat1 16x16]
-;                                          |
-;                                       corAC(23m)
-;                                          |
-;                                   [C Combat2 16x16]
-;                                          |
-;                                       corCE(13m)
-;                                          |
-;                                   [E Boss 22x22]
-
-; === FLOORS ===
-[sub_resource type="BoxShape3D" id="sha_floor_a"]
-size = Vector3(14, 0.3, 14)
-
-[sub_resource type="BoxMesh" id="msh_floor_a"]
-size = Vector3(14, 0.3, 14)
-
-[sub_resource type="BoxShape3D" id="sha_floor_bc"]
-size = Vector3(16, 0.3, 16)
-
-[sub_resource type="BoxMesh" id="msh_floor_bc"]
-size = Vector3(16, 0.3, 16)
-
-[sub_resource type="BoxShape3D" id="sha_floor_d"]
-size = Vector3(12, 0.3, 12)
-
-[sub_resource type="BoxMesh" id="msh_floor_d"]
-size = Vector3(12, 0.3, 12)
-
-[sub_resource type="BoxShape3D" id="sha_floor_e"]
-size = Vector3(22, 0.3, 22)
-
-[sub_resource type="BoxMesh" id="msh_floor_e"]
-size = Vector3(22, 0.3, 22)
-
-; === WALLS ===
-[sub_resource type="BoxShape3D" id="sha_wall_14z"]
-size = Vector3(14, 4, 0.3)
-
-[sub_resource type="BoxMesh" id="msh_wall_14z"]
-size = Vector3(14, 4, 0.3)
-
-[sub_resource type="BoxShape3D" id="sha_wall_16z"]
-size = Vector3(16, 4, 0.3)
-
-[sub_resource type="BoxMesh" id="msh_wall_16z"]
-size = Vector3(16, 4, 0.3)
-
-[sub_resource type="BoxShape3D" id="sha_wall_16x"]
-size = Vector3(0.3, 4, 16)
-
-[sub_resource type="BoxMesh" id="msh_wall_16x"]
-size = Vector3(0.3, 4, 16)
-
-[sub_resource type="BoxShape3D" id="sha_wall_12z"]
-size = Vector3(12, 4, 0.3)
-
-[sub_resource type="BoxMesh" id="msh_wall_12z"]
-size = Vector3(12, 4, 0.3)
-
-[sub_resource type="BoxShape3D" id="sha_wall_12x"]
-size = Vector3(0.3, 4, 12)
-
-[sub_resource type="BoxMesh" id="msh_wall_12x"]
-size = Vector3(0.3, 4, 12)
-
-[sub_resource type="BoxShape3D" id="sha_wall_22z"]
-size = Vector3(22, 4, 0.3)
-
-[sub_resource type="BoxMesh" id="msh_wall_22z"]
-size = Vector3(22, 4, 0.3)
-
-[sub_resource type="BoxShape3D" id="sha_wall_22x"]
-size = Vector3(0.3, 4, 22)
-
-[sub_resource type="BoxMesh" id="msh_wall_22x"]
-size = Vector3(0.3, 4, 22)
-
-; === CORRIDOR A-B (East, 23m x 4m) ===
-[sub_resource type="BoxShape3D" id="sha_cor_ab_floor"]
-size = Vector3(23, 0.3, 4)
-
-[sub_resource type="BoxMesh" id="msh_cor_ab_floor"]
-size = Vector3(23, 0.3, 4)
-
-[sub_resource type="BoxShape3D" id="sha_cor_ab_wall"]
-size = Vector3(23, 4, 0.3)
-
-[sub_resource type="BoxMesh" id="msh_cor_ab_wall"]
-size = Vector3(23, 4, 0.3)
-
-; === CORRIDOR A-D (West, 15m x 4m) ===
-[sub_resource type="BoxShape3D" id="sha_cor_ad_floor"]
-size = Vector3(15, 0.3, 4)
-
-[sub_resource type="BoxMesh" id="msh_cor_ad_floor"]
-size = Vector3(15, 0.3, 4)
-
-[sub_resource type="BoxShape3D" id="sha_cor_ad_wall"]
-size = Vector3(15, 4, 0.3)
-
-[sub_resource type="BoxMesh" id="msh_cor_ad_wall"]
-size = Vector3(15, 4, 0.3)
-
-; === CORRIDOR A-C (South, 4m x 23m) ===
-[sub_resource type="BoxShape3D" id="sha_cor_ac_floor"]
-size = Vector3(4, 0.3, 23)
-
-[sub_resource type="BoxMesh" id="msh_cor_ac_floor"]
-size = Vector3(4, 0.3, 23)
-
-[sub_resource type="BoxShape3D" id="sha_cor_ac_wall"]
-size = Vector3(0.3, 4, 23)
-
-[sub_resource type="BoxMesh" id="msh_cor_ac_wall"]
-size = Vector3(0.3, 4, 23)
-
-; === CORRIDOR C-E (South, 4m x 13m) ===
-[sub_resource type="BoxShape3D" id="sha_cor_ce_floor"]
-size = Vector3(4, 0.3, 13)
-
-[sub_resource type="BoxMesh" id="msh_cor_ce_floor"]
-size = Vector3(4, 0.3, 13)
-
-[sub_resource type="BoxShape3D" id="sha_cor_ce_wall"]
-size = Vector3(0.3, 4, 13)
-
-[sub_resource type="BoxMesh" id="msh_cor_ce_wall"]
-size = Vector3(0.3, 4, 13)
-
-; === ENVIRONMENT ===
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_horizon_color = Color(0.65, 0.72, 0.85, 1)
 ground_horizon_color = Color(0.4, 0.45, 0.5, 1)
@@ -147,14 +14,189 @@ ambient_light_source = 3
 ambient_light_energy = 0.3
 tonemap_mode = 2
 
-; === NAVIGATION MESH (bake in editor after opening) ===
-[sub_resource type="NavigationMesh" id="nav_mesh"]
-geometry/parsed_geometry_type = 1
-geometry/source_geometry_mode = 0
+[sub_resource type="BoxShape3D" id="sha_floor_a"]
+size = Vector3(14, 0.3, 14)
 
-; =============================================================
-; NODES
-; =============================================================
+[sub_resource type="BoxMesh" id="msh_floor_a"]
+size = Vector3(14, 0.3, 14)
+
+[sub_resource type="BoxShape3D" id="sha_wall_14z"]
+size = Vector3(14, 4, 0.3)
+
+[sub_resource type="BoxMesh" id="msh_wall_14z"]
+size = Vector3(14, 4, 0.3)
+
+[sub_resource type="BoxShape3D" id="sha_floor_bc"]
+size = Vector3(16, 0.3, 16)
+
+[sub_resource type="BoxMesh" id="msh_floor_bc"]
+size = Vector3(16, 0.3, 16)
+
+[sub_resource type="BoxShape3D" id="sha_wall_16z"]
+size = Vector3(16, 4, 0.3)
+
+[sub_resource type="BoxMesh" id="msh_wall_16z"]
+size = Vector3(16, 4, 0.3)
+
+[sub_resource type="BoxShape3D" id="sha_wall_16x"]
+size = Vector3(0.3, 4, 16)
+
+[sub_resource type="BoxMesh" id="msh_wall_16x"]
+size = Vector3(0.3, 4, 16)
+
+[sub_resource type="BoxShape3D" id="sha_floor_d"]
+size = Vector3(12, 0.3, 12)
+
+[sub_resource type="BoxMesh" id="msh_floor_d"]
+size = Vector3(12, 0.3, 12)
+
+[sub_resource type="BoxShape3D" id="sha_wall_12z"]
+size = Vector3(12, 4, 0.3)
+
+[sub_resource type="BoxMesh" id="msh_wall_12z"]
+size = Vector3(12, 4, 0.3)
+
+[sub_resource type="BoxShape3D" id="sha_wall_12x"]
+size = Vector3(0.3, 4, 12)
+
+[sub_resource type="BoxMesh" id="msh_wall_12x"]
+size = Vector3(0.3, 4, 12)
+
+[sub_resource type="BoxShape3D" id="sha_floor_e"]
+size = Vector3(35, 0.3, 35)
+
+[sub_resource type="BoxMesh" id="msh_floor_e"]
+size = Vector3(35, 0.3, 35)
+
+[sub_resource type="BoxShape3D" id="sha_wall_22z"]
+size = Vector3(35, 12, 0.3)
+
+[sub_resource type="BoxMesh" id="msh_wall_22z"]
+size = Vector3(35, 12, 0.3)
+
+[sub_resource type="BoxShape3D" id="sha_wall_22x"]
+size = Vector3(0.3, 12, 35)
+
+[sub_resource type="BoxMesh" id="msh_wall_22x"]
+size = Vector3(0.3, 12, 35)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lgtrw"]
+size = Vector3(15.5, 12, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lgtrw"]
+size = Vector3(15.5, 12, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vi66d"]
+size = Vector3(15.5, 12, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_vi66d"]
+size = Vector3(15.5, 12, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6wn8c"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lgtrw"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_6wn8c"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_b1nat"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vi66d"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_b1nat"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_u8mt7"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6wn8c"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_u8mt7"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f8pxf"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b1nat"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_f8pxf"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ab_floor"]
+size = Vector3(23, 0.3, 4)
+
+[sub_resource type="BoxMesh" id="msh_cor_ab_floor"]
+size = Vector3(23, 0.3, 4)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ab_wall"]
+size = Vector3(23, 4, 0.3)
+
+[sub_resource type="BoxMesh" id="msh_cor_ab_wall"]
+size = Vector3(23, 4, 0.3)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ad_floor"]
+size = Vector3(15, 0.3, 4)
+
+[sub_resource type="BoxMesh" id="msh_cor_ad_floor"]
+size = Vector3(15, 0.3, 4)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ad_wall"]
+size = Vector3(15, 4, 0.3)
+
+[sub_resource type="BoxMesh" id="msh_cor_ad_wall"]
+size = Vector3(15, 4, 0.3)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ac_floor"]
+size = Vector3(4, 0.3, 23)
+
+[sub_resource type="BoxMesh" id="msh_cor_ac_floor"]
+size = Vector3(4, 0.3, 23)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ac_wall"]
+size = Vector3(0.3, 4, 23)
+
+[sub_resource type="BoxMesh" id="msh_cor_ac_wall"]
+size = Vector3(0.3, 4, 23)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ce_floor"]
+size = Vector3(4, 0.3, 13)
+
+[sub_resource type="BoxMesh" id="msh_cor_ce_floor"]
+size = Vector3(4, 0.3, 13)
+
+[sub_resource type="BoxShape3D" id="sha_cor_ce_wall"]
+size = Vector3(0.3, 4, 13)
+
+[sub_resource type="BoxMesh" id="msh_cor_ce_wall"]
+size = Vector3(0.3, 4, 13)
+
+[sub_resource type="NavigationMesh" id="nav_mesh"]
 
 [node name="Level01POC" type="Node3D" unique_id=1000]
 
@@ -166,8 +208,6 @@ shadow_enabled = true
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1002]
 environment = SubResource("env")
 
-; ------ ROOM A : SPAWN (14x14, centre 0,0,0) ------
-; Ouvertures : Est (vers B), Ouest (vers D), Sud (vers C)
 [node name="RoomSpawn" type="Node3D" parent="." unique_id=1010]
 
 [node name="Floor" type="StaticBody3D" parent="RoomSpawn" unique_id=1011]
@@ -188,8 +228,6 @@ shape = SubResource("sha_wall_14z")
 [node name="Mesh" type="MeshInstance3D" parent="RoomSpawn/WallNorth" unique_id=1016]
 mesh = SubResource("msh_wall_14z")
 
-; ------ ROOM B : COMBAT 1 (16x16, centre 38,0,0) ------
-; Ouverture : Ouest (vers A via corAB)
 [node name="RoomCombat1" type="Node3D" parent="." unique_id=1020]
 
 [node name="Floor" type="StaticBody3D" parent="RoomCombat1" unique_id=1021]
@@ -228,8 +266,6 @@ shape = SubResource("sha_wall_16x")
 [node name="Mesh" type="MeshInstance3D" parent="RoomCombat1/WallEast" unique_id=1032]
 mesh = SubResource("msh_wall_16x")
 
-; ------ ROOM C : COMBAT 2 (16x16, centre 0,0,38) ------
-; Ouvertures : Nord (vers A via corAC), Sud (vers E via corCE)
 [node name="RoomCombat2" type="Node3D" parent="." unique_id=1040]
 
 [node name="Floor" type="StaticBody3D" parent="RoomCombat2" unique_id=1041]
@@ -259,8 +295,6 @@ shape = SubResource("sha_wall_16x")
 [node name="Mesh" type="MeshInstance3D" parent="RoomCombat2/WallWest" unique_id=1049]
 mesh = SubResource("msh_wall_16x")
 
-; ------ ROOM D : LOOT/CALME (12x12, centre -28,0,0) ------
-; Ouverture : Est (vers A via corAD)
 [node name="RoomLoot" type="Node3D" parent="." unique_id=1050]
 
 [node name="Floor" type="StaticBody3D" parent="RoomLoot" unique_id=1051]
@@ -299,12 +333,10 @@ shape = SubResource("sha_wall_12x")
 [node name="Mesh" type="MeshInstance3D" parent="RoomLoot/WallWest" unique_id=1062]
 mesh = SubResource("msh_wall_12x")
 
-; ------ ROOM E : BOSS ARENA (22x22, centre 0,0,70) ------
-; Ouverture : Nord (vers C via corCE)
 [node name="RoomBoss" type="Node3D" parent="." unique_id=1070]
 
 [node name="Floor" type="StaticBody3D" parent="RoomBoss" unique_id=1071]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 70)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 76.5)
 
 [node name="Shape" type="CollisionShape3D" parent="RoomBoss/Floor" unique_id=1072]
 shape = SubResource("sha_floor_e")
@@ -313,7 +345,7 @@ shape = SubResource("sha_floor_e")
 mesh = SubResource("msh_floor_e")
 
 [node name="WallSouth" type="StaticBody3D" parent="RoomBoss" unique_id=1074]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 81)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 94)
 
 [node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallSouth" unique_id=1075]
 shape = SubResource("sha_wall_22z")
@@ -322,7 +354,7 @@ shape = SubResource("sha_wall_22z")
 mesh = SubResource("msh_wall_22z")
 
 [node name="WallEast" type="StaticBody3D" parent="RoomBoss" unique_id=1077]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 2, 70)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.5, 6, 76.5)
 
 [node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallEast" unique_id=1078]
 shape = SubResource("sha_wall_22x")
@@ -331,7 +363,7 @@ shape = SubResource("sha_wall_22x")
 mesh = SubResource("msh_wall_22x")
 
 [node name="WallWest" type="StaticBody3D" parent="RoomBoss" unique_id=1080]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 2, 70)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.5, 6, 76.5)
 
 [node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallWest" unique_id=1081]
 shape = SubResource("sha_wall_22x")
@@ -339,7 +371,64 @@ shape = SubResource("sha_wall_22x")
 [node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallWest" unique_id=1082]
 mesh = SubResource("msh_wall_22x")
 
-; ------ COULOIR A→B (centre 18.5, 0, 0) ------
+[node name="WallNorthLeft" type="StaticBody3D" parent="RoomBoss" unique_id=1036303129]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.75, 6, 59)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallNorthLeft" unique_id=894818473]
+shape = SubResource("BoxShape3D_lgtrw")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallNorthLeft" unique_id=2087464503]
+mesh = SubResource("BoxMesh_lgtrw")
+
+[node name="WallNorthRight" type="StaticBody3D" parent="RoomBoss" unique_id=797889556]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.75, 6, 59)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallNorthRight" unique_id=1116006873]
+shape = SubResource("BoxShape3D_vi66d")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallNorthRight" unique_id=1539338353]
+mesh = SubResource("BoxMesh_vi66d")
+
+[node name="ColumnNW" type="StaticBody3D" parent="RoomBoss" unique_id=1645433152]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4, 67)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/ColumnNW" unique_id=2103735208]
+shape = SubResource("BoxShape3D_6wn8c")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/ColumnNW" unique_id=1359934604]
+material_override = SubResource("StandardMaterial3D_lgtrw")
+mesh = SubResource("BoxMesh_6wn8c")
+
+[node name="ColumnNE" type="StaticBody3D" parent="RoomBoss" unique_id=71083442]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4, 67)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/ColumnNE" unique_id=140503853]
+shape = SubResource("BoxShape3D_b1nat")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/ColumnNE" unique_id=1388566982]
+material_override = SubResource("StandardMaterial3D_vi66d")
+mesh = SubResource("BoxMesh_b1nat")
+
+[node name="ColumnSW" type="StaticBody3D" parent="RoomBoss" unique_id=1176222068]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4, 86)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/ColumnSW" unique_id=1877769173]
+shape = SubResource("BoxShape3D_u8mt7")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/ColumnSW" unique_id=1254150286]
+material_override = SubResource("StandardMaterial3D_6wn8c")
+mesh = SubResource("BoxMesh_u8mt7")
+
+[node name="ColumnSE" type="StaticBody3D" parent="RoomBoss" unique_id=1952177968]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4, 86)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/ColumnSE" unique_id=1776003066]
+shape = SubResource("BoxShape3D_f8pxf")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/ColumnSE" unique_id=212815143]
+material_override = SubResource("StandardMaterial3D_b1nat")
+mesh = SubResource("BoxMesh_f8pxf")
+
 [node name="CorridorAB" type="Node3D" parent="." unique_id=1090]
 
 [node name="Floor" type="StaticBody3D" parent="CorridorAB" unique_id=1091]
@@ -369,7 +458,6 @@ shape = SubResource("sha_cor_ab_wall")
 [node name="Mesh" type="MeshInstance3D" parent="CorridorAB/WallSouth" unique_id=1099]
 mesh = SubResource("msh_cor_ab_wall")
 
-; ------ COULOIR A→D (centre -14.5, 0, 0) ------
 [node name="CorridorAD" type="Node3D" parent="." unique_id=1100]
 
 [node name="Floor" type="StaticBody3D" parent="CorridorAD" unique_id=1101]
@@ -399,7 +487,6 @@ shape = SubResource("sha_cor_ad_wall")
 [node name="Mesh" type="MeshInstance3D" parent="CorridorAD/WallSouth" unique_id=1109]
 mesh = SubResource("msh_cor_ad_wall")
 
-; ------ COULOIR A→C (centre 0, 0, 18.5) ------
 [node name="CorridorAC" type="Node3D" parent="." unique_id=1110]
 
 [node name="Floor" type="StaticBody3D" parent="CorridorAC" unique_id=1111]
@@ -429,7 +516,6 @@ shape = SubResource("sha_cor_ac_wall")
 [node name="Mesh" type="MeshInstance3D" parent="CorridorAC/WallWest" unique_id=1119]
 mesh = SubResource("msh_cor_ac_wall")
 
-; ------ COULOIR C→E (centre 0, 0, 52.5) ------
 [node name="CorridorCE" type="Node3D" parent="." unique_id=1120]
 
 [node name="Floor" type="StaticBody3D" parent="CorridorCE" unique_id=1121]
@@ -459,11 +545,9 @@ shape = SubResource("sha_cor_ce_wall")
 [node name="Mesh" type="MeshInstance3D" parent="CorridorCE/WallWest" unique_id=1129]
 mesh = SubResource("msh_cor_ce_wall")
 
-; ------ NAVIGATION (bake requis dans l'éditeur Godot) ------
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1140]
 navigation_mesh = SubResource("nav_mesh")
 
-; ------ SPAWN POINTS JOUEURS (Room A) ------
 [node name="PlayerSpawnPoints" type="Node3D" parent="." unique_id=1150]
 
 [node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints" unique_id=1151]
@@ -478,7 +562,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.1, 2)
 [node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints" unique_id=1154]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, 2)
 
-; ------ SPAWN POINTS ENNEMIS ------
 [node name="EnemySpawnPoints" type="Node3D" parent="." unique_id=1160]
 
 [node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints" unique_id=1161]
@@ -508,33 +591,25 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.1, 74)
 [node name="EnemyE2" type="Marker3D" parent="EnemySpawnPoints" unique_id=1169]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, 74)
 
-; ------ SPAWN POINTS COFFRES DE RELIQUES ------
-; 7 markers candidats répartis dans le niveau. run_shell en pioche 4 au
-; lancement et y instancie un relic_chest.tscn. Le group "relic_chest_spawns"
-; permet à run_shell de les retrouver via get_nodes_in_group.
-[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+[node name="RelicChestSpawnPoints" type="Node3D" parent="." unique_id=308962554]
 
-; Room A (Spawn) — un coffre proche pour incentive immédiat
-[node name="ChestA0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0,-5)
+[node name="ChestA0" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=1997971348 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -5)
 
-; Room B (Combat1) — coin opposé pour récompenser après combat
-[node name="ChestB0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0,5)
+[node name="ChestB0" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=1104343268 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 0, 5)
 
-[node name="ChestB1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0,-6)
+[node name="ChestB1" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=1869523268 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0, -6)
 
-; Room C (Combat2) — deux positions
-[node name="ChestC0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0,43)
+[node name="ChestC0" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=222234948 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 43)
 
-[node name="ChestC1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0,33)
+[node name="ChestC1" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=1520091226 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 33)
 
-; Room D (Loot) — la salle dédiée aux pickups
-[node name="ChestD0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0,3)
+[node name="ChestD0" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=1828901271 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, 3)
 
-[node name="ChestD1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0,-3)
+[node name="ChestD1" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=1594909162 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 0, -3)

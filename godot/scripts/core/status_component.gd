@@ -27,9 +27,38 @@ const SLOW := &"slow"
 const FREEZE := &"freeze"
 const POISON := &"poison"
 const STUN := &"stun"
+const THUNDER := &"thunder"
 
-## id -> {duration_left: float, magnitude: float, source: Node, accumulator: float}
+signal status_application_attempt(id: StringName, source: Node)
+
+## Configurable par l'entité parente (boss = threshold 2, window 5s,
+## multiplier 0.5). Défaut = mob standard (1 hit suffit, durée intacte).
+@export_range(1, 5) var hit_threshold: int = 1
+@export var threshold_window: float = 0.0
+@export_range(0.1, 2.0) var duration_multiplier: float = 1.0
+
+## id -> {duration_left, magnitude, source, accumulator}.
 var _active: Dictionary = {}
+## id -> Array[float] timestamps des récentes tentatives (pour threshold).
+var _recent_attempts: Dictionary = {}
+## IDs filtrés (immune total, pas de threshold qui compte non plus).
+var _immune_ids: Dictionary = {}
+
+
+## Bloque définitivement l'application d'un status (utilisé par le boss en
+## phase enrage : immune à stun/freeze).
+func set_immune(id: StringName, immune: bool) -> void:
+	if immune:
+		_immune_ids[id] = true
+		# Retire le status actif s'il l'était.
+		if _active.has(id):
+			remove_status(id)
+	else:
+		_immune_ids.erase(id)
+
+
+func is_immune(id: StringName) -> bool:
+	return _immune_ids.has(id)
 
 
 ## Applique (ou rafraichit) un status. Si deja actif : on garde la magnitude
@@ -38,6 +67,27 @@ var _active: Dictionary = {}
 func apply_status(id: StringName, duration: float, magnitude: float, source: Node = null) -> void:
 	if duration <= 0.0 or magnitude <= 0.0:
 		return
+	if _immune_ids.has(id):
+		return
+	# Toujours notifier la tentative (utile pour le combo weak point boss
+	# qui veut savoir quand un ingrédient arrive, même si pas encore déclenché).
+	status_application_attempt.emit(id, source)
+	# Threshold : on n'applique qu'après `hit_threshold` tentatives dans
+	# `threshold_window`. Si threshold = 1, on passe direct.
+	if hit_threshold > 1 and threshold_window > 0.0:
+		var now: float = Time.get_ticks_msec() / 1000.0
+		var arr: Array = _recent_attempts.get(id, [])
+		arr.append(now)
+		# Drop des timestamps trop anciens.
+		while arr.size() > 0 and now - arr[0] > threshold_window:
+			arr.pop_front()
+		_recent_attempts[id] = arr
+		if arr.size() < hit_threshold:
+			return
+		# Threshold atteint : on consomme la fenêtre.
+		_recent_attempts[id] = []
+	# Multiplier de durée (boss = 0.5).
+	duration *= duration_multiplier
 	if _active.has(id):
 		var ex: Dictionary = _active[id]
 		ex.duration_left = max(ex.duration_left, duration)
