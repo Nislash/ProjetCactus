@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://br1uquawi0uob" path="res://scripts/core/split_screen_manager.gd" id="2_split"]
 [ext_resource type="Script" uid="uid://b35ofb1p2op1m" path="res://scripts/core/enemy_spawner.gd" id="3_spawner"]
 [ext_resource type="PackedScene" uid="uid://brisom6oby548" path="res://scenes/ui/hud/boss_hud.tscn" id="4_5tn6d"]
+[ext_resource type="PackedScene" uid="uid://qroguvstuv11" path="res://scenes/ui/hud/boss_post_combat.tscn" id="5_fm2id"]
 
 [node name="RunShell" type="Node" unique_id=837587888]
 script = ExtResource("1_shell")
@@ -20,3 +21,5 @@ anchors_preset = 0
 script = ExtResource("2_split")
 
 [node name="BossHUD" parent="." unique_id=1938177698 instance=ExtResource("4_5tn6d")]
+
+[node name="BossPostCombat" parent="." unique_id=1267015210 instance=ExtResource("5_fm2id")]
