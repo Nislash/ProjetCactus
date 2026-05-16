@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="CharacterAnimSet" load_steps=12 format=3 uid="uid://char_anim_sentinel"]
+
+[ext_resource type="Script" path="res://scripts/core/data/character_anim_set.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://dvfi1ek1b7ir7" path="res://assets/characters/sentinel/sentinel_mesh.glb" id="2_model"]
+[ext_resource type="PackedScene" uid="uid://bpilbpcsbt4tx" path="res://assets/characters/sentinel/animations/idle.glb" id="3_idle"]
+[ext_resource type="PackedScene" uid="uid://cono7ctqj0s5u" path="res://assets/characters/sentinel/animations/walk.glb" id="4_walk"]
+[ext_resource type="PackedScene" uid="uid://c0v2sfgpm7iql" path="res://assets/characters/sentinel/animations/run.glb" id="5_run"]
+[ext_resource type="PackedScene" uid="uid://cw86l4wtgnqe1" path="res://assets/characters/sentinel/animations/jump.glb" id="6_jump"]
+[ext_resource type="PackedScene" uid="uid://dn7ll30e6gx20" path="res://assets/characters/sentinel/animations/walk_shoot_forward.glb" id="7_shootf"]
+[ext_resource type="PackedScene" uid="uid://b75qka3xiabpa" path="res://assets/characters/sentinel/animations/walk_shoot_back.glb" id="8_shootb"]
+[ext_resource type="PackedScene" uid="uid://d8pdu2a3vhpc" path="res://assets/characters/sentinel/animations/run_and_shoot.glb" id="9_shootr"]
+[ext_resource type="PackedScene" uid="uid://ec1o7xs4j58a" path="res://assets/characters/sentinel/animations/death_shot.glb" id="10_death"]
+[ext_resource type="PackedScene" uid="uid://fitpc8nq07d4" path="res://assets/characters/sentinel/animations/melee_combo.glb" id="11_melee"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Sentinel (test)"
+model_scene = ExtResource("2_model")
+idle = ExtResource("3_idle")
+walk = ExtResource("4_walk")
+run = ExtResource("5_run")
+jump = ExtResource("6_jump")
+shoot_walk_forward = ExtResource("7_shootf")
+shoot_walk_back = ExtResource("8_shootb")
+shoot_run = ExtResource("9_shootr")
+death = ExtResource("10_death")
+melee_combo = ExtResource("11_melee")
+scale = 1.0
+y_offset = 0.0
+loop_locomotion = true

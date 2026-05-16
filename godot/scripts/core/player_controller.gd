@@ -156,6 +156,16 @@ func get_equipped_weapon_kind() -> StringName:
 	return _equipped_weapon
 
 
+## Lu par CharacterAnimator (auto_read_combat_state) pour basculer sur les
+## clips shoot_*. True si on tient RT avec un pistolet équipé.
+func is_shooting() -> bool:
+	if state != PlayerState.ALIVE:
+		return false
+	if _equipped_weapon != &"pistol":
+		return false
+	return InputRouter.is_action_pressed(player_id, &"shoot")
+
+
 ## À 0 HP : on passe en état DOWNED (cf CLAUDE.md "Friendly fire & revive").
 ## Le joueur peut ramper mais pas tirer ; un allié peut le relever en
 ## maintenant `interact` à proximité.

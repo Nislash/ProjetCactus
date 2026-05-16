@@ -1,8 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://enemy_ranged_m1"]
+[gd_scene load_steps=9 format=3 uid="uid://enemy_ranged_m1"]
 
 [ext_resource type="Script" path="res://scripts/core/enemy_ranged.gd" id="1_ranged"]
 [ext_resource type="Script" path="res://scripts/core/health_component.gd" id="2_health"]
 [ext_resource type="PackedScene" uid="uid://health_bar_3d_m1" path="res://scenes/ui/health_bar_3d.tscn" id="3_hbar"]
+[ext_resource type="Script" path="res://scripts/core/character_visual.gd" id="4_visual"]
+[ext_resource type="Script" path="res://scripts/core/character_animator.gd" id="5_animator"]
+[ext_resource type="Resource" uid="uid://char_anim_sentinel" path="res://resources/characters/sentinel.tres" id="6_animset"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ranged"]
 radius = 0.4
@@ -24,8 +27,17 @@ shape = SubResource("CapsuleShape3D_ranged")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+visible = false
 mesh = SubResource("CapsuleMesh_ranged")
 material_override = SubResource("Mat_ranged")
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("4_visual")
+anim_set = ExtResource("6_animset")
+
+[node name="Animator" type="Node" parent="."]
+script = ExtResource("5_animator")
+visual_path = NodePath("../Visual")
 
 [node name="Health" type="Node" parent="."]
 script = ExtResource("2_health")

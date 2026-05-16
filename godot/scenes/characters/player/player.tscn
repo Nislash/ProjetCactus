@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://db7hs4bcs45ro"]
+[gd_scene load_steps=15 format=3 uid="uid://db7hs4bcs45ro"]
 
 [ext_resource type="Script" uid="uid://kvn1yabbqf8b" path="res://scripts/core/player_controller.gd" id="1_7uws0"]
 [ext_resource type="Script" uid="uid://dky7nmxy5s4ut" path="res://scripts/core/weapon_hitscan.gd" id="2_t61fv"]
@@ -9,6 +9,9 @@
 [ext_resource type="Resource" uid="uid://weapon_melee_sword_m2" path="res://resources/weapons/melee_sword.tres" id="7_sword"]
 [ext_resource type="Script" path="res://scripts/core/relic_inventory.gd" id="8_relic_inv"]
 [ext_resource type="Script" path="res://scripts/core/relic_effect_resolver.gd" id="9_relic_res"]
+[ext_resource type="Script" path="res://scripts/core/character_visual.gd" id="10_visual"]
+[ext_resource type="Script" path="res://scripts/core/character_animator.gd" id="11_animator"]
+[ext_resource type="Resource" uid="uid://char_anim_sentinel" path="res://resources/characters/sentinel.tres" id="12_animset"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_7uws0"]
 radius = 0.4
@@ -41,7 +44,18 @@ shape = SubResource("CapsuleShape3D_7uws0")
 
 [node name="Mesh" type="MeshInstance3D" parent="." unique_id=1960622179]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+visible = false
 mesh = SubResource("CapsuleMesh_7uws0")
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("10_visual")
+anim_set = ExtResource("12_animset")
+hide_for_local_player = false
+
+[node name="Animator" type="Node" parent="."]
+script = ExtResource("11_animator")
+visual_path = NodePath("../Visual")
+aim_pivot_path = NodePath("../CameraPivot")
 
 [node name="CameraPivot" type="Node3D" parent="." unique_id=1173852313]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
