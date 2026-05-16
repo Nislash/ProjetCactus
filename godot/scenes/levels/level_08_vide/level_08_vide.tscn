@@ -1,0 +1,325 @@
+[gd_scene load_steps=20 format=3 uid="uid://lv08vide01"]
+
+[ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
+[ext_resource type="Script" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+[ext_resource type="Script" path="res://scripts/core/mechanic_low_gravity.gd" id="7_lowgrav"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_horizon_color = Color(0.02, 0.0, 0.08, 1)
+ground_horizon_color = Color(0.05, 0.0, 0.12, 1)
+sky_top_color = Color(0.0, 0.0, 0.02, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.4, 0.35, 0.6, 1)
+ambient_light_energy = 0.3
+tonemap_mode = 2
+
+; ============================================================================
+; SUB_RESOURCES
+; ============================================================================
+[sub_resource type="BoxShape3D" id="sha_aster"]
+size = Vector3(14, 0.8, 14)
+[sub_resource type="BoxMesh" id="msh_aster"]
+size = Vector3(14, 0.8, 14)
+
+[sub_resource type="BoxShape3D" id="sha_core"]
+size = Vector3(22, 0.8, 22)
+[sub_resource type="BoxMesh" id="msh_core"]
+size = Vector3(22, 0.8, 22)
+
+[sub_resource type="BoxShape3D" id="sha_core_wall_h"]
+size = Vector3(22, 5, 0.4)
+[sub_resource type="BoxMesh" id="msh_core_wall_h"]
+size = Vector3(22, 5, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_core_wall_v"]
+size = Vector3(0.4, 5, 22)
+[sub_resource type="BoxMesh" id="msh_core_wall_v"]
+size = Vector3(0.4, 5, 22)
+
+[sub_resource type="BoxShape3D" id="sha_boss_trigger"]
+size = Vector3(20, 4, 20)
+
+[sub_resource type="BoxShape3D" id="sha_blocker"]
+size = Vector3(5, 4, 0.6)
+[sub_resource type="BoxMesh" id="msh_blocker"]
+size = Vector3(5, 4, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="mat_blocker"]
+albedo_color = Color(0.5, 0.2, 0.8, 0.7)
+emission_enabled = true
+emission = Color(0.7, 0.3, 1, 1)
+emission_energy_multiplier = 1.2
+
+; Materials
+[sub_resource type="StandardMaterial3D" id="mat_asteroid"]
+albedo_color = Color(0.22, 0.18, 0.3, 1)
+roughness = 0.8
+metallic = 0.2
+
+[sub_resource type="StandardMaterial3D" id="mat_core"]
+albedo_color = Color(0.5, 0.35, 0.7, 1)
+roughness = 0.4
+metallic = 0.5
+emission_enabled = true
+emission = Color(0.4, 0.2, 0.7, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="mat_fragment"]
+albedo_color = Color(0.4, 0.8, 1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.85, 1, 1)
+emission_energy_multiplier = 2.5
+
+; ============================================================================
+; ROOT
+; ============================================================================
+[node name="Level08Vide" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.3, -0.65, 0, 0.9, -0.42, 0.7, 0.3, 0.65, 0, 80, 0)
+light_color = Color(0.7, 0.5, 1, 1)
+light_energy = 0.5
+shadow_enabled = true
+
+; Mécanique signature : pseudo-zéro-gravité (très basse + saut très puissant)
+[node name="MechanicLowGravity" type="Node" parent="."]
+script = ExtResource("7_lowgrav")
+gravity_value = 3.0
+jump_velocity_multiplier = 2.5
+
+[node name="LightCore" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
+light_color = Color(0.6, 0.3, 1, 1)
+light_energy = 3.0
+omni_range = 40
+
+; ============================================================================
+; ASTÉROÏDES — Plateformes flottantes en cercle autour du cœur
+; ============================================================================
+
+; Astéroïde départ (sas d'arrivée, sud, Y=0)
+[node name="AsterStart" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, -38)
+[node name="Shape" type="CollisionShape3D" parent="AsterStart"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterStart"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; P1 — Sud-ouest (Y=0)
+[node name="AsterP1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, -0.4, -18)
+[node name="Shape" type="CollisionShape3D" parent="AsterP1"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterP1"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; P2 — Ouest (Y=4)
+[node name="AsterP2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 3.6, 0)
+[node name="Shape" type="CollisionShape3D" parent="AsterP2"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterP2"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; P3 — Nord-ouest (Y=8)
+[node name="AsterP3" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 7.6, 22)
+[node name="Shape" type="CollisionShape3D" parent="AsterP3"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterP3"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; P4 — Nord (Y=12)
+[node name="AsterP4" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.6, 30)
+[node name="Shape" type="CollisionShape3D" parent="AsterP4"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterP4"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; P5 — Nord-est (Y=8)
+[node name="AsterP5" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 7.6, 22)
+[node name="Shape" type="CollisionShape3D" parent="AsterP5"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterP5"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; P6 — Est (Y=4)
+[node name="AsterP6" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 3.6, 0)
+[node name="Shape" type="CollisionShape3D" parent="AsterP6"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterP6"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; P7 — Sud-est (Y=0)
+[node name="AsterP7" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, -0.4, -18)
+[node name="Shape" type="CollisionShape3D" parent="AsterP7"]
+shape = SubResource("sha_aster")
+[node name="Mesh" type="MeshInstance3D" parent="AsterP7"]
+mesh = SubResource("msh_aster")
+material_override = SubResource("mat_asteroid")
+
+; ============================================================================
+; CŒUR COSMIQUE — Arène boss final (Y=16, central)
+; ============================================================================
+[node name="RoomBoss" type="Node3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.6, 0)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/Floor"]
+shape = SubResource("sha_core")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/Floor"]
+mesh = SubResource("msh_core")
+material_override = SubResource("mat_core")
+
+[node name="WallN" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.5, 11.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallN"]
+shape = SubResource("sha_core_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallN"]
+mesh = SubResource("msh_core_wall_h")
+material_override = SubResource("mat_core")
+[node name="WallS" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.5, -11.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallS"]
+shape = SubResource("sha_core_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallS"]
+mesh = SubResource("msh_core_wall_h")
+material_override = SubResource("mat_core")
+[node name="WallE" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.2, 18.5, 0)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallE"]
+shape = SubResource("sha_core_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallE"]
+mesh = SubResource("msh_core_wall_v")
+material_override = SubResource("mat_core")
+[node name="WallW" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.2, 18.5, 0)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallW"]
+shape = SubResource("sha_core_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallW"]
+mesh = SubResource("msh_core_wall_v")
+material_override = SubResource("mat_core")
+
+; ============================================================================
+; LEVERS — 7 fragments cosmiques (clin d'œil aux 7 niveaux précédents)
+; ============================================================================
+[node name="P1_Fragment" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, -30, 0.1, -18)
+[node name="P2_Fragment" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, -32, 4.1, 0)
+[node name="P3_Fragment" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, -22, 8.1, 22)
+[node name="P4_Fragment" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 0, 12.1, 30)
+[node name="P5_Fragment" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 22, 8.1, 22)
+[node name="P6_Fragment" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 32, 4.1, 0)
+[node name="P7_Fragment" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 30, 0.1, -18)
+
+; ============================================================================
+; BOSS DOOR + PuzzleGate
+; ============================================================================
+[node name="BossDoor" parent="." instance=ExtResource("3_door")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 17.5, -11.5)
+
+[node name="PuzzleGate" type="Node" parent="."]
+script = ExtResource("6_puzzle")
+lever_paths = [NodePath("../P1_Fragment"), NodePath("../P2_Fragment"), NodePath("../P3_Fragment"), NodePath("../P4_Fragment"), NodePath("../P5_Fragment"), NodePath("../P6_Fragment"), NodePath("../P7_Fragment")]
+door_paths = [NodePath("../BossDoor")]
+
+[node name="BossFinal" parent="." instance=ExtResource("4_boss")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 16, 4)
+
+[node name="BossArena" type="Node3D" parent="."]
+script = ExtResource("5_arena")
+boss_path = NodePath("../BossFinal")
+trigger_zone_path = NodePath("TriggerZone")
+entrance_blocker_path = NodePath("EntranceBlocker")
+
+[node name="TriggerZone" type="Area3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18, 0)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/TriggerZone"]
+shape = SubResource("sha_boss_trigger")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17.5, -11.5)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/EntranceBlocker"]
+shape = SubResource("sha_blocker")
+[node name="Mesh" type="MeshInstance3D" parent="BossArena/EntranceBlocker"]
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_blocker")
+
+; ============================================================================
+; FRAGMENT méta n°8 — au cœur (déclenche la fin spéciale)
+; ============================================================================
+[node name="FragmentMetaFinal" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 17, -2)
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_fragment")
+
+; ============================================================================
+; SPAWNS
+; ============================================================================
+[node name="PlayerSpawnPoints" type="Node3D" parent="."]
+[node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.4, -38)
+[node name="Spawn1" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.4, -38)
+[node name="Spawn2" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.4, -35)
+[node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.4, -35)
+
+[node name="EnemySpawnPoints" type="Node3D" parent="."]
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.5, -18)
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 8.5, 22)
+[node name="EnemyC2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 8.5, 22)
+[node name="EnemyC3" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.5, -18)
+[node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.5, 30)
+[node name="EnemyB1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 4.5, 0)
+[node name="EnemyB2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 4.5, 0)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+[node name="ChestStart" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, -38)
+[node name="ChestP1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.1, -18)
+[node name="ChestP3" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 8.1, 24)
+[node name="ChestP4" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.1, 28)
+[node name="ChestP6" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 4.1, 0)
