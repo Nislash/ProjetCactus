@@ -19,6 +19,7 @@ extends Node
 const FALLBACK_LEVEL := "res://scenes/levels/level_01_poc/level_01_poc.tscn"
 const RELIC_CHEST_SCENE := "res://scenes/world/relic_chest.tscn"
 const RELIC_CHESTS_PER_LEVEL := 4
+const START_CHEST_SCENE := "res://scenes/world/start_chest.tscn"
 
 @onready var _world: Node3D = $World
 
@@ -30,6 +31,7 @@ func _ready() -> void:
 		level_path = FALLBACK_LEVEL
 	_load_level(level_path)
 	_spawn_relic_chests()
+	_spawn_start_chest()
 
 
 func _load_level(path: String) -> void:
@@ -74,3 +76,24 @@ func _spawn_relic_chests() -> void:
 	for marker in markers:
 		marker.queue_free()
 	print("[RunShell] %d coffres de reliques placés (sur %d markers candidats)" % [spawn_count, markers.size()])
+
+
+## Place le coffre de début de run sur le Marker3D "StartChestSpawn" du
+## level (si present). Le coffre, au try_interact, equipe tous les joueurs
+## d'une arme + sort tirés au sort. Sans Marker, on log un warning : le
+## level joue sans arme (mode test).
+func _spawn_start_chest() -> void:
+	await get_tree().process_frame
+	var marker: Node3D = _world.find_child("StartChestSpawn", true, false) as Node3D
+	if marker == null:
+		push_warning("[RunShell] Pas de Marker3D 'StartChestSpawn' dans le level — pas de coffre de début. Les joueurs spawnent sans arme.")
+		return
+	var scene: PackedScene = load(START_CHEST_SCENE)
+	if scene == null:
+		push_error("[RunShell] Impossible de charger %s" % START_CHEST_SCENE)
+		return
+	var chest: Node3D = scene.instantiate() as Node3D
+	_world.add_child(chest)
+	chest.global_transform = marker.global_transform
+	marker.queue_free()
+	print("[RunShell] Coffre de début placé.")

@@ -350,6 +350,9 @@ material_override = SubResource("mat_mirror")
 ; ============================================================================
 ; SPAWNS
 ; ============================================================================
+[node name="StartChestSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 3)
+
 [node name="PlayerSpawnPoints" type="Node3D" parent="."]
 [node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, -3)
