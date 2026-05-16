@@ -87,7 +87,7 @@ func _update_phase_dots(phase: int) -> void:
 	_phase_dot_3.color = Color(1, 0.3, 0.2, 1) if reached_phase_3 else dim
 
 
-func _on_boss_defeated(_damage_by_player: Dictionary, _duration: float) -> void:
+func _on_boss_defeated(_damage_by_player: Dictionary, _duration: float, _dropped_relic: RelicData) -> void:
 	# Fade-out simple (instantané pour le POC).
 	visible = false
 	_boss = null

@@ -44,8 +44,11 @@ func _try_bind() -> void:
 			b.boss_defeated.connect(_on_boss_defeated)
 
 
-func _on_boss_defeated(damage_by_player: Dictionary, fight_duration_sec: float) -> void:
-	_show(damage_by_player, fight_duration_sec, "")
+func _on_boss_defeated(damage_by_player: Dictionary, fight_duration_sec: float, dropped_relic: RelicData) -> void:
+	var relic_name: String = "—"
+	if dropped_relic != null:
+		relic_name = "%s  [Légendaire]" % dropped_relic.display_name
+	_show(damage_by_player, fight_duration_sec, relic_name)
 
 
 ## Public si on veut driver l'affichage manuellement (ex: depuis le drop relique

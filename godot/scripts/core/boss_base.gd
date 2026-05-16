@@ -15,7 +15,7 @@ extends EnemyBase
 signal phase_changed(new_phase: int)
 signal combo_triggered(stun_duration: float, hp_lost: int)
 signal boss_engaged()  ## émis quand le lock arène déclenche le combat
-signal boss_defeated(damage_by_player: Dictionary, fight_duration_sec: float)
+signal boss_defeated(damage_by_player: Dictionary, fight_duration_sec: float, dropped_relic: RelicData)
 
 enum Phase { IDLE, PHASE_1, TRANSITION_1_TO_2, PHASE_2, TRANSITION_2_TO_3, PHASE_3_ENRAGE, STUNNED_COMBO, DEAD }
 
@@ -226,15 +226,39 @@ func _on_combo_stun_end() -> void:
 		_set_phase(Phase.PHASE_1)
 
 
-## Override la mort : pas de queue_free immédiat — on émet d'abord les
-## stats pour l'écran post-combat, et la scène fille gère le slow-mo / VFX.
+const _RELIC_DROP_SCENE: PackedScene = preload("res://scenes/pickups/boss_relic_drop.tscn")
+
+## Override la mort : slow-mo + drop relique + signal post-combat. Pas de
+## queue_free immédiat — un timer libère le mesh après l'anim de mort.
 func _on_died(source: Node) -> void:
 	killed.emit(source)
 	_set_phase(Phase.DEAD)
 	var duration: float = get_fight_duration_sec()
-	boss_defeated.emit(_damage_by_player.duplicate(), duration)
-	# Pas de queue_free ici — la scène boss orchestre slow-mo + anim death
-	# + drop avant de free.
+	var relic: RelicData = null
+	if boss_data != null and boss_data.drops_legendary_relic:
+		# Pool legendary uniquement (drop_pool boss_only = tier 3 dans le POC).
+		relic = RelicLootTable.draw_with({RelicData.Tier.LEGENDARY: 1.0})
+		if relic != null:
+			_spawn_relic_drop(relic)
+	boss_defeated.emit(_damage_by_player.duplicate(), duration, relic)
+	# Slow-mo court (0.3x pendant 1s real-time = ~0.3s game-time).
+	Engine.time_scale = 0.3
+	get_tree().create_timer(1.0, true, false, true).timeout.connect(_end_slowmo)
+	# Free le boss après une anim placeholder (2s).
+	get_tree().create_timer(2.0).timeout.connect(queue_free)
+
+
+func _end_slowmo() -> void:
+	Engine.time_scale = 1.0
+
+
+func _spawn_relic_drop(relic: RelicData) -> void:
+	var drop: Node = _RELIC_DROP_SCENE.instantiate()
+	if drop.has_method("set_relic"):
+		drop.set_relic(relic)
+	get_parent().add_child(drop)
+	if drop is Node3D:
+		(drop as Node3D).global_position = global_position
 
 
 ## Stun-immunity check : pendant l'enrage, freeze et stun n'ont pas d'effet
