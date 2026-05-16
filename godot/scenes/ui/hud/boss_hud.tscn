@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://brisom6oby548"]
+
+[ext_resource type="Script" path="res://scripts/core/boss_hud.gd" id="1_glsw1"]
+
+[node name="BossHUD" type="Control" unique_id=1938177698]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_glsw1")
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=1921047450]
+layout_mode = 0
+anchor_left = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.12
+offset_top = 8.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=925208098]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Name" type="Label" parent="Panel/VBox" unique_id=212966006]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 24
+text = "Boss"
+horizontal_alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="Panel/VBox" unique_id=2096113948]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="Phases" type="HBoxContainer" parent="Panel/VBox" unique_id=357025650]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Dot1" type="ColorRect" parent="Panel/VBox/Phases" unique_id=997474030]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(1, 0.8, 0.2, 1)
+
+[node name="Dot2" type="ColorRect" parent="Panel/VBox/Phases" unique_id=1593919765]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
+
+[node name="Dot3" type="ColorRect" parent="Panel/VBox/Phases" unique_id=1798103991]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.3, 1)
