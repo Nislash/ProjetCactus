@@ -1,0 +1,358 @@
+[gd_scene load_steps=24 format=3 uid="uid://lv06montagne01"]
+
+[ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
+[ext_resource type="Script" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+[ext_resource type="Script" path="res://scripts/core/mechanic_freeze_on_idle.gd" id="7_freeze"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_horizon_color = Color(0.78, 0.86, 0.95, 1)
+ground_horizon_color = Color(0.7, 0.8, 0.9, 1)
+sky_top_color = Color(0.5, 0.65, 0.85, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.85, 0.92, 1, 1)
+ambient_light_energy = 0.65
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.85, 0.9, 1, 1)
+fog_density = 0.025
+
+; ============================================================================
+; SUB_RESOURCES — plateaux montagne
+; ============================================================================
+[sub_resource type="BoxShape3D" id="sha_plateau"]
+size = Vector3(20, 0.6, 16)
+[sub_resource type="BoxMesh" id="msh_plateau"]
+size = Vector3(20, 0.6, 16)
+
+[sub_resource type="BoxShape3D" id="sha_plateau_S"]
+size = Vector3(14, 0.6, 12)
+[sub_resource type="BoxMesh" id="msh_plateau_S"]
+size = Vector3(14, 0.6, 12)
+
+[sub_resource type="BoxShape3D" id="sha_summit"]
+size = Vector3(28, 0.6, 24)
+[sub_resource type="BoxMesh" id="msh_summit"]
+size = Vector3(28, 0.6, 24)
+
+[sub_resource type="BoxShape3D" id="sha_path"]
+size = Vector3(6, 0.6, 12)
+[sub_resource type="BoxMesh" id="msh_path"]
+size = Vector3(6, 0.6, 12)
+
+[sub_resource type="BoxShape3D" id="sha_summit_wall_h"]
+size = Vector3(28, 4, 0.4)
+[sub_resource type="BoxMesh" id="msh_summit_wall_h"]
+size = Vector3(28, 4, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_summit_wall_v"]
+size = Vector3(0.4, 4, 24)
+[sub_resource type="BoxMesh" id="msh_summit_wall_v"]
+size = Vector3(0.4, 4, 24)
+
+[sub_resource type="BoxShape3D" id="sha_boss_trigger"]
+size = Vector3(26, 4, 22)
+
+[sub_resource type="BoxShape3D" id="sha_blocker"]
+size = Vector3(5, 4, 0.6)
+[sub_resource type="BoxMesh" id="msh_blocker"]
+size = Vector3(5, 4, 0.6)
+
+; Warm zone (camp safe) collision shape
+[sub_resource type="SphereShape3D" id="sha_warm"]
+radius = 6
+
+[sub_resource type="StandardMaterial3D" id="mat_blocker"]
+albedo_color = Color(0.7, 0.85, 1, 0.7)
+emission_enabled = true
+emission = Color(0.6, 0.85, 1, 1)
+emission_energy_multiplier = 0.7
+
+; Materials
+[sub_resource type="StandardMaterial3D" id="mat_snow"]
+albedo_color = Color(0.88, 0.92, 0.97, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="mat_rock"]
+albedo_color = Color(0.45, 0.42, 0.4, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_brasero"]
+albedo_color = Color(1, 0.5, 0.15, 1)
+emission_enabled = true
+emission = Color(1, 0.55, 0.2, 1)
+emission_energy_multiplier = 2.5
+
+; ============================================================================
+; ROOT
+; ============================================================================
+[node name="Level06Montagne" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.3, -0.65, 0, 0.9, -0.42, 0.7, 0.3, 0.65, 0, 60, 0)
+light_color = Color(1, 0.97, 0.92, 1)
+light_energy = 1.3
+shadow_enabled = true
+
+; Mécanique signature : gel d'immobilité
+[node name="MechanicFreezeOnIdle" type="Node" parent="."]
+script = ExtResource("7_freeze")
+idle_threshold_sec = 4.0
+freeze_duration_sec = 1.5
+move_epsilon = 0.4
+
+[node name="LightCamp" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+light_color = Color(1, 0.65, 0.3, 1)
+light_energy = 1.8
+omni_range = 14
+
+[node name="LightRefuge" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, 18)
+light_color = Color(1, 0.65, 0.3, 1)
+light_energy = 1.5
+omni_range = 12
+
+; ============================================================================
+; STRATE 0 — Camp de base (Y=0)
+; ============================================================================
+[node name="Camp" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+[node name="Shape" type="CollisionShape3D" parent="Camp"]
+shape = SubResource("sha_plateau")
+[node name="Mesh" type="MeshInstance3D" parent="Camp"]
+mesh = SubResource("msh_plateau")
+material_override = SubResource("mat_snow")
+
+; Warm zone (camp safe — pas de gel d'immobilité dedans)
+[node name="WarmZoneCamp" type="Area3D" parent="." groups=["warm_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WarmZoneCamp"]
+shape = SubResource("sha_warm")
+
+; Path Camp → Refuge1 (serpentine — first leg, ramp up Y=0→4 over 12m)
+[node name="Path0_1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.95, 0.32, 0, -0.32, 0.95, 5, 2, 12)
+[node name="Shape" type="CollisionShape3D" parent="Path0_1"]
+shape = SubResource("sha_path")
+[node name="Mesh" type="MeshInstance3D" parent="Path0_1"]
+mesh = SubResource("msh_path")
+material_override = SubResource("mat_rock")
+
+; ============================================================================
+; STRATE +1 — Versant + Refuge (Y=4)
+; ============================================================================
+[node name="VersantW" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 3.7, 22)
+[node name="Shape" type="CollisionShape3D" parent="VersantW"]
+shape = SubResource("sha_plateau_S")
+[node name="Mesh" type="MeshInstance3D" parent="VersantW"]
+mesh = SubResource("msh_plateau_S")
+material_override = SubResource("mat_snow")
+
+[node name="Refuge1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3.7, 22)
+[node name="Shape" type="CollisionShape3D" parent="Refuge1"]
+shape = SubResource("sha_plateau_S")
+[node name="Mesh" type="MeshInstance3D" parent="Refuge1"]
+mesh = SubResource("msh_plateau_S")
+material_override = SubResource("mat_snow")
+
+[node name="WarmZoneRefuge" type="Area3D" parent="." groups=["warm_zone"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 5, 22)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WarmZoneRefuge"]
+shape = SubResource("sha_warm")
+
+; Linking path between versants
+[node name="LinkVersant" type="StaticBody3D" parent="."]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 3.7, 22)
+[node name="Shape" type="CollisionShape3D" parent="LinkVersant"]
+shape = SubResource("sha_path")
+[node name="Mesh" type="MeshInstance3D" parent="LinkVersant"]
+mesh = SubResource("msh_path")
+material_override = SubResource("mat_rock")
+
+; Path Refuge1 → Col (Y=4→8)
+[node name="Path1_2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.95, 0.32, 0, -0.32, 0.95, -5, 6, 34)
+[node name="Shape" type="CollisionShape3D" parent="Path1_2"]
+shape = SubResource("sha_path")
+[node name="Mesh" type="MeshInstance3D" parent="Path1_2"]
+mesh = SubResource("msh_path")
+material_override = SubResource("mat_rock")
+
+; ============================================================================
+; STRATE +2 — Col (Y=8)
+; ============================================================================
+[node name="ColW" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 7.7, 44)
+[node name="Shape" type="CollisionShape3D" parent="ColW"]
+shape = SubResource("sha_plateau_S")
+[node name="Mesh" type="MeshInstance3D" parent="ColW"]
+mesh = SubResource("msh_plateau_S")
+material_override = SubResource("mat_snow")
+
+[node name="ColE" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 7.7, 44)
+[node name="Shape" type="CollisionShape3D" parent="ColE"]
+shape = SubResource("sha_plateau_S")
+[node name="Mesh" type="MeshInstance3D" parent="ColE"]
+mesh = SubResource("msh_plateau_S")
+material_override = SubResource("mat_snow")
+
+; Pont du col (verglacé)
+[node name="ColBridge" type="StaticBody3D" parent="."]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 7.7, 44)
+[node name="Shape" type="CollisionShape3D" parent="ColBridge"]
+shape = SubResource("sha_path")
+[node name="Mesh" type="MeshInstance3D" parent="ColBridge"]
+mesh = SubResource("msh_path")
+material_override = SubResource("mat_snow")
+
+; Path Col → Sommet (Y=8→12)
+[node name="Path2_3" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.95, 0.32, 0, -0.32, 0.95, 0, 10, 56)
+[node name="Shape" type="CollisionShape3D" parent="Path2_3"]
+shape = SubResource("sha_path")
+[node name="Mesh" type="MeshInstance3D" parent="Path2_3"]
+mesh = SubResource("msh_path")
+material_override = SubResource("mat_rock")
+
+; ============================================================================
+; STRATE +3 — Sommet (Y=12, arène boss Roi de glace)
+; ============================================================================
+[node name="RoomBoss" type="Node3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.7, 72)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/Floor"]
+shape = SubResource("sha_summit")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/Floor"]
+mesh = SubResource("msh_summit")
+material_override = SubResource("mat_snow")
+
+[node name="WallN" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 84.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallN"]
+shape = SubResource("sha_summit_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallN"]
+mesh = SubResource("msh_summit_wall_h")
+material_override = SubResource("mat_rock")
+
+[node name="WallE" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.2, 14, 72)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallE"]
+shape = SubResource("sha_summit_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallE"]
+mesh = SubResource("msh_summit_wall_v")
+material_override = SubResource("mat_rock")
+
+[node name="WallW" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.2, 14, 72)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallW"]
+shape = SubResource("sha_summit_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallW"]
+mesh = SubResource("msh_summit_wall_v")
+material_override = SubResource("mat_rock")
+
+; ============================================================================
+; LEVERS — 3 braseros à éteindre
+; ============================================================================
+[node name="P1_Brasero" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, -10, 4.1, 22)
+
+[node name="P2_Brasero" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, -8, 8.1, 44)
+
+[node name="P3_Brasero" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, 8, 8.1, 44)
+
+; ============================================================================
+; BOSS DOOR + PuzzleGate
+; ============================================================================
+[node name="BossDoor" parent="." instance=ExtResource("3_door")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 13.5, 60)
+
+[node name="PuzzleGate" type="Node" parent="."]
+script = ExtResource("6_puzzle")
+lever_paths = [NodePath("../P1_Brasero"), NodePath("../P2_Brasero"), NodePath("../P3_Brasero")]
+door_paths = [NodePath("../BossDoor")]
+
+[node name="BossRoiGlace" parent="." instance=ExtResource("4_boss")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 76)
+
+[node name="BossArena" type="Node3D" parent="."]
+script = ExtResource("5_arena")
+boss_path = NodePath("../BossRoiGlace")
+trigger_zone_path = NodePath("TriggerZone")
+entrance_blocker_path = NodePath("EntranceBlocker")
+
+[node name="TriggerZone" type="Area3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 72)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/TriggerZone"]
+shape = SubResource("sha_boss_trigger")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 13.5, 60)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/EntranceBlocker"]
+shape = SubResource("sha_blocker")
+[node name="Mesh" type="MeshInstance3D" parent="BossArena/EntranceBlocker"]
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_blocker")
+
+; ============================================================================
+; FRAGMENT méta (cairn caché versant est)
+; ============================================================================
+[node name="FragmentMeta" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 12, 4.5, 24)
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_brasero")
+
+; ============================================================================
+; SPAWNS
+; ============================================================================
+[node name="PlayerSpawnPoints" type="Node3D" parent="."]
+[node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, -3)
+[node name="Spawn1" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, -3)
+[node name="Spawn2" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, 3)
+[node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 3)
+
+[node name="EnemySpawnPoints" type="Node3D" parent="."]
+[node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 4.5, 22)
+[node name="EnemyB1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 8.5, 44)
+[node name="EnemyB2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 8.5, 44)
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.5, 22)
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.5, 50)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+[node name="ChestCamp" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, -3)
+[node name="ChestRefuge" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 4.1, 22)
+[node name="ChestColW" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 8.1, 44)
+[node name="ChestColE" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 8.1, 44)
