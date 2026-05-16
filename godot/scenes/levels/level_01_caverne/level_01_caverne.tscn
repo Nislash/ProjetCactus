@@ -1,0 +1,631 @@
+[gd_scene load_steps=43 format=3 uid="uid://lv01caverne01"]
+
+[ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
+[ext_resource type="Script" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_horizon_color = Color(0.05, 0.06, 0.1, 1)
+ground_horizon_color = Color(0.04, 0.04, 0.06, 1)
+sky_top_color = Color(0.02, 0.03, 0.05, 1)
+ground_bottom_color = Color(0.02, 0.02, 0.03, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.35, 0.45, 0.7, 1)
+ambient_light_energy = 0.2
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.12, 0.16, 0.22, 1)
+fog_density = 0.02
+
+; ============================================================================
+; SUB_RESOURCES — shapes & meshes réutilisables
+; ============================================================================
+
+; -- FLOORS --
+[sub_resource type="BoxShape3D" id="sha_floor_entry"]
+size = Vector3(14, 0.6, 12)
+[sub_resource type="BoxMesh" id="msh_floor_entry"]
+size = Vector3(14, 0.6, 12)
+
+[sub_resource type="BoxShape3D" id="sha_floor_hall"]
+size = Vector3(20, 0.6, 16)
+[sub_resource type="BoxMesh" id="msh_floor_hall"]
+size = Vector3(20, 0.6, 16)
+
+[sub_resource type="BoxShape3D" id="sha_floor_gallery"]
+size = Vector3(14, 0.6, 10)
+[sub_resource type="BoxMesh" id="msh_floor_gallery"]
+size = Vector3(14, 0.6, 10)
+
+[sub_resource type="BoxShape3D" id="sha_floor_secret"]
+size = Vector3(10, 0.6, 8)
+[sub_resource type="BoxMesh" id="msh_floor_secret"]
+size = Vector3(10, 0.6, 8)
+
+[sub_resource type="BoxShape3D" id="sha_floor_deep"]
+size = Vector3(18, 0.6, 14)
+[sub_resource type="BoxMesh" id="msh_floor_deep"]
+size = Vector3(18, 0.6, 14)
+
+[sub_resource type="BoxShape3D" id="sha_floor_boss"]
+size = Vector3(36, 0.6, 36)
+[sub_resource type="BoxMesh" id="msh_floor_boss"]
+size = Vector3(36, 0.6, 36)
+
+; Slopes (small ramp 8m long, 4m tall via rotation)
+[sub_resource type="BoxShape3D" id="sha_slope"]
+size = Vector3(6, 0.6, 9)
+[sub_resource type="BoxMesh" id="msh_slope"]
+size = Vector3(6, 0.6, 9)
+
+; Corridor floors
+[sub_resource type="BoxShape3D" id="sha_corridor"]
+size = Vector3(6, 0.6, 10)
+[sub_resource type="BoxMesh" id="msh_corridor"]
+size = Vector3(6, 0.6, 10)
+
+; -- WALLS --
+; wall_h_M : aligned along X (height in Y, thin in Z)
+[sub_resource type="BoxShape3D" id="sha_wall_h_M"]
+size = Vector3(20, 5, 0.4)
+[sub_resource type="BoxMesh" id="msh_wall_h_M"]
+size = Vector3(20, 5, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_wall_h_S"]
+size = Vector3(14, 5, 0.4)
+[sub_resource type="BoxMesh" id="msh_wall_h_S"]
+size = Vector3(14, 5, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_wall_v_M"]
+size = Vector3(0.4, 5, 16)
+[sub_resource type="BoxMesh" id="msh_wall_v_M"]
+size = Vector3(0.4, 5, 16)
+
+[sub_resource type="BoxShape3D" id="sha_wall_v_S"]
+size = Vector3(0.4, 5, 10)
+[sub_resource type="BoxMesh" id="msh_wall_v_S"]
+size = Vector3(0.4, 5, 10)
+
+[sub_resource type="BoxShape3D" id="sha_wall_h_boss"]
+size = Vector3(36, 8, 0.4)
+[sub_resource type="BoxMesh" id="msh_wall_h_boss"]
+size = Vector3(36, 8, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_wall_v_boss"]
+size = Vector3(0.4, 8, 36)
+[sub_resource type="BoxMesh" id="msh_wall_v_boss"]
+size = Vector3(0.4, 8, 36)
+
+; Boss arena trigger zone
+[sub_resource type="BoxShape3D" id="sha_boss_trigger"]
+size = Vector3(34, 6, 34)
+
+; Entrance blocker (door of boss arena)
+[sub_resource type="BoxShape3D" id="sha_blocker"]
+size = Vector3(6, 6, 0.6)
+[sub_resource type="BoxMesh" id="msh_blocker"]
+size = Vector3(6, 6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="mat_blocker"]
+albedo_color = Color(0.18, 0.12, 0.2, 0.8)
+metallic = 0.4
+emission_enabled = true
+emission = Color(0.5, 0.2, 0.8, 1)
+emission_energy_multiplier = 0.6
+
+; Materials
+[sub_resource type="StandardMaterial3D" id="mat_stone"]
+albedo_color = Color(0.32, 0.34, 0.42, 1)
+roughness = 0.85
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="mat_crystal"]
+albedo_color = Color(0.4, 0.8, 1.0, 1)
+metallic = 0.3
+roughness = 0.15
+emission_enabled = true
+emission = Color(0.3, 0.7, 1.0, 1)
+emission_energy_multiplier = 1.8
+
+; ============================================================================
+; ROOT
+; ============================================================================
+[node name="Level01Caverne" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.3, -0.65, 0, 0.9, -0.42, 0.7, 0.3, 0.65, 0, 30, 0)
+light_energy = 0.3
+shadow_enabled = true
+
+; Ambient torch-like lighting (visibilité limitée)
+[node name="LightEntry" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+light_color = Color(1, 0.85, 0.6, 1)
+light_energy = 1.2
+omni_range = 14
+
+[node name="LightHall" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 24)
+light_color = Color(0.6, 0.85, 1, 1)
+light_energy = 1.5
+omni_range = 18
+
+[node name="LightG1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -1, 22)
+light_color = Color(0.5, 0.9, 1, 1)
+light_energy = 1.4
+omni_range = 14
+
+[node name="LightG3" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, -1, 30)
+light_color = Color(0.5, 0.9, 1, 1)
+light_energy = 1.4
+omni_range = 14
+
+[node name="LightSecret" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -5, 44)
+light_color = Color(0.7, 1, 0.85, 1)
+light_energy = 1.1
+omni_range = 12
+
+[node name="LightDeep" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 44)
+light_color = Color(0.6, 0.85, 1, 1)
+light_energy = 1.5
+omni_range = 18
+
+[node name="LightBoss" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 76)
+light_color = Color(0.55, 0.8, 1, 1)
+light_energy = 2.5
+omni_range = 30
+
+; ============================================================================
+; STRATE 0 — Surface : Entry porch (Y=0)
+; ============================================================================
+[node name="RoomEntry" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomEntry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+[node name="Shape" type="CollisionShape3D" parent="RoomEntry/Floor"]
+shape = SubResource("sha_floor_entry")
+[node name="Mesh" type="MeshInstance3D" parent="RoomEntry/Floor"]
+mesh = SubResource("msh_floor_entry")
+material_override = SubResource("mat_stone")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomEntry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -6.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomEntry/WallSouth"]
+shape = SubResource("sha_wall_h_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomEntry/WallSouth"]
+mesh = SubResource("msh_wall_h_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallWest" type="StaticBody3D" parent="RoomEntry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2, 2.5, 0)
+[node name="Shape" type="CollisionShape3D" parent="RoomEntry/WallWest"]
+shape = SubResource("sha_wall_v_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomEntry/WallWest"]
+mesh = SubResource("msh_wall_v_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallEast" type="StaticBody3D" parent="RoomEntry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2, 2.5, 0)
+[node name="Shape" type="CollisionShape3D" parent="RoomEntry/WallEast"]
+shape = SubResource("sha_wall_v_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomEntry/WallEast"]
+mesh = SubResource("msh_wall_v_S")
+material_override = SubResource("mat_stone")
+
+; ============================================================================
+; STAIRS DOWN — RoomEntry (Y=0) → Hall (Y=-4), via slope going +Z
+; Slope is 9m long over -4m drop ≈ 24° angle (safe < 45°)
+; ============================================================================
+[node name="StairsDown1" type="StaticBody3D" parent="."]
+; Rotation around X axis : tan = -4 / 9 → angle ≈ -24°
+; Transform3D: rotation_x ≈ -0.42rad. cos≈0.91, sin≈0.41
+; Row1=(1,0,0), Row2=(0,cos,-sin)=(0,0.91,-0.41), Row3=(0,sin,cos)=(0,0.41,0.91)
+; Godot Transform3D format is column-major: c0,c1,c2,c3 (each Vector3)
+; T3D(c0x,c0y,c0z, c1x,c1y,c1z, c2x,c2y,c2z, originX,originY,originZ)
+transform = Transform3D(1, 0, 0, 0, 0.91, 0.41, 0, -0.41, 0.91, 0, -2, 10.5)
+[node name="Shape" type="CollisionShape3D" parent="StairsDown1"]
+shape = SubResource("sha_slope")
+[node name="Mesh" type="MeshInstance3D" parent="StairsDown1"]
+mesh = SubResource("msh_slope")
+material_override = SubResource("mat_stone")
+
+; ============================================================================
+; STRATE -1 — Galleries (Y=-4 floor top)
+; ============================================================================
+[node name="RoomHall" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomHall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.3, 24)
+[node name="Shape" type="CollisionShape3D" parent="RoomHall/Floor"]
+shape = SubResource("sha_floor_hall")
+[node name="Mesh" type="MeshInstance3D" parent="RoomHall/Floor"]
+mesh = SubResource("msh_floor_hall")
+material_override = SubResource("mat_stone")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomHall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5, 16.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomHall/WallSouth"]
+shape = SubResource("sha_wall_h_M")
+[node name="Mesh" type="MeshInstance3D" parent="RoomHall/WallSouth"]
+mesh = SubResource("msh_wall_h_M")
+material_override = SubResource("mat_stone")
+
+[node name="WallNorth" type="StaticBody3D" parent="RoomHall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.5, 31.8)
+[node name="Shape" type="CollisionShape3D" parent="RoomHall/WallNorth"]
+shape = SubResource("sha_wall_h_M")
+[node name="Mesh" type="MeshInstance3D" parent="RoomHall/WallNorth"]
+mesh = SubResource("msh_wall_h_M")
+material_override = SubResource("mat_stone")
+
+; West wall has an opening for corridor to G1 — split in 2 segments
+[node name="WallWestN" type="StaticBody3D" parent="RoomHall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.2, -1.5, 28)
+[node name="Shape" type="CollisionShape3D" parent="RoomHall/WallWestN"]
+shape = SubResource("sha_wall_v_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomHall/WallWestN"]
+mesh = SubResource("msh_wall_v_S")
+material_override = SubResource("mat_stone")
+; WallWestS skipped — opening for G1 corridor
+
+[node name="WallEastS" type="StaticBody3D" parent="RoomHall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.2, -1.5, 20)
+[node name="Shape" type="CollisionShape3D" parent="RoomHall/WallEastS"]
+shape = SubResource("sha_wall_v_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomHall/WallEastS"]
+mesh = SubResource("msh_wall_v_S")
+material_override = SubResource("mat_stone")
+; WallEastN skipped — opening for G3 corridor
+
+; --- Galerie G1 (west of Hall, with P1) ---
+[node name="RoomG1" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomG1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -4.3, 28)
+[node name="Shape" type="CollisionShape3D" parent="RoomG1/Floor"]
+shape = SubResource("sha_floor_gallery")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG1/Floor"]
+mesh = SubResource("msh_floor_gallery")
+material_override = SubResource("mat_stone")
+
+[node name="WallWest" type="StaticBody3D" parent="RoomG1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.2, -1.5, 28)
+[node name="Shape" type="CollisionShape3D" parent="RoomG1/WallWest"]
+shape = SubResource("sha_wall_v_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG1/WallWest"]
+mesh = SubResource("msh_wall_v_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallNorth" type="StaticBody3D" parent="RoomG1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -1.5, 33.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomG1/WallNorth"]
+shape = SubResource("sha_wall_h_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG1/WallNorth"]
+mesh = SubResource("msh_wall_h_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomG1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -1.5, 22.8)
+[node name="Shape" type="CollisionShape3D" parent="RoomG1/WallSouth"]
+shape = SubResource("sha_wall_h_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG1/WallSouth"]
+mesh = SubResource("msh_wall_h_S")
+material_override = SubResource("mat_stone")
+
+; --- Corridor Hall ↔ G1 ---
+[node name="CorridorHallG1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, -4.3, 28)
+[node name="Shape" type="CollisionShape3D" parent="CorridorHallG1"]
+shape = SubResource("sha_corridor")
+[node name="Mesh" type="MeshInstance3D" parent="CorridorHallG1"]
+mesh = SubResource("msh_corridor")
+material_override = SubResource("mat_stone")
+
+; --- Galerie G3 (east-north of Hall, with P2) ---
+[node name="RoomG3" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomG3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, -4.3, 30)
+[node name="Shape" type="CollisionShape3D" parent="RoomG3/Floor"]
+shape = SubResource("sha_floor_gallery")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG3/Floor"]
+mesh = SubResource("msh_floor_gallery")
+material_override = SubResource("mat_stone")
+
+[node name="WallEast" type="StaticBody3D" parent="RoomG3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.2, -1.5, 30)
+[node name="Shape" type="CollisionShape3D" parent="RoomG3/WallEast"]
+shape = SubResource("sha_wall_v_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG3/WallEast"]
+mesh = SubResource("msh_wall_v_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallNorth" type="StaticBody3D" parent="RoomG3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, -1.5, 35.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomG3/WallNorth"]
+shape = SubResource("sha_wall_h_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG3/WallNorth"]
+mesh = SubResource("msh_wall_h_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomG3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, -1.5, 24.8)
+[node name="Shape" type="CollisionShape3D" parent="RoomG3/WallSouth"]
+shape = SubResource("sha_wall_h_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomG3/WallSouth"]
+mesh = SubResource("msh_wall_h_S")
+material_override = SubResource("mat_stone")
+
+; --- Corridor Hall ↔ G3 ---
+[node name="CorridorHallG3" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, -4.3, 28)
+[node name="Shape" type="CollisionShape3D" parent="CorridorHallG3"]
+shape = SubResource("sha_corridor")
+[node name="Mesh" type="MeshInstance3D" parent="CorridorHallG3"]
+mesh = SubResource("msh_corridor")
+material_override = SubResource("mat_stone")
+
+; ============================================================================
+; STAIRS DOWN — Hall (Y=-4) → Profondeur (Y=-8), going +Z
+; ============================================================================
+[node name="StairsDown2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.91, 0.41, 0, -0.41, 0.91, 0, -6, 36)
+[node name="Shape" type="CollisionShape3D" parent="StairsDown2"]
+shape = SubResource("sha_slope")
+[node name="Mesh" type="MeshInstance3D" parent="StairsDown2"]
+mesh = SubResource("msh_slope")
+material_override = SubResource("mat_stone")
+
+; ============================================================================
+; STRATE -2 — Profondeurs (Y=-8 floor top)
+; ============================================================================
+
+; --- Profondeur (central deep gallery) ---
+[node name="RoomDeep" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomDeep"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8.3, 44)
+[node name="Shape" type="CollisionShape3D" parent="RoomDeep/Floor"]
+shape = SubResource("sha_floor_deep")
+[node name="Mesh" type="MeshInstance3D" parent="RoomDeep/Floor"]
+mesh = SubResource("msh_floor_deep")
+material_override = SubResource("mat_stone")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomDeep"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5.5, 37.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomDeep/WallSouth"]
+shape = SubResource("sha_wall_h_M")
+[node name="Mesh" type="MeshInstance3D" parent="RoomDeep/WallSouth"]
+mesh = SubResource("msh_wall_h_M")
+material_override = SubResource("mat_stone")
+
+[node name="WallEast" type="StaticBody3D" parent="RoomDeep"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.2, -5.5, 44)
+[node name="Shape" type="CollisionShape3D" parent="RoomDeep/WallEast"]
+shape = SubResource("sha_wall_v_M")
+[node name="Mesh" type="MeshInstance3D" parent="RoomDeep/WallEast"]
+mesh = SubResource("msh_wall_v_M")
+material_override = SubResource("mat_stone")
+
+[node name="WallWest" type="StaticBody3D" parent="RoomDeep"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.2, -5.5, 44)
+[node name="Shape" type="CollisionShape3D" parent="RoomDeep/WallWest"]
+shape = SubResource("sha_wall_v_M")
+[node name="Mesh" type="MeshInstance3D" parent="RoomDeep/WallWest"]
+mesh = SubResource("msh_wall_v_M")
+material_override = SubResource("mat_stone")
+
+; --- Salle cachée (P3 cristal, ouest de la profondeur, passage secret) ---
+[node name="RoomSecret" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomSecret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -8.3, 44)
+[node name="Shape" type="CollisionShape3D" parent="RoomSecret/Floor"]
+shape = SubResource("sha_floor_secret")
+[node name="Mesh" type="MeshInstance3D" parent="RoomSecret/Floor"]
+mesh = SubResource("msh_floor_secret")
+material_override = SubResource("mat_stone")
+
+[node name="WallWest" type="StaticBody3D" parent="RoomSecret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.2, -5.5, 44)
+[node name="Shape" type="CollisionShape3D" parent="RoomSecret/WallWest"]
+shape = SubResource("sha_wall_v_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomSecret/WallWest"]
+mesh = SubResource("msh_wall_v_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallNorth" type="StaticBody3D" parent="RoomSecret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -5.5, 48.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomSecret/WallNorth"]
+shape = SubResource("sha_wall_h_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomSecret/WallNorth"]
+mesh = SubResource("msh_wall_h_S")
+material_override = SubResource("mat_stone")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomSecret"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -5.5, 39.8)
+[node name="Shape" type="CollisionShape3D" parent="RoomSecret/WallSouth"]
+shape = SubResource("sha_wall_h_S")
+[node name="Mesh" type="MeshInstance3D" parent="RoomSecret/WallSouth"]
+mesh = SubResource("msh_wall_h_S")
+material_override = SubResource("mat_stone")
+
+; --- Corridor Profondeur ↔ Secret (sol plat) ---
+[node name="CorridorDeepSecret" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, -8.3, 44)
+[node name="Shape" type="CollisionShape3D" parent="CorridorDeepSecret"]
+shape = SubResource("sha_corridor")
+[node name="Mesh" type="MeshInstance3D" parent="CorridorDeepSecret"]
+mesh = SubResource("msh_corridor")
+material_override = SubResource("mat_stone")
+
+; --- Couloir vers porte boss (au nord de Profondeur, sol plat) ---
+[node name="CorridorBoss" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8.3, 56)
+[node name="Shape" type="CollisionShape3D" parent="CorridorBoss"]
+shape = SubResource("sha_corridor")
+[node name="Mesh" type="MeshInstance3D" parent="CorridorBoss"]
+mesh = SubResource("msh_corridor")
+material_override = SubResource("mat_stone")
+
+; ============================================================================
+; ARÈNE BOSS — Y=-8 (vaste, 36×36)
+; ============================================================================
+[node name="RoomBoss" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8.3, 80)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/Floor"]
+shape = SubResource("sha_floor_boss")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/Floor"]
+mesh = SubResource("msh_floor_boss")
+material_override = SubResource("mat_stone")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4, 62.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallSouth"]
+shape = SubResource("sha_wall_h_boss")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallSouth"]
+mesh = SubResource("msh_wall_h_boss")
+material_override = SubResource("mat_stone")
+
+[node name="WallNorth" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4, 97.8)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallNorth"]
+shape = SubResource("sha_wall_h_boss")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallNorth"]
+mesh = SubResource("msh_wall_h_boss")
+material_override = SubResource("mat_stone")
+
+[node name="WallEast" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.8, -4, 80)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallEast"]
+shape = SubResource("sha_wall_v_boss")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallEast"]
+mesh = SubResource("msh_wall_v_boss")
+material_override = SubResource("mat_stone")
+
+[node name="WallWest" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.8, -4, 80)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallWest"]
+shape = SubResource("sha_wall_v_boss")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallWest"]
+mesh = SubResource("msh_wall_v_boss")
+material_override = SubResource("mat_stone")
+
+; ============================================================================
+; LEVERS (P1, P2, P3) — crystal triggers
+; ============================================================================
+[node name="P1_Cristal" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, -22, -3.8, 28)
+
+[node name="P2_Cristal" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, 22, -3.8, 30)
+
+[node name="P3_Cristal" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, -22, -7.8, 44)
+
+; ============================================================================
+; PORTE BOSS (verrouillée par PuzzleGate) + arène
+; ============================================================================
+[node name="BossDoor" parent="." instance=ExtResource("3_door")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, -6, 61)
+
+[node name="PuzzleGate" type="Node" parent="."]
+script = ExtResource("6_puzzle")
+lever_paths = [NodePath("../P1_Cristal"), NodePath("../P2_Cristal"), NodePath("../P3_Cristal")]
+door_paths = [NodePath("../BossDoor")]
+
+; --- Boss instance ---
+[node name="BossGolem" parent="." instance=ExtResource("4_boss")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8, 85)
+
+; --- BossArena lock ---
+[node name="BossArena" type="Node3D" parent="."]
+script = ExtResource("5_arena")
+boss_path = NodePath("../BossGolem")
+trigger_zone_path = NodePath("TriggerZone")
+entrance_blocker_path = NodePath("EntranceBlocker")
+
+[node name="TriggerZone" type="Area3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 80)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/TriggerZone"]
+shape = SubResource("sha_boss_trigger")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 64)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/EntranceBlocker"]
+shape = SubResource("sha_blocker")
+[node name="Mesh" type="MeshInstance3D" parent="BossArena/EntranceBlocker"]
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_blocker")
+
+; ============================================================================
+; FRAGMENT puzzle méta (placeholder visuel, gameplay non implémenté)
+; ============================================================================
+[node name="FragmentMeta" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -22, -7, 47)
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_crystal")
+
+; ============================================================================
+; SPAWN POINTS — joueurs + ennemis + coffres reliques
+; ============================================================================
+[node name="PlayerSpawnPoints" type="Node3D" parent="."]
+[node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, -2)
+[node name="Spawn1" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, -2)
+[node name="Spawn2" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, 2)
+[node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 2)
+
+[node name="EnemySpawnPoints" type="Node3D" parent="."]
+; Mêlée dans le hall (B markers → enemy_melee)
+[node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -3.5, 22)
+[node name="EnemyB1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -3.5, 22)
+[node name="EnemyB2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.5, 28)
+; Ranged dans G3 (C markers → enemy_ranged)
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, -3.5, 32)
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -3.5, 28)
+; Mêlée dans profondeur (B markers)
+[node name="EnemyB3" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -7.5, 42)
+[node name="EnemyB4" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -7.5, 46)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+[node name="ChestEntry" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, -4)
+[node name="ChestHall" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -3.9, 28)
+[node name="ChestG3" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, -3.9, 28)
+[node name="ChestSecret" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, -7.9, 41)
+[node name="ChestDeep" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, -7.9, 48)
