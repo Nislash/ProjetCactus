@@ -63,3 +63,7 @@ mesh = SubResource("BoxMesh_p0orm")
 
 [node name="Health" type="Node" parent="." unique_id=552139802]
 script = ExtResource("2_p0orm")
+
+[node name="BossAI" type="BossAI" parent="." unique_id=2140679379]
+melee_range = 6.0
+stop_chase_distance = 5.0
