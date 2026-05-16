@@ -1,0 +1,65 @@
+[gd_scene format=3 uid="uid://cr8bg6vwe157r"]
+
+[ext_resource type="Script" uid="uid://crwsy3umlcte4" path="res://scripts/core/boss_golem.gd" id="1_8ggej"]
+[ext_resource type="Script" uid="uid://duufd13mvbexe" path="res://scripts/core/health_component.gd" id="2_p0orm"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8ggej"]
+radius = 2.0
+height = 6.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8ggej"]
+albedo_color = Color(0.5, 0.55, 0.7, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_8ggej"]
+radius = 2.0
+height = 6.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p0orm"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_8ggej"]
+size = Vector3(1.2, 2, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_170uf"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_p0orm"]
+size = Vector3(1.2, 2, 0.8)
+
+[node name="BossGolem" type="CharacterBody3D" unique_id=1932997227]
+script = ExtResource("1_8ggej")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=977429573]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+shape = SubResource("CapsuleShape3D_8ggej")
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=105077980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+material_override = SubResource("StandardMaterial3D_8ggej")
+mesh = SubResource("CapsuleMesh_8ggej")
+
+[node name="CrystalBack" type="MeshInstance3D" parent="." unique_id=988232664]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -1.8)
+material_override = SubResource("StandardMaterial3D_p0orm")
+mesh = SubResource("BoxMesh_8ggej")
+
+[node name="CrystalChest" type="MeshInstance3D" parent="." unique_id=864210091]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 1.8)
+visible = false
+material_override = SubResource("StandardMaterial3D_170uf")
+mesh = SubResource("BoxMesh_p0orm")
+
+[node name="Health" type="Node" parent="." unique_id=552139802]
+script = ExtResource("2_p0orm")

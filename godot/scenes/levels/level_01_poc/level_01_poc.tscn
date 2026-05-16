@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://level01poc0a"]
 
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="1_vi66d"]
+
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_horizon_color = Color(0.65, 0.72, 0.85, 1)
 ground_horizon_color = Color(0.4, 0.45, 0.5, 1)
@@ -428,6 +430,9 @@ shape = SubResource("BoxShape3D_f8pxf")
 [node name="Mesh" type="MeshInstance3D" parent="RoomBoss/ColumnSE" unique_id=212815143]
 material_override = SubResource("StandardMaterial3D_b1nat")
 mesh = SubResource("BoxMesh_f8pxf")
+
+[node name="BossGolem" parent="RoomBoss" unique_id=1932997227 instance=ExtResource("1_vi66d")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 76.5)
 
 [node name="CorridorAB" type="Node3D" parent="." unique_id=1090]
 
