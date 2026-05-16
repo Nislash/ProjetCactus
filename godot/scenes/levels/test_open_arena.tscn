@@ -1253,4 +1253,4 @@ mesh = SubResource("BoxMesh_fklot")
 
 [node name="DebugLeverBossSkip" parent="." unique_id=1693265070 instance=ExtResource("200_lever")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.2, -45.5)
-lever_group = "\"cave_door_s\""
+lever_group = &"cave_door_s"
