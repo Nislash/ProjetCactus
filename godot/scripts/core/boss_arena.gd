@@ -20,11 +20,20 @@ var _players_inside: Dictionary = {}  # player_id -> bool
 
 func _ready() -> void:
 	_boss = get_node_or_null(boss_path) as BossBase
+	if _boss == null:
+		# Fallback : cherche un BossBase parmi les frères (cas où boss_path
+		# n'a pas été set dans l'inspector).
+		var parent: Node = get_parent()
+		if parent != null:
+			for sibling in parent.get_children():
+				if sibling is BossBase:
+					_boss = sibling as BossBase
+					break
 	_trigger_zone = get_node_or_null(trigger_zone_path) as Area3D
 	_blocker = get_node_or_null(entrance_blocker_path) as StaticBody3D
 
 	if _boss == null:
-		push_warning("BossArena: boss_path non résolu (%s)" % boss_path)
+		push_warning("BossArena: aucun BossBase trouvé (boss_path=%s)" % boss_path)
 	if _trigger_zone == null:
 		push_warning("BossArena: trigger_zone_path non résolu (%s)" % trigger_zone_path)
 		return
