@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="BossData" load_steps=2 format=3 uid="uid://boss_data_golem_m3"]
+
+[ext_resource type="Script" path="res://scripts/core/data/boss_data.gd" id="1_boss_data"]
+
+[resource]
+script = ExtResource("1_boss_data")
+boss_name_display = "Golem de cristal"
+description = "Premier boss POC. Caverne crystalline niveau 1."
+max_health = 500
+move_speed_base = 2.0
+move_speed_enrage = 3.5
+phase_2_trigger = 0.66
+phase_3_trigger = 0.33
+status_hit_threshold = 2
+status_threshold_window = 5.0
+status_duration_multiplier = 0.5
+enrage_immune_status = Array[StringName]([&"stun", &"freeze"])
+weak_point_recipe = Array[StringName]([&"slow", &"stun"])
+weak_point_window = 3.0
+combo_stun_duration = 5.0
+combo_hp_loss_percent = 0.15
+combo_cooldown = 15.0
+intro_camera_duration = 3.0
+boss_music_path = ""
+drops_legendary_relic = true
