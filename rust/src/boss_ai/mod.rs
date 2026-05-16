@@ -23,6 +23,34 @@ mod targeting;
 use attacks::Attack;
 use state::{ActState, BossPhase};
 
+/// Normalise un angle dans [-PI, PI] pour éviter des rotations de plus
+/// d'un demi-tour quand on calcule la différence cible - courant.
+fn wrap_angle(a: f32) -> f32 {
+    let two_pi = std::f32::consts::TAU;
+    let mut x = a % two_pi;
+    if x > std::f32::consts::PI {
+        x -= two_pi;
+    } else if x < -std::f32::consts::PI {
+        x += two_pi;
+    }
+    x
+}
+
+#[cfg(test)]
+mod tests {
+    use super::wrap_angle;
+
+    #[test]
+    fn wrap_keeps_in_range() {
+        let pi = std::f32::consts::PI;
+        assert!((wrap_angle(0.5) - 0.5).abs() < 1e-5);
+        assert!((wrap_angle(-0.5) + 0.5).abs() < 1e-5);
+        // Plus d'un tour : ramène dans [-PI, PI].
+        let w = wrap_angle(3.0 * pi);
+        assert!(w.abs() <= pi + 1e-5);
+    }
+}
+
 /// Conversion Phase int (côté BossBase GDScript) vers `BossPhase` Rust.
 /// Doit rester aligné avec l'enum `BossBase.Phase` (boss_base.gd).
 const PHASE_GD_IDLE: i32 = 0;
@@ -81,6 +109,17 @@ pub struct BossAI {
 
     /// L'attaque actuellement en cours (ou None si chase/idle).
     current_attack: Option<Attack>,
+
+    /// Vitesse de rotation Y du boss vers sa cible (rad/s).
+    #[export]
+    turn_speed: f32,
+
+    /// Direction figée au début d'une charge (la charge ne peut pas être
+    /// re-aimed pendant son exécution).
+    charge_direction: Vector3,
+    /// Vitesse de la charge (m/s) pendant l'execute.
+    #[export]
+    charge_speed: f32,
 }
 
 #[godot_api]
@@ -101,6 +140,9 @@ impl INode3D for BossAI {
             ranged_cooldown_left: 0.0,
             boss_parent: None,
             current_attack: None,
+            turn_speed: 3.0,
+            charge_direction: Vector3::ZERO,
+            charge_speed: 14.0,
         }
     }
 
@@ -208,6 +250,14 @@ impl BossAI {
         let target_pos = target.get_global_position();
         let dist = boss_pos.distance_to(target_pos);
 
+        // Tourne progressivement le boss vers sa cible (sauf pendant charge
+        // execute : la direction est figée au moment du windup).
+        if !(self.act_state == ActState::AttackExecute
+            && self.current_attack == Some(Attack::Charge))
+        {
+            self.face_target(delta, boss_pos, target_pos);
+        }
+
         // 2) Si déjà en train d'attaquer, on laisse l'attaque dérouler.
         if self.act_state != ActState::Chase && self.act_state != ActState::Idle {
             self.tick_attack(delta, boss_pos, target_pos);
@@ -238,12 +288,21 @@ impl BossAI {
         self.apply_velocity(velocity);
     }
 
-    fn start_attack(&mut self, att: Attack, _boss_pos: Vector3, target_pos: Vector3) {
+    fn start_attack(&mut self, att: Attack, boss_pos: Vector3, target_pos: Vector3) {
         let cfg = att.config();
         self.current_attack = Some(att);
         self.act_state = ActState::AttackWindup;
         self.state_time = 0.0;
         self.stop_movement();
+
+        // Charge : on fige la direction au moment du windup. Pendant
+        // l'execute, le boss avancera tout droit dans cette direction.
+        if att == Attack::Charge {
+            let mut dir = target_pos - boss_pos;
+            dir.y = 0.0;
+            let l = dir.length();
+            self.charge_direction = if l > 0.001 { dir / l } else { Vector3::ZERO };
+        }
 
         // Notifie le boss GDScript que le windup démarre : déclenche le
         // telegraph (decal au sol, anim d'amorce) côté scène.
@@ -258,6 +317,26 @@ impl BossAI {
                 ],
             );
         }
+    }
+
+    /// Fait pivoter le boss autour de l'axe Y pour faire face à la cible.
+    /// move_toward angulaire — borné par `turn_speed * delta` par tick.
+    fn face_target(&mut self, delta: f32, boss_pos: Vector3, target_pos: Vector3) {
+        let Some(boss) = self.boss_parent.as_mut() else {
+            return;
+        };
+        let mut dir = target_pos - boss_pos;
+        dir.y = 0.0;
+        if dir.length() < 0.001 {
+            return;
+        }
+        let target_yaw = (-dir.x).atan2(-dir.z);
+        let mut rotation = boss.get_rotation();
+        let max_step = self.turn_speed * delta;
+        let diff = wrap_angle(target_yaw - rotation.y);
+        let step = diff.clamp(-max_step, max_step);
+        rotation.y += step;
+        boss.set_rotation(rotation);
     }
 
     fn tick_attack(&mut self, _delta: f32, boss_pos: Vector3, target_pos: Vector3) {
@@ -288,9 +367,19 @@ impl BossAI {
                 }
             }
             ActState::AttackExecute => {
+                // Pendant l'execute d'une Charge : déplacement linéaire
+                // forcé selon la direction figée au windup. Les autres
+                // attaques ne bougent pas pendant l'execute.
+                if att == Attack::Charge {
+                    let velocity = self.charge_direction * self.charge_speed;
+                    self.apply_velocity(velocity);
+                }
                 if self.state_time >= cfg.execute {
                     self.act_state = ActState::AttackRecovery;
                     self.state_time = 0.0;
+                    if att == Attack::Charge {
+                        self.stop_movement();
+                    }
                 }
             }
             ActState::AttackRecovery => {

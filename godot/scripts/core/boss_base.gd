@@ -160,16 +160,178 @@ func ai_on_attack_windup(attack_name: String, target_pos: Vector3, duration: flo
 ## slam/shockwave, projectiles pour throw_rocks/shards/beam, etc.).
 func ai_on_attack_execute(attack_name: String, boss_pos: Vector3, target_pos: Vector3, radius: float, damage: float) -> void:
 	match attack_name:
-		"slam", "shockwave":
-			# AoE centré sur target_pos (slam) ou sur le boss (shockwave).
-			var center: Vector3 = target_pos if attack_name == "slam" else boss_pos
-			_apply_aoe_damage(center, radius, int(damage))
-		_:
-			# Les autres attaques (throw_rocks, charge, shard_rain, crystal_beam)
-			# seront implémentées en Phase 3. Stub pour l'instant.
-			pass
+		"slam":
+			_apply_aoe_damage(target_pos, radius, int(damage))
+		"shockwave":
+			# Anneau d'expansion (toute l'arène) centré sur le boss.
+			_apply_aoe_damage(boss_pos, radius, int(damage))
+		"throw_rocks":
+			_execute_throw_rocks(boss_pos, target_pos, radius, int(damage))
+		"shard_rain":
+			_execute_shard_rain(target_pos, radius, int(damage))
+		"charge":
+			# Le mouvement est piloté par BossAI Rust (charge_speed pendant
+			# 1.5s). Ici on attache une hitbox qui inflige dmg+knockback à
+			# tout player touché pendant l'execute.
+			_execute_charge(int(damage), radius)
+		"crystal_beam":
+			_execute_crystal_beam(boss_pos, target_pos, radius, int(damage))
 	if has_method("_on_attack_execute"):
 		call("_on_attack_execute", attack_name, boss_pos, target_pos, radius, damage)
+
+
+# --- Implémentations des attaques distance / spéciales ---
+
+## throw_rocks (phase 1 distance) : 3 rochers en cône vers target_pos,
+## chacun en arc balistique (~0.6s) et explose en AoE `radius` à l'impact.
+func _execute_throw_rocks(boss_pos: Vector3, target_pos: Vector3, radius: float, damage: int) -> void:
+	var dir: Vector3 = (target_pos - boss_pos)
+	dir.y = 0
+	if dir.length() < 0.1:
+		dir = Vector3.FORWARD
+	dir = dir.normalized()
+	var perp: Vector3 = Vector3(-dir.z, 0, dir.x)
+	# 3 rochers : centre + 2 spreads latéraux (±2.5m).
+	var offsets: Array = [Vector3.ZERO, perp * 2.5, -perp * 2.5]
+	for off in offsets:
+		var impact: Vector3 = target_pos + off
+		_spawn_rock_projectile(boss_pos + Vector3(0, 4.5, 0), impact, radius, damage)
+
+
+func _spawn_rock_projectile(from_pos: Vector3, to_pos: Vector3, radius: float, damage: int) -> void:
+	var rock: MeshInstance3D = MeshInstance3D.new()
+	var box: BoxMesh = BoxMesh.new()
+	box.size = Vector3(0.7, 0.7, 0.7)
+	rock.mesh = box
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.55, 0.55, 0.65, 1.0)
+	mat.metallic = 0.4
+	mat.roughness = 0.5
+	rock.material_override = mat
+	get_parent().add_child(rock)
+	rock.global_position = from_pos
+	# Telegraph au sol pendant le vol pour signaler la zone d'impact.
+	_spawn_aoe_telegraph(to_pos, radius, 0.6)
+	# Arc balistique : tween position + petite rotation visuelle.
+	var tween: Tween = rock.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(rock, "global_position", to_pos, 0.6) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(rock, "rotation:y", randf() * TAU, 0.6)
+	# À l'impact : AoE + free.
+	get_tree().create_timer(0.6).timeout.connect(func() -> void:
+		if is_instance_valid(rock):
+			_apply_aoe_damage(rock.global_position, radius, damage)
+			rock.queue_free()
+	)
+
+
+## shard_rain (phase 2 distance) : 6 mini-AoE dispersés autour du target,
+## chacun avec son telegraph 1.5s puis impact.
+func _execute_shard_rain(target_pos: Vector3, radius: float, damage: int) -> void:
+	for i in 6:
+		var angle: float = randf() * TAU
+		var dist: float = randf_range(2.0, 8.0)
+		var impact: Vector3 = target_pos + Vector3(cos(angle) * dist, 0, sin(angle) * dist)
+		_spawn_aoe_telegraph(impact, radius, 1.5)
+		get_tree().create_timer(1.5).timeout.connect(
+			_apply_aoe_damage.bind(impact, radius, damage)
+		)
+
+
+## charge (phase 2 CaC) : pendant l'execute (1.5s pilotée Rust), tout
+## player touché par le boss prend dmg + knockback. On lance une coroutine
+## qui check les overlaps toutes les frames pendant la durée.
+func _execute_charge(damage: int, radius: float) -> void:
+	_charge_hit_players.clear()
+	_charge_remaining = 1.5
+	_charge_damage = damage
+	_charge_radius = radius
+	set_process(true)
+
+
+## crystal_beam (phase 3 enrage) : faisceau orienté vers target_pos, dmg
+## tick toutes les 0.3s pendant 3s aux players sur la ligne (largeur radius).
+func _execute_crystal_beam(boss_pos: Vector3, target_pos: Vector3, radius: float, damage: int) -> void:
+	var dir: Vector3 = (target_pos - boss_pos)
+	dir.y = 0
+	if dir.length() < 0.1:
+		return
+	dir = dir.normalized()
+	# Beam visuel : long box rouge entre boss et 30m devant.
+	var beam: MeshInstance3D = MeshInstance3D.new()
+	var box: BoxMesh = BoxMesh.new()
+	box.size = Vector3(radius * 2, 0.5, 30.0)
+	beam.mesh = box
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = Color(1, 0.2, 0.3, 0.65)
+	mat.emission_enabled = true
+	mat.emission = Color(1, 0.15, 0.2)
+	mat.emission_energy_multiplier = 4.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	beam.material_override = mat
+	get_parent().add_child(beam)
+	beam.global_position = boss_pos + dir * 15.0 + Vector3(0, 1.0, 0)
+	beam.look_at(beam.global_position + dir, Vector3.UP)
+	# 10 ticks de damage sur 3s aux players sur la ligne.
+	var tick_count: int = 10
+	var dmg_per_tick: int = max(1, int(round(float(damage) * 3.0 / float(tick_count))))
+	for i in tick_count:
+		get_tree().create_timer(0.3 * float(i)).timeout.connect(
+			_apply_line_damage.bind(boss_pos, dir, radius, 30.0, dmg_per_tick)
+		)
+	get_tree().create_timer(3.0).timeout.connect(beam.queue_free)
+
+
+## Inflige dmg à tout player dans une bande de demi-largeur `width` le long
+## du segment [origin, origin + dir*length], en XZ uniquement.
+func _apply_line_damage(origin: Vector3, dir: Vector3, half_width: float, length: float, damage: int) -> void:
+	for n in get_tree().get_nodes_in_group(&"players"):
+		if not (n is PlayerController):
+			continue
+		var p: PlayerController = n
+		var to_player: Vector3 = p.global_position - origin
+		to_player.y = 0
+		var along: float = to_player.dot(dir)
+		if along < 0.0 or along > length:
+			continue
+		var perp: Vector3 = to_player - dir * along
+		if perp.length() <= half_width:
+			var hc: HealthComponent = p.get_health()
+			if hc != null and not hc.is_dead:
+				hc.take_damage(damage, self)
+
+
+# --- État runtime de l'attaque charge (tick par _process) ---
+var _charge_remaining: float = 0.0
+var _charge_radius: float = 2.0
+var _charge_damage: int = 50
+var _charge_hit_players: Dictionary = {}
+
+
+func _process(delta: float) -> void:
+	if _charge_remaining <= 0.0:
+		set_process(false)
+		return
+	_charge_remaining -= delta
+	# Check les players proches du boss et applique 1 fois le dmg par player
+	# (set _charge_hit_players pour pas spam-damage 60x/s).
+	for n in get_tree().get_nodes_in_group(&"players"):
+		if not (n is PlayerController):
+			continue
+		var p: PlayerController = n
+		if _charge_hit_players.has(p.player_id):
+			continue
+		var d: Vector3 = p.global_position - global_position
+		d.y = 0
+		if d.length() <= _charge_radius:
+			_charge_hit_players[p.player_id] = true
+			var hc: HealthComponent = p.get_health()
+			if hc != null and not hc.is_dead:
+				hc.take_damage(_charge_damage, self)
+			# Knockback : pousse le player dans la direction de la charge.
+			if d.length() > 0.01:
+				p.velocity += d.normalized() * 8.0 + Vector3(0, 4, 0)
 
 
 ## Spawne un decal au sol cylindrique rouge semi-transparent qui clignote
