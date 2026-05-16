@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://level01poc0a"]
 
 [ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="1_vi66d"]
+[ext_resource type="Script" uid="uid://dca7t3p4xi5jc" path="res://scripts/core/boss_arena.gd" id="2_6wn8c"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_horizon_color = Color(0.65, 0.72, 0.85, 1)
@@ -149,6 +150,21 @@ emission_energy_multiplier = 1.2
 
 [sub_resource type="BoxMesh" id="BoxMesh_f8pxf"]
 size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_a6nhi"]
+size = Vector3(34, 8, 34)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yxx6m"]
+size = Vector3(4, 6, 0.3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_u8mt7"]
+transparency = 1
+albedo_color = Color(1, 0.3, 0.3, 0.5)
+emission_enabled = true
+emission = Color(0.8, 0.1, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_a6nhi"]
+size = Vector3(4, 6, 0.3)
 
 [sub_resource type="BoxShape3D" id="sha_cor_ab_floor"]
 size = Vector3(23, 0.3, 4)
@@ -433,6 +449,26 @@ mesh = SubResource("BoxMesh_f8pxf")
 
 [node name="BossGolem" parent="RoomBoss" unique_id=1932997227 instance=ExtResource("1_vi66d")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 76.5)
+
+[node name="BossArena" type="Node3D" parent="RoomBoss" unique_id=1089110737]
+script = ExtResource("2_6wn8c")
+
+[node name="TriggerZone" type="Area3D" parent="RoomBoss/BossArena" unique_id=1152712861]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 76.5)
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomBoss/BossArena/TriggerZone" unique_id=793150789]
+shape = SubResource("BoxShape3D_a6nhi")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="RoomBoss/BossArena" unique_id=224694485]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 59.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RoomBoss/BossArena/EntranceBlocker" unique_id=579287415]
+shape = SubResource("BoxShape3D_yxx6m")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/BossArena/EntranceBlocker" unique_id=1267477831]
+material_override = SubResource("StandardMaterial3D_u8mt7")
+mesh = SubResource("BoxMesh_a6nhi")
 
 [node name="CorridorAB" type="Node3D" parent="." unique_id=1090]
 
