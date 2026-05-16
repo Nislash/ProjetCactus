@@ -27,4 +27,5 @@ death = ExtResource("10_death")
 melee_combo = ExtResource("11_melee")
 scale = 1.0
 y_offset = 0.0
+y_rotation_deg = 180.0
 loop_locomotion = true

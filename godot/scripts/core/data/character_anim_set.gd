@@ -40,6 +40,9 @@ extends Resource
 @export var scale: float = 1.0
 ## Offset Y appliqué au modèle (utile si le pivot du .glb n'est pas aux pieds).
 @export var y_offset: float = 0.0
+## Rotation Y (deg) appliquée au modèle. 180 pour les .glb Meshy qui
+## regardent +Z (forward Godot = -Z, il faut donc retourner).
+@export var y_rotation_deg: float = 0.0
 ## Loop par défaut sur idle/walk/run.
 @export var loop_locomotion: bool = true
 

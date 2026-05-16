@@ -64,6 +64,8 @@ func _build() -> void:
 		_model.scale = Vector3.ONE * anim_set.scale
 	if anim_set.y_offset != 0.0:
 		_model.position.y = anim_set.y_offset
+	if anim_set.y_rotation_deg != 0.0:
+		_model.rotation.y = deg_to_rad(anim_set.y_rotation_deg)
 
 	# Trouver / créer l'AnimationPlayer cible.
 	_anim_player = _find_animation_player(_model)
