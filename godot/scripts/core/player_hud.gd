@@ -98,6 +98,9 @@ func bind_to_player(player: PlayerController) -> void:
 		player.relic_inventory.inventory_full_attempt.connect(_on_inventory_full_attempt)
 	if _relic_inventory_screen != null:
 		_relic_inventory_screen.bind(player)
+		# Cache le HpPanel et le StatsPanel pendant que l'inventaire reliques
+		# est ouvert (sinon ils chevauchent l'overlay centré).
+		_relic_inventory_screen.visibility_changed.connect(_on_inventory_visibility_changed)
 
 	# Refresh immédiat sur changement d'inventaire (ajout/perte de relique).
 	# Le _process se charge des buffs temporaires entre deux events.
@@ -116,6 +119,18 @@ func _process(delta: float) -> void:
 	if _stats_refresh_accum >= STATS_REFRESH_SEC:
 		_stats_refresh_accum = 0.0
 		_refresh_stats()
+
+
+func _on_inventory_visibility_changed() -> void:
+	if _relic_inventory_screen == null:
+		return
+	var inv_open: bool = _relic_inventory_screen.visible
+	var hp_panel: Control = get_node_or_null(^"HpPanel") as Control
+	var stats_panel: Control = get_node_or_null(^"StatsPanel") as Control
+	if hp_panel != null:
+		hp_panel.visible = not inv_open
+	if stats_panel != null:
+		stats_panel.visible = not inv_open
 
 
 ## Pull-stats du joueur → labels du StatsPanel. Format compact pour rester
@@ -184,6 +199,7 @@ func _apply_minimap_layout() -> void:
 			_minimap_panel.offset_right = -24.0
 			_minimap_panel.offset_bottom = 184.0
 			_minimap_background.color.a = 0.85
+			_minimap_container.modulate.a = 1.0
 			_minimap_container.set_deferred("offset_left", 4.0)
 			_minimap_container.set_deferred("offset_top", 4.0)
 			_minimap_container.set_deferred("offset_right", 156.0)
@@ -206,7 +222,9 @@ func _apply_minimap_layout() -> void:
 			_minimap_panel.offset_top = -h * 0.5
 			_minimap_panel.offset_right = w * 0.5
 			_minimap_panel.offset_bottom = h * 0.5
-			_minimap_background.color.a = 0.35
+			_minimap_background.color.a = 0.2
+			# Map elle-même semi-transparente pour voir le jeu derrière.
+			_minimap_container.modulate.a = 0.6
 			# Le viewport occupe toute la zone (- 4px de marge cohérence).
 			_minimap_container.set_deferred("offset_left", 4.0)
 			_minimap_container.set_deferred("offset_top", 4.0)

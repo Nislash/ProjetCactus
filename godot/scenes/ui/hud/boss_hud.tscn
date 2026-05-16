@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://brisom6oby548"]
 
-[ext_resource type="Script" path="res://scripts/core/boss_hud.gd" id="1_glsw1"]
+[ext_resource type="Script" uid="uid://bb65v0maajtka" path="res://scripts/core/boss_hud.gd" id="1_glsw1"]
 
 [node name="BossHUD" type="Control" unique_id=1938177698]
 layout_mode = 3
@@ -9,8 +9,8 @@ script = ExtResource("1_glsw1")
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=1921047450]
 layout_mode = 0
-anchor_left = 0.1
-anchor_right = 0.9
+anchor_left = 0.3
+anchor_right = 0.7
 anchor_bottom = 0.12
 offset_top = 8.0
 

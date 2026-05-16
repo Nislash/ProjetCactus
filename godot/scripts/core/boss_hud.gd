@@ -55,13 +55,16 @@ func _bind_to(b: BossBase) -> void:
 	if hc != null:
 		_hp_bar.max_value = hc.max_health
 		_hp_bar.value = hc.current_health
-		hc.health_changed.connect(_on_health_changed)
+		if not hc.health_changed.is_connected(_on_health_changed):
+			hc.health_changed.connect(_on_health_changed)
 	if b.boss_data != null:
 		_name_label.text = b.boss_data.boss_name_display
 	else:
 		_name_label.text = "Boss"
-	b.phase_changed.connect(_on_phase_changed)
-	b.boss_defeated.connect(_on_boss_defeated)
+	if not b.phase_changed.is_connected(_on_phase_changed):
+		b.phase_changed.connect(_on_phase_changed)
+	if not b.boss_defeated.is_connected(_on_boss_defeated):
+		b.boss_defeated.connect(_on_boss_defeated)
 	_update_phase_dots(b.get_current_phase())
 	visible = true
 

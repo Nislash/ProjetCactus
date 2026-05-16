@@ -77,19 +77,19 @@ func _check_all_in() -> void:
 	_boss.engage()
 
 
-func _on_boss_defeated(_damage_by_player: Dictionary, _duration: float) -> void:
+func _on_boss_defeated(_damage_by_player: Dictionary, _duration: float, _dropped_relic: RelicData) -> void:
 	_set_blocker_active(false)
 
 
 func _set_blocker_active(active: bool) -> void:
 	if _blocker == null:
 		return
-	_blocker.process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
-	# Désactive aussi via collision_layer pour neutraliser les colliders.
-	_blocker.collision_layer = 1 if active else 0
-	_blocker.collision_mask = 1 if active else 0
+	# Les enable/disable de CollisionShape ne peuvent pas se faire pendant le
+	# flush physics (cas du body_entered → _check_all_in → ici). On passe par
+	# set_deferred pour appliquer au tick suivant.
+	_blocker.set_deferred("collision_layer", 1 if active else 0)
 	for c in _blocker.get_children():
 		if c is CollisionShape3D:
-			c.disabled = not active
-		if c is MeshInstance3D:
-			c.visible = active
+			(c as CollisionShape3D).set_deferred("disabled", not active)
+		elif c is MeshInstance3D:
+			(c as MeshInstance3D).visible = active
