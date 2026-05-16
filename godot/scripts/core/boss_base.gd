@@ -135,6 +135,87 @@ func _attack_tick(_delta: float) -> void:
 	pass
 
 
+# =============================================================================
+# API appelée par BossAI Rust (cf rust/src/boss_ai/). Toutes les méthodes
+# préfixées `ai_` sont des hooks que la lib Rust appelle via Node.call().
+# =============================================================================
+
+## Vitesse de déplacement courante demandée par l'IA. is_enrage = phase 3.
+func get_ai_move_speed(is_enrage: bool) -> float:
+	if boss_data == null:
+		return 2.0
+	return boss_data.move_speed_enrage if is_enrage else boss_data.move_speed_base
+
+
+## Démarrage de telegraph d'attaque (l'IA Rust passe en AttackWindup). Spawne
+## un decal AoE clignotant au sol pendant `duration` secondes.
+func ai_on_attack_windup(attack_name: String, target_pos: Vector3, duration: float, radius: float) -> void:
+	_spawn_aoe_telegraph(target_pos, radius, duration)
+	# Hook pour les sous-classes (ex: BossGolem joue une anim d'amorce).
+	if has_method("_on_attack_windup"):
+		call("_on_attack_windup", attack_name, target_pos, duration, radius)
+
+
+## Exécution effective d'une attaque. Applique l'effet (AoE damage pour
+## slam/shockwave, projectiles pour throw_rocks/shards/beam, etc.).
+func ai_on_attack_execute(attack_name: String, boss_pos: Vector3, target_pos: Vector3, radius: float, damage: float) -> void:
+	match attack_name:
+		"slam", "shockwave":
+			# AoE centré sur target_pos (slam) ou sur le boss (shockwave).
+			var center: Vector3 = target_pos if attack_name == "slam" else boss_pos
+			_apply_aoe_damage(center, radius, int(damage))
+		_:
+			# Les autres attaques (throw_rocks, charge, shard_rain, crystal_beam)
+			# seront implémentées en Phase 3. Stub pour l'instant.
+			pass
+	if has_method("_on_attack_execute"):
+		call("_on_attack_execute", attack_name, boss_pos, target_pos, radius, damage)
+
+
+## Spawne un decal au sol cylindrique rouge semi-transparent qui clignote
+## pendant `duration` puis s'auto-free. Y posé à 0.05 au-dessus du sol pour
+## éviter le z-fighting. Utilisé par les attaques zone (slam, shockwave).
+func _spawn_aoe_telegraph(center: Vector3, radius: float, duration: float) -> void:
+	var marker: MeshInstance3D = MeshInstance3D.new()
+	var cyl: CylinderMesh = CylinderMesh.new()
+	cyl.top_radius = radius
+	cyl.bottom_radius = radius
+	cyl.height = 0.05
+	marker.mesh = cyl
+	var mat: StandardMaterial3D = StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.25, 0.2, 0.4)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.2, 0.15)
+	mat.emission_energy_multiplier = 1.5
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	marker.material_override = mat
+	# Anchored sur le boss parent (= dans le World), à hauteur sol.
+	get_parent().add_child(marker)
+	marker.global_position = Vector3(center.x, center.y + 0.05, center.z)
+	# Tween pulse alpha pour signaler le windup.
+	var tween: Tween = marker.create_tween()
+	tween.set_loops()
+	tween.tween_property(marker, "material_override:albedo_color:a", 0.75, 0.2)
+	tween.tween_property(marker, "material_override:albedo_color:a", 0.25, 0.2)
+	# Free à la fin du windup.
+	get_tree().create_timer(duration).timeout.connect(marker.queue_free)
+
+
+## Inflige des dégâts à tous les PlayerControllers dans le rayon autour
+## du centre (XZ uniquement, ignore Y).
+func _apply_aoe_damage(center: Vector3, radius: float, damage: int) -> void:
+	for n in get_tree().get_nodes_in_group(&"players"):
+		if not (n is PlayerController):
+			continue
+		var p: PlayerController = n
+		var dxz: Vector3 = p.global_position - center
+		dxz.y = 0
+		if dxz.length() <= radius:
+			var hc: HealthComponent = p.get_health()
+			if hc != null and not hc.is_dead:
+				hc.take_damage(damage, self)
+
+
 func _on_damaged_for_tracking(amount: int, source: Node) -> void:
 	if source == null:
 		return
