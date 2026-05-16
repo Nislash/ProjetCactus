@@ -158,24 +158,41 @@ func get_equipped_weapon_kind() -> StringName:
 
 ## À 0 HP : on passe en état DOWNED (cf CLAUDE.md "Friendly fire & revive").
 ## Le joueur peut ramper mais pas tirer ; un allié peut le relever en
-## maintenant `interact` à proximité. Le kill plane reste géré séparément
-## (chute = respawn full HP, ne passe pas par downed).
+## maintenant `interact` à proximité.
 ##
-## En SOLO : pas d'allié pour faire le revive → on respawn directement
-## au spawn point (équivalent au kill plane). Évite le lock complet.
+## En SOLO : pas d'allié → Game Over immédiat.
+## En MULTI : DOWNED. Si TOUS les joueurs sont DOWNED simultanément →
+## Game Over (plus personne pour revive).
 func _on_died(source: Node) -> void:
 	if state == PlayerState.DOWNED:
-		return
-	# Solo (1 seul joueur enregistré) → respawn auto, pas de DOWNED
-	if PlayerManager.get_active_player_count() <= 1:
-		died.emit(source)
-		_respawn()
 		return
 	state = PlayerState.DOWNED
 	velocity = Vector3.ZERO
 	_dash_time_left = 0.0
 	died.emit(source)
 	downed.emit()
+	_check_game_over()
+
+
+## Vérifie si plus aucun joueur n'est en mesure de relever les autres
+## (i.e. tous sont DOWNED). Si oui, déclenche le Game Over.
+func _check_game_over() -> void:
+	var any_alive: bool = false
+	for n in get_tree().get_nodes_in_group(&"players"):
+		if not (n is PlayerController):
+			continue
+		var p: PlayerController = n
+		if p.state == PlayerState.ALIVE and not p._health.is_dead:
+			any_alive = true
+			break
+	if not any_alive:
+		_trigger_game_over()
+
+
+func _trigger_game_over() -> void:
+	var screen: GameOverScreen = get_tree().root.find_child("GameOverScreen", true, false) as GameOverScreen
+	if screen != null:
+		screen.show_game_over()
 
 
 ## Téléporte le joueur au spawn point d'origine et réinitialise tout.

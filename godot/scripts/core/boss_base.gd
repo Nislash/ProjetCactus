@@ -97,7 +97,8 @@ func _set_phase(new_phase: int) -> void:
 	if new_phase == _current_phase:
 		return
 	_current_phase = new_phase
-	# Entrée en enrage : immunité stun + freeze (selon BossData).
+	# Entrée en enrage : immunité stun + freeze (selon BossData) + shift
+	# visuel (mesh principal vire rouge incandescent).
 	if new_phase == Phase.PHASE_3_ENRAGE and boss_data != null:
 		var status: StatusComponent = _health.get_status()
 		if status != null:
@@ -105,7 +106,24 @@ func _set_phase(new_phase: int) -> void:
 				status.set_immune(sid, true)
 		# Vitesse enrage.
 		move_speed = boss_data.move_speed_enrage
+		_apply_enrage_visual()
 	phase_changed.emit(new_phase)
+
+
+## Override le material du mesh principal pour signaler l'enrage. Si une
+## sous-classe (BossGolem) veut customiser, elle peut surcharger.
+func _apply_enrage_visual() -> void:
+	var mesh: MeshInstance3D = get_node_or_null(^"Mesh") as MeshInstance3D
+	if mesh == null:
+		return
+	var enrage_mat: StandardMaterial3D = StandardMaterial3D.new()
+	enrage_mat.albedo_color = Color(0.95, 0.25, 0.15, 1.0)
+	enrage_mat.metallic = 0.7
+	enrage_mat.roughness = 0.25
+	enrage_mat.emission_enabled = true
+	enrage_mat.emission = Color(1.0, 0.4, 0.1)
+	enrage_mat.emission_energy_multiplier = 2.5
+	mesh.material_override = enrage_mat
 
 
 ## Surcharge de _enemy_tick pour piloter les transitions HP. L'IA Rust (#62)

@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://dlm80dec433p3"]
+
+[ext_resource type="Script" path="res://scripts/core/game_over_screen.gd" id="1_l2w8f"]
+
+[node name="GameOverScreen" type="Control" unique_id=2069624692]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_l2w8f")
+
+[node name="Backdrop" type="ColorRect" parent="." unique_id=1109497912]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.85)
+
+[node name="VBox" type="VBoxContainer" parent="Backdrop" unique_id=583948418]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -80.0
+offset_right = 300.0
+offset_bottom = 80.0
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="Title" type="Label" parent="Backdrop/VBox" unique_id=1927481484]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.25, 0.2, 1)
+theme_override_font_sizes/font_size = 72
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Backdrop/VBox" unique_id=1685754686]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "Appuyez sur n'importe quel bouton pour retourner au menu"
+horizontal_alignment = 1
