@@ -113,6 +113,7 @@ func _get_player_color(player_id: int) -> Color:
 
 func _format_duration(sec: float) -> String:
 	var total_s: int = int(sec)
+	@warning_ignore("integer_division")
 	var m: int = total_s / 60
 	var s: int = total_s % 60
 	return "%02d:%02d" % [m, s]
