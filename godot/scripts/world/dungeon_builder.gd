@@ -74,14 +74,126 @@ func build_async() -> void:
 		emit_signal("build_failed", "layout absent")
 		return
 	if mesh_library == null:
-		push_warning("DungeonBuilder: mesh_library absent — GridMap restera vide")
+		# Voie rapide test : MeshLibrary auto-générée en BoxMesh colorés.
+		mesh_library = _make_default_mesh_library()
 	_gridmap.cell_size = layout.cell_size
-	if mesh_library != null:
-		_gridmap.mesh_library = mesh_library
+	_gridmap.mesh_library = mesh_library
 
 	await _build_cells_async()
 	_spawn_entities()
+	_add_floor_colliders()
 	emit_signal("build_completed")
+
+
+## Génère une MeshLibrary minimaliste : 1 BoxMesh par tile_id, coloré pour
+## qu'on distingue visuellement les types. Pour test/dev uniquement — à
+## remplacer par une vraie MeshLibrary d'assets quand on aura les meshes.
+func _make_default_mesh_library() -> MeshLibrary:
+	var lib := MeshLibrary.new()
+	# Couleurs par tile_id. Hauteurs : sols 0.2m, murs 3m (= cell_size.y).
+	var defs := {
+		TILE_FLOOR:       {"color": Color(0.7, 0.7, 0.7), "h": 0.1, "wall": false},
+		TILE_WALL:        {"color": Color(0.35, 0.25, 0.2), "h": 3.0, "wall": true},
+		TILE_CORRIDOR:    {"color": Color(0.55, 0.55, 0.6), "h": 0.1, "wall": false},
+		TILE_SECRET:      {"color": Color(0.45, 0.3, 0.55), "h": 0.1, "wall": false},
+		TILE_DOOR:        {"color": Color(0.3, 0.5, 0.8), "h": 0.3, "wall": false},
+		TILE_BOSS_DOOR:   {"color": Color(0.85, 0.15, 0.15), "h": 3.0, "wall": true},
+		TILE_SECRET_DOOR: {"color": Color(0.5, 0.2, 0.6), "h": 3.0, "wall": true},
+		TILE_STAIR_UP:    {"color": Color(0.95, 0.85, 0.3), "h": 1.2, "wall": false},
+		TILE_STAIR_DOWN:  {"color": Color(0.85, 0.55, 0.2), "h": 1.2, "wall": false},
+		TILE_DROP:        {"color": Color(1.0, 0.4, 0.0), "h": 0.1, "wall": false},
+		TILE_DROP_LANDING:{"color": Color(0.7, 0.3, 0.0), "h": 0.1, "wall": false},
+		TILE_JUMP_PAD:    {"color": Color(0.2, 0.8, 0.2), "h": 0.3, "wall": false},
+		TILE_DRIFT:       {"color": Color(0.3, 0.3, 0.55), "h": 0.1, "wall": false},
+	}
+	var cs := layout.cell_size
+	for tid in defs.keys():
+		var spec: Dictionary = defs[tid]
+		var box := BoxMesh.new()
+		var h: float = spec["h"]
+		box.size = Vector3(cs.x * 0.98, h, cs.z * 0.98)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = spec["color"]
+		mat.roughness = 0.85
+		# Émission légère pour les transitions verticales (visibilité).
+		if tid in [TILE_STAIR_UP, TILE_STAIR_DOWN, TILE_JUMP_PAD, TILE_DROP, TILE_BOSS_DOOR]:
+			mat.emission_enabled = true
+			mat.emission = spec["color"]
+			mat.emission_energy_multiplier = 0.4
+		box.material = mat
+		var id := lib.get_last_unused_item_id()
+		# Force un id explicite : on veut tid en clé exacte pour set_cell_item.
+		lib.create_item(tid)
+		lib.set_item_name(tid, _tile_name(tid))
+		lib.set_item_mesh(tid, box)
+		# Offset Y pour aligner le mesh à la cellule : sol au bas, mur centré.
+		var y_offset: float = h * 0.5 - cs.y * 0.5
+		if spec["wall"]:
+			y_offset = 0.0  # centré dans la cellule
+		var xform := Transform3D(Basis(), Vector3(0, y_offset, 0))
+		lib.set_item_mesh_transform(tid, xform)
+	return lib
+
+
+func _tile_name(tid: int) -> String:
+	match tid:
+		TILE_FLOOR:       return "floor"
+		TILE_WALL:        return "wall"
+		TILE_CORRIDOR:    return "corridor"
+		TILE_SECRET:      return "secret"
+		TILE_DOOR:        return "door"
+		TILE_BOSS_DOOR:   return "boss_door"
+		TILE_SECRET_DOOR: return "secret_door"
+		TILE_STAIR_UP:    return "stair_up"
+		TILE_STAIR_DOWN:  return "stair_down"
+		TILE_DROP:        return "drop"
+		TILE_DROP_LANDING:return "drop_landing"
+		TILE_JUMP_PAD:    return "jump_pad"
+		TILE_DRIFT:       return "drift"
+		_: return "tile_%d" % tid
+
+
+## Ajoute des collisions box invisibles sur les murs pour que le player ne
+## traverse pas. Solution rapide : un StaticBody3D par cellule WALL.
+## Pas optimal pour la perf mais OK pour validation visuelle.
+func _add_floor_colliders() -> void:
+	var size: Vector3i = layout.grid_size
+	var cs: Vector3 = layout.cell_size
+	# Un grand sol invisible par strate pour empêcher de tomber.
+	for y in range(size.y):
+		var floor_body := StaticBody3D.new()
+		floor_body.name = "FloorCollider_y%d" % y
+		var shape_node := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(size.x * cs.x, 0.2, size.z * cs.z)
+		shape_node.shape = shape
+		shape_node.position = Vector3(
+			size.x * cs.x * 0.5,
+			y * cs.y - cs.y * 0.5 + 0.1,
+			size.z * cs.z * 0.5,
+		)
+		floor_body.add_child(shape_node)
+		add_child(floor_body)
+	# Walls : un StaticBody3D par cellule WALL.
+	var walls_body := StaticBody3D.new()
+	walls_body.name = "Walls"
+	add_child(walls_body)
+	for y in range(size.y):
+		for z in range(size.z):
+			for x in range(size.x):
+				var tid := layout.get_tile(x, y, z)
+				if tid != TILE_WALL and tid != TILE_BOSS_DOOR and tid != TILE_SECRET_DOOR:
+					continue
+				var shape_node := CollisionShape3D.new()
+				var shape := BoxShape3D.new()
+				shape.size = Vector3(cs.x, cs.y, cs.z)
+				shape_node.shape = shape
+				shape_node.position = Vector3(
+					(float(x) + 0.5) * cs.x,
+					(float(y) + 0.5) * cs.y,
+					(float(z) + 0.5) * cs.z,
+				)
+				walls_body.add_child(shape_node)
 
 
 func _build_cells_async() -> void:
@@ -99,23 +211,31 @@ func _build_cells_async() -> void:
 
 
 func _spawn_entities() -> void:
-	# Spawn joueurs : marker au centre de la spawn_room (pas d'instanciation
-	# d'un PlayerController ici, c'est le PlayerManager qui s'en charge).
+	# Spawn joueurs : crée la structure attendue par SplitScreenManager :
+	# PlayerSpawnPoints/Spawn0..Spawn3 (cf split_screen_manager.gd).
 	if layout.spawn_room in layout.rooms:
 		var sr: Dictionary = layout.rooms[layout.spawn_room]
-		var spawn_pos: Vector3 = _grid_to_world(
+		var center: Vector3 = _grid_to_world(
 			sr["x"] + int(sr["w"]) / 2,
 			sr["y"],
 			sr["z"] + int(sr["d"]) / 2,
 		)
-		var spawn_marker := Marker3D.new()
-		spawn_marker.name = "PlayerSpawn"
-		spawn_marker.position = spawn_pos
-		_entities_root.add_child(spawn_marker)
-		if spawn_scene != null:
-			var inst := spawn_scene.instantiate()
-			inst.position = spawn_pos
-			_entities_root.add_child(inst)
+		# Léger Y au-dessus du sol pour pas spawner dans le mesh.
+		center.y += 0.5
+		var spawns_root := Node3D.new()
+		spawns_root.name = "PlayerSpawnPoints"
+		_entities_root.add_child(spawns_root)
+		var offsets := [
+			Vector3(-1.0, 0, -1.0),
+			Vector3( 1.0, 0, -1.0),
+			Vector3(-1.0, 0,  1.0),
+			Vector3( 1.0, 0,  1.0),
+		]
+		for i in range(4):
+			var m := Marker3D.new()
+			m.name = "Spawn%d" % i
+			m.position = center + offsets[i]
+			spawns_root.add_child(m)
 
 	# Boss doors : instancie une porte interactive là où le tile BOSS_DOOR est posé.
 	for door in layout.doors:
