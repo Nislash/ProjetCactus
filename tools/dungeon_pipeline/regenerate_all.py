@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DRAWIO = REPO_ROOT / "docs" / "design" / "levels" / "topology.drawio"
 BUILD_DIR = Path(__file__).resolve().parent / "build"
 
-STEPS_AVAILABLE = ["parser", "layout"]
+STEPS_AVAILABLE = ["parser", "layout", "corridors"]
 
 
 def step_parser(drawio: Path, out: Path, strict: bool) -> int:
@@ -36,6 +36,11 @@ def step_parser(drawio: Path, out: Path, strict: bool) -> int:
 def step_layout(levels_json: Path, out_dir: Path, seed: int) -> int:
     from layout.force_directed import main as layout_main
     return layout_main([str(levels_json), "--out-dir", str(out_dir), "--seed", str(seed)])
+
+
+def step_corridors(levels_json: Path, layouts_dir: Path, out_dir: Path, seed: int) -> int:
+    from corridors.build_geometry import main as corr_main
+    return corr_main([str(levels_json), "--layouts", str(layouts_dir), "--out-dir", str(out_dir), "--seed", str(seed)])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -62,6 +67,16 @@ def main(argv: list[str] | None = None) -> int:
             sys.stderr.write(f"ERREUR: {levels_json} absent. Lance d'abord --step parser.\n")
             return 1
         rc = step_layout(levels_json, layouts_dir, args.seed)
+        if rc != 0 and args.strict:
+            return rc
+
+    if args.step in ("corridors", "all"):
+        sys.stderr.write("\n=== Étape 3 : corridors (A* + drunkard) ===\n")
+        if not levels_json.exists() or not layouts_dir.exists():
+            sys.stderr.write("ERREUR: prérequis manquant (levels.json ou layouts/).\n")
+            return 1
+        geometry_dir = BUILD_DIR / "geometry"
+        rc = step_corridors(levels_json, layouts_dir, geometry_dir, args.seed + 100)
         if rc != 0 and args.strict:
             return rc
 
