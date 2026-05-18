@@ -2,6 +2,8 @@
 
 **Statut : STUB — 1 niveau fait main au POC (`level_01_poc`), proc-gen + 7 niveaux restants en phase 2.** Owner : Machine B.
 
+> Voir aussi : [`levels/topology.drawio`](levels/topology.drawio) — schémas topologiques des 8 niveaux avec verticalité, puzzle, fragment méta. Ouvrir dans [app.diagrams.net](https://app.diagrams.net) ou l'extension VS Code "Draw.io Integration".
+
 ## Règle
 
 Chaque niveau a :

@@ -1,0 +1,337 @@
+[gd_scene load_steps=28 format=3 uid="uid://lv03temple01"]
+
+[ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
+[ext_resource type="Script" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+[ext_resource type="Script" path="res://scripts/core/mechanic_low_gravity.gd" id="7_lowgrav"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_horizon_color = Color(0.55, 0.65, 0.85, 1)
+ground_horizon_color = Color(0.6, 0.5, 0.7, 1)
+sky_top_color = Color(0.25, 0.35, 0.65, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.7, 0.75, 0.95, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 2
+
+; ============================================================================
+; SUB_RESOURCES — petites plateformes flottantes
+; ============================================================================
+[sub_resource type="BoxShape3D" id="sha_plat_S"]
+size = Vector3(10, 0.6, 8)
+[sub_resource type="BoxMesh" id="msh_plat_S"]
+size = Vector3(10, 0.6, 8)
+
+[sub_resource type="BoxShape3D" id="sha_plat_M"]
+size = Vector3(14, 0.6, 12)
+[sub_resource type="BoxMesh" id="msh_plat_M"]
+size = Vector3(14, 0.6, 12)
+
+[sub_resource type="BoxShape3D" id="sha_parvis"]
+size = Vector3(18, 0.6, 14)
+[sub_resource type="BoxMesh" id="msh_parvis"]
+size = Vector3(18, 0.6, 14)
+
+[sub_resource type="BoxShape3D" id="sha_pied"]
+size = Vector3(8, 0.6, 8)
+[sub_resource type="BoxMesh" id="msh_pied"]
+size = Vector3(8, 0.6, 8)
+
+[sub_resource type="BoxShape3D" id="sha_boss_floor"]
+size = Vector3(28, 0.6, 22)
+[sub_resource type="BoxMesh" id="msh_boss_floor"]
+size = Vector3(28, 0.6, 22)
+
+; Low railings (visual barrier on platform edges to reduce accidental falls)
+[sub_resource type="BoxShape3D" id="sha_rail_h"]
+size = Vector3(10, 1.2, 0.3)
+[sub_resource type="BoxMesh" id="msh_rail_h"]
+size = Vector3(10, 1.2, 0.3)
+
+[sub_resource type="BoxShape3D" id="sha_rail_v"]
+size = Vector3(0.3, 1.2, 8)
+[sub_resource type="BoxMesh" id="msh_rail_v"]
+size = Vector3(0.3, 1.2, 8)
+
+; Boss arena walls (sommet)
+[sub_resource type="BoxShape3D" id="sha_boss_wall_h"]
+size = Vector3(28, 6, 0.4)
+[sub_resource type="BoxMesh" id="msh_boss_wall_h"]
+size = Vector3(28, 6, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_boss_wall_v"]
+size = Vector3(0.4, 6, 22)
+[sub_resource type="BoxMesh" id="msh_boss_wall_v"]
+size = Vector3(0.4, 6, 22)
+
+; Boss trigger
+[sub_resource type="BoxShape3D" id="sha_boss_trigger"]
+size = Vector3(26, 4, 20)
+
+; Door blocker
+[sub_resource type="BoxShape3D" id="sha_blocker"]
+size = Vector3(6, 6, 0.6)
+[sub_resource type="BoxMesh" id="msh_blocker"]
+size = Vector3(6, 6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="mat_blocker"]
+albedo_color = Color(1.0, 0.95, 0.8, 0.6)
+emission_enabled = true
+emission = Color(1.0, 0.95, 0.6, 1)
+emission_energy_multiplier = 0.8
+
+; Materials — temple céleste, pierres claires + bandeaux dorés
+[sub_resource type="StandardMaterial3D" id="mat_stone_white"]
+albedo_color = Color(0.78, 0.78, 0.82, 1)
+roughness = 0.5
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="mat_gold"]
+albedo_color = Color(0.85, 0.7, 0.3, 1)
+metallic = 0.7
+roughness = 0.25
+emission_enabled = true
+emission = Color(0.85, 0.7, 0.3, 1)
+emission_energy_multiplier = 0.4
+
+; ============================================================================
+; ROOT
+; ============================================================================
+[node name="Level03Temple" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.3, -0.65, 0, 0.9, -0.42, 0.7, 0.3, 0.65, 0, 60, 0)
+light_color = Color(1, 0.95, 0.85, 1)
+light_energy = 1.5
+shadow_enabled = true
+
+; Mécanique signature : gravité réduite
+[node name="MechanicLowGravity" type="Node" parent="."]
+script = ExtResource("7_lowgrav")
+gravity_value = 6.0
+jump_velocity_multiplier = 1.5
+
+; ============================================================================
+; STRATE 0 — Parvis du temple (Y=0)
+; ============================================================================
+[node name="Parvis" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+[node name="Shape" type="CollisionShape3D" parent="Parvis"]
+shape = SubResource("sha_parvis")
+[node name="Mesh" type="MeshInstance3D" parent="Parvis"]
+mesh = SubResource("msh_parvis")
+material_override = SubResource("mat_stone_white")
+
+[node name="Piedestal0" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, -0.3, 0)
+[node name="Shape" type="CollisionShape3D" parent="Piedestal0"]
+shape = SubResource("sha_pied")
+[node name="Mesh" type="MeshInstance3D" parent="Piedestal0"]
+mesh = SubResource("msh_pied")
+material_override = SubResource("mat_gold")
+
+; ============================================================================
+; STRATE +1 — Mezzanine (Y=8)
+; Plates flottantes accessibles par jump (gravité réduite)
+; ============================================================================
+[node name="Plat1W" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 7.7, 12)
+[node name="Shape" type="CollisionShape3D" parent="Plat1W"]
+shape = SubResource("sha_plat_S")
+[node name="Mesh" type="MeshInstance3D" parent="Plat1W"]
+mesh = SubResource("msh_plat_S")
+material_override = SubResource("mat_stone_white")
+; railings
+[node name="RailN" type="StaticBody3D" parent="Plat1W"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -4)
+[node name="Shape" type="CollisionShape3D" parent="Plat1W/RailN"]
+shape = SubResource("sha_rail_h")
+[node name="Mesh" type="MeshInstance3D" parent="Plat1W/RailN"]
+mesh = SubResource("msh_rail_h")
+material_override = SubResource("mat_gold")
+
+[node name="Plat1E" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 7.7, 12)
+[node name="Shape" type="CollisionShape3D" parent="Plat1E"]
+shape = SubResource("sha_plat_S")
+[node name="Mesh" type="MeshInstance3D" parent="Plat1E"]
+mesh = SubResource("msh_plat_S")
+material_override = SubResource("mat_stone_white")
+
+[node name="Plat1N" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.7, 22)
+[node name="Shape" type="CollisionShape3D" parent="Plat1N"]
+shape = SubResource("sha_plat_S")
+[node name="Mesh" type="MeshInstance3D" parent="Plat1N"]
+mesh = SubResource("msh_plat_S")
+material_override = SubResource("mat_stone_white")
+
+; ============================================================================
+; STRATE +2 — Coupole (Y=16)
+; ============================================================================
+[node name="Plat2W" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 15.7, 18)
+[node name="Shape" type="CollisionShape3D" parent="Plat2W"]
+shape = SubResource("sha_plat_S")
+[node name="Mesh" type="MeshInstance3D" parent="Plat2W"]
+mesh = SubResource("msh_plat_S")
+material_override = SubResource("mat_stone_white")
+
+[node name="Plat2C" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 15.7, 26)
+[node name="Shape" type="CollisionShape3D" parent="Plat2C"]
+shape = SubResource("sha_plat_M")
+[node name="Mesh" type="MeshInstance3D" parent="Plat2C"]
+mesh = SubResource("msh_plat_M")
+material_override = SubResource("mat_stone_white")
+
+; ============================================================================
+; STRATE +3 — Sanctuaire céleste (Y=24, arène boss)
+; ============================================================================
+[node name="RoomBoss" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 23.7, 46)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/Floor"]
+shape = SubResource("sha_boss_floor")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/Floor"]
+mesh = SubResource("msh_boss_floor")
+material_override = SubResource("mat_stone_white")
+
+[node name="WallSouth" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 27, 35.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallSouth"]
+shape = SubResource("sha_boss_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallSouth"]
+mesh = SubResource("msh_boss_wall_h")
+material_override = SubResource("mat_stone_white")
+
+[node name="WallNorth" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 27, 56.8)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallNorth"]
+shape = SubResource("sha_boss_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallNorth"]
+mesh = SubResource("msh_boss_wall_h")
+material_override = SubResource("mat_stone_white")
+
+[node name="WallEast" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.8, 27, 46)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallEast"]
+shape = SubResource("sha_boss_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallEast"]
+mesh = SubResource("msh_boss_wall_v")
+material_override = SubResource("mat_stone_white")
+
+[node name="WallWest" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.8, 27, 46)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallWest"]
+shape = SubResource("sha_boss_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallWest"]
+mesh = SubResource("msh_boss_wall_v")
+material_override = SubResource("mat_stone_white")
+
+; ============================================================================
+; LEVERS (P1 P2 P3) — idoles à activer
+; ============================================================================
+[node name="P1_Idole" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2.2, 0, 0, 0, 1.5, 18, 0.1, 0)
+
+[node name="P2_Idole" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2.2, 0, 0, 0, 1.5, 16, 8.1, 12)
+
+[node name="P3_Idole" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2.2, 0, 0, 0, 1.5, -14, 16.1, 18)
+
+; ============================================================================
+; PORTE BOSS + PuzzleGate — pont de lumière vers le sommet
+; ============================================================================
+[node name="BossDoor" parent="." instance=ExtResource("3_door")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 25.5, 35)
+
+[node name="PuzzleGate" type="Node" parent="."]
+script = ExtResource("6_puzzle")
+lever_paths = Array[NodePath]([NodePath("../P1_Idole"), NodePath("../P2_Idole"), NodePath("../P3_Idole")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
+
+; --- Boss (Idole flottante, placeholder) ---
+[node name="BossIdole" parent="." instance=ExtResource("4_boss")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 24, 50)
+
+; --- BossArena lock ---
+[node name="BossArena" type="Node3D" parent="."]
+script = ExtResource("5_arena")
+boss_path = NodePath("../BossIdole")
+trigger_zone_path = NodePath("TriggerZone")
+entrance_blocker_path = NodePath("EntranceBlocker")
+
+[node name="TriggerZone" type="Area3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 26, 46)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/TriggerZone"]
+shape = SubResource("sha_boss_trigger")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 26, 35)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/EntranceBlocker"]
+shape = SubResource("sha_blocker")
+[node name="Mesh" type="MeshInstance3D" parent="BossArena/EntranceBlocker"]
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_blocker")
+
+; ============================================================================
+; FRAGMENT méta (placeholder)
+; ============================================================================
+[node name="FragmentMeta" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -16, 16.5, 12)
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_gold")
+
+; ============================================================================
+; SPAWNS
+; ============================================================================
+[node name="StartChestSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -3)
+
+[node name="PlayerSpawnPoints" type="Node3D" parent="."]
+[node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, -3)
+[node name="Spawn1" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, -3)
+[node name="Spawn2" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, 3)
+[node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 3)
+
+[node name="EnemySpawnPoints" type="Node3D" parent="."]
+[node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 8.5, 12)
+[node name="EnemyB1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.5, 22)
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 8.5, 12)
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 16.5, 26)
+[node name="EnemyC2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 16.5, 22)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+[node name="ChestParvis" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, -3)
+[node name="ChestPied" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.1, 2)
+[node name="ChestPlat1N" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 8.1, 22)
+[node name="ChestPlat2C" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 16.1, 28)

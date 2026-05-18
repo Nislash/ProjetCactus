@@ -1,0 +1,352 @@
+[gd_scene format=3 uid="uid://lv08vide01"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
+[ext_resource type="Script" uid="uid://dca7t3p4xi5jc" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" uid="uid://cqrr68rjasgmk" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+[ext_resource type="Script" uid="uid://bl6xwcceo4uwc" path="res://scripts/core/mechanic_low_gravity.gd" id="7_lowgrav"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0, 0, 0.02, 1)
+sky_horizon_color = Color(0.02, 0, 0.08, 1)
+ground_horizon_color = Color(0.05, 0, 0.12, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.4, 0.35, 0.6, 1)
+ambient_light_energy = 0.3
+tonemap_mode = 2
+
+[sub_resource type="BoxShape3D" id="sha_aster"]
+size = Vector3(14, 0.8, 14)
+
+[sub_resource type="StandardMaterial3D" id="mat_asteroid"]
+albedo_color = Color(0.22, 0.18, 0.3, 1)
+metallic = 0.2
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="msh_aster"]
+size = Vector3(14, 0.8, 14)
+
+[sub_resource type="BoxShape3D" id="sha_core"]
+size = Vector3(22, 0.8, 22)
+
+[sub_resource type="StandardMaterial3D" id="mat_core"]
+albedo_color = Color(0.5, 0.35, 0.7, 1)
+metallic = 0.5
+roughness = 0.4
+emission_enabled = true
+emission = Color(0.4, 0.2, 0.7, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="BoxMesh" id="msh_core"]
+size = Vector3(22, 0.8, 22)
+
+[sub_resource type="BoxShape3D" id="sha_core_wall_h"]
+size = Vector3(22, 5, 0.4)
+
+[sub_resource type="BoxMesh" id="msh_core_wall_h"]
+size = Vector3(22, 5, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_core_wall_v"]
+size = Vector3(0.4, 5, 22)
+
+[sub_resource type="BoxMesh" id="msh_core_wall_v"]
+size = Vector3(0.4, 5, 22)
+
+[sub_resource type="BoxShape3D" id="sha_boss_trigger"]
+size = Vector3(20, 4, 20)
+
+[sub_resource type="BoxShape3D" id="sha_blocker"]
+size = Vector3(5, 4, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="mat_blocker"]
+albedo_color = Color(0.5, 0.2, 0.8, 0.7)
+emission_enabled = true
+emission = Color(0.7, 0.3, 1, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="msh_blocker"]
+size = Vector3(5, 4, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="mat_fragment"]
+albedo_color = Color(0.4, 0.8, 1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.85, 1, 1)
+emission_energy_multiplier = 2.5
+
+[node name="Level08Vide" type="Node3D" unique_id=716071669]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=966867449]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1700536195]
+transform = Transform3D(0.7, -0.3, -0.65, 0, 0.9, -0.42, 0.7, 0.3, 0.65, 0, 80, 0)
+light_color = Color(0.7, 0.5, 1, 1)
+light_energy = 0.5
+shadow_enabled = true
+
+[node name="MechanicLowGravity" type="Node" parent="." unique_id=340749865]
+script = ExtResource("7_lowgrav")
+gravity_value = 3.0
+jump_velocity_multiplier = 2.5
+
+[node name="LightCore" type="OmniLight3D" parent="." unique_id=1805250809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
+light_color = Color(0.6, 0.3, 1, 1)
+light_energy = 3.0
+omni_range = 40.0
+
+[node name="AsterStart" type="StaticBody3D" parent="." unique_id=13857958]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, -38)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterStart" unique_id=857401938]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterStart" unique_id=151906413]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="AsterP1" type="StaticBody3D" parent="." unique_id=1575097944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, -0.4, -18)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterP1" unique_id=1708556708]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterP1" unique_id=1507183148]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="AsterP2" type="StaticBody3D" parent="." unique_id=14871104]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 3.6, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterP2" unique_id=100273769]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterP2" unique_id=1919825793]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="AsterP3" type="StaticBody3D" parent="." unique_id=366730355]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 7.6, 22)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterP3" unique_id=73588672]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterP3" unique_id=1948402996]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="AsterP4" type="StaticBody3D" parent="." unique_id=1476452532]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.6, 30)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterP4" unique_id=1008899516]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterP4" unique_id=1813820907]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="AsterP5" type="StaticBody3D" parent="." unique_id=774738850]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 7.6, 22)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterP5" unique_id=1307259962]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterP5" unique_id=333868316]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="AsterP6" type="StaticBody3D" parent="." unique_id=1810524227]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 3.6, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterP6" unique_id=2094190793]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterP6" unique_id=1855039561]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="AsterP7" type="StaticBody3D" parent="." unique_id=1828245377]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, -0.4, -18)
+
+[node name="Shape" type="CollisionShape3D" parent="AsterP7" unique_id=93071189]
+shape = SubResource("sha_aster")
+
+[node name="Mesh" type="MeshInstance3D" parent="AsterP7" unique_id=215580112]
+material_override = SubResource("mat_asteroid")
+mesh = SubResource("msh_aster")
+
+[node name="RoomBoss" type="Node3D" parent="." unique_id=2052079711]
+
+[node name="Floor" type="StaticBody3D" parent="RoomBoss" unique_id=383638666]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.6, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/Floor" unique_id=695962804]
+shape = SubResource("sha_core")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/Floor" unique_id=1895685474]
+material_override = SubResource("mat_core")
+mesh = SubResource("msh_core")
+
+[node name="WallN" type="StaticBody3D" parent="RoomBoss" unique_id=1128438537]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.5, 11.2)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallN" unique_id=283062119]
+shape = SubResource("sha_core_wall_h")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallN" unique_id=565727122]
+material_override = SubResource("mat_core")
+mesh = SubResource("msh_core_wall_h")
+
+[node name="WallS" type="StaticBody3D" parent="RoomBoss" unique_id=1890649377]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18.5, -11.2)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallS" unique_id=1011388810]
+shape = SubResource("sha_core_wall_h")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallS" unique_id=1499633404]
+material_override = SubResource("mat_core")
+mesh = SubResource("msh_core_wall_h")
+
+[node name="WallE" type="StaticBody3D" parent="RoomBoss" unique_id=1088187358]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.2, 18.5, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallE" unique_id=35881180]
+shape = SubResource("sha_core_wall_v")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallE" unique_id=1988886590]
+material_override = SubResource("mat_core")
+mesh = SubResource("msh_core_wall_v")
+
+[node name="WallW" type="StaticBody3D" parent="RoomBoss" unique_id=1710933553]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.2, 18.5, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallW" unique_id=905166876]
+shape = SubResource("sha_core_wall_v")
+
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallW" unique_id=1262145591]
+material_override = SubResource("mat_core")
+mesh = SubResource("msh_core_wall_v")
+
+[node name="P1_Fragment" parent="." unique_id=386481917 instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, -30, 0.1, -18)
+
+[node name="P2_Fragment" parent="." unique_id=1391677242 instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, -32, 4.1, 0)
+
+[node name="P3_Fragment" parent="." unique_id=990146336 instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, -22, 8.1, 22)
+
+[node name="P4_Fragment" parent="." unique_id=1470667088 instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 0, 12.1, 30)
+
+[node name="P5_Fragment" parent="." unique_id=2088128581 instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 22, 8.1, 22)
+
+[node name="P6_Fragment" parent="." unique_id=1723280116 instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 32, 4.1, 0)
+
+[node name="P7_Fragment" parent="." unique_id=2142654872 instance=ExtResource("2_lever")]
+transform = Transform3D(1.6, 0, 0, 0, 2.2, 0, 0, 0, 1.6, 30, 0.1, -18)
+
+[node name="BossDoor" parent="." unique_id=14194228 instance=ExtResource("3_door")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 17.5, -11.5)
+
+[node name="PuzzleGate" type="Node" parent="." unique_id=1077337030]
+script = ExtResource("6_puzzle")
+lever_paths = Array[NodePath]([NodePath("../P1_Fragment"), NodePath("../P2_Fragment"), NodePath("../P3_Fragment"), NodePath("../P4_Fragment"), NodePath("../P5_Fragment"), NodePath("../P6_Fragment"), NodePath("../P7_Fragment")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
+
+[node name="BossFinal" parent="." unique_id=1542214832 instance=ExtResource("4_boss")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 16, 4)
+
+[node name="BossArena" type="Node3D" parent="." unique_id=2072691744]
+script = ExtResource("5_arena")
+boss_path = NodePath("../BossFinal")
+
+[node name="TriggerZone" type="Area3D" parent="BossArena" unique_id=480522449]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 18, 0)
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/TriggerZone" unique_id=923296936]
+shape = SubResource("sha_boss_trigger")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="BossArena" unique_id=1157391230]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17.5, -11.5)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/EntranceBlocker" unique_id=1650596140]
+shape = SubResource("sha_blocker")
+
+[node name="Mesh" type="MeshInstance3D" parent="BossArena/EntranceBlocker" unique_id=682485134]
+material_override = SubResource("mat_blocker")
+mesh = SubResource("msh_blocker")
+
+[node name="FragmentMetaFinal" type="MeshInstance3D" parent="." unique_id=793137827]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 17, -2)
+material_override = SubResource("mat_fragment")
+mesh = SubResource("msh_blocker")
+
+[node name="StartChestSpawn" type="Marker3D" parent="." unique_id=1175770327]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -35)
+
+[node name="PlayerSpawnPoints" type="Node3D" parent="." unique_id=2070809159]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.939436, 12.946968, 22.934353)
+
+[node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints" unique_id=1629200867]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.39999962, -4.370144)
+
+[node name="Spawn1" type="Marker3D" parent="PlayerSpawnPoints" unique_id=178504397]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.39999962, -4.370144)
+
+[node name="Spawn2" type="Marker3D" parent="PlayerSpawnPoints" unique_id=958529054]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.39999962, -1.3701439)
+
+[node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints" unique_id=2017537208]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.39999962, -1.3701439)
+
+[node name="EnemySpawnPoints" type="Node3D" parent="." unique_id=1820559404]
+
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints" unique_id=1576270458]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.5, -18)
+
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints" unique_id=1435390432]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 8.5, 22)
+
+[node name="EnemyC2" type="Marker3D" parent="EnemySpawnPoints" unique_id=1622644955]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 8.5, 22)
+
+[node name="EnemyC3" type="Marker3D" parent="EnemySpawnPoints" unique_id=484602571]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.5, -18)
+
+[node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints" unique_id=975701777]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.5, 30)
+
+[node name="EnemyB1" type="Marker3D" parent="EnemySpawnPoints" unique_id=1761533887]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 4.5, 0)
+
+[node name="EnemyB2" type="Marker3D" parent="EnemySpawnPoints" unique_id=677291757]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 4.5, 0)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="." unique_id=1631373836]
+
+[node name="ChestStart" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=490664798 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, -38)
+
+[node name="ChestP1" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=665783730 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.1, -18)
+
+[node name="ChestP3" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=382787928 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 8.1, 24)
+
+[node name="ChestP4" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=35274642 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12.1, 28)
+
+[node name="ChestP6" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=1775205538 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 4.1, 0)

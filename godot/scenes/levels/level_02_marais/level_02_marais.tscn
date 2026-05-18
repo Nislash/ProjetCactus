@@ -1,0 +1,429 @@
+[gd_scene load_steps=36 format=3 uid="uid://lv02marais01"]
+
+[ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
+[ext_resource type="Script" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_horizon_color = Color(0.25, 0.32, 0.18, 1)
+ground_horizon_color = Color(0.15, 0.2, 0.12, 1)
+sky_top_color = Color(0.15, 0.2, 0.12, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.4, 0.55, 0.35, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.4, 0.55, 0.35, 1)
+fog_density = 0.05
+fog_height = 4
+
+; ============================================================================
+; SUB_RESOURCES
+; ============================================================================
+; Îlots (small, medium)
+[sub_resource type="BoxShape3D" id="sha_ilot_S"]
+size = Vector3(10, 0.6, 10)
+[sub_resource type="BoxMesh" id="msh_ilot_S"]
+size = Vector3(10, 0.6, 10)
+
+[sub_resource type="BoxShape3D" id="sha_ilot_M"]
+size = Vector3(14, 0.6, 12)
+[sub_resource type="BoxMesh" id="msh_ilot_M"]
+size = Vector3(14, 0.6, 12)
+
+[sub_resource type="BoxShape3D" id="sha_ilot_L"]
+size = Vector3(18, 0.6, 14)
+[sub_resource type="BoxMesh" id="msh_ilot_L"]
+size = Vector3(18, 0.6, 14)
+
+; Bridges (long thin floors)
+[sub_resource type="BoxShape3D" id="sha_bridge_X"]
+size = Vector3(12, 0.4, 3)
+[sub_resource type="BoxMesh" id="msh_bridge_X"]
+size = Vector3(12, 0.4, 3)
+
+[sub_resource type="BoxShape3D" id="sha_bridge_Z"]
+size = Vector3(3, 0.4, 12)
+[sub_resource type="BoxMesh" id="msh_bridge_Z"]
+size = Vector3(3, 0.4, 12)
+
+[sub_resource type="BoxShape3D" id="sha_bridge_diag"]
+size = Vector3(3, 0.4, 16)
+[sub_resource type="BoxMesh" id="msh_bridge_diag"]
+size = Vector3(3, 0.4, 16)
+
+; Bassin (large floor at Y=-6)
+[sub_resource type="BoxShape3D" id="sha_bassin"]
+size = Vector3(40, 0.6, 30)
+[sub_resource type="BoxMesh" id="msh_bassin"]
+size = Vector3(40, 0.6, 30)
+
+; Bassin walls
+[sub_resource type="BoxShape3D" id="sha_bassin_wall_h"]
+size = Vector3(40, 8, 0.4)
+[sub_resource type="BoxMesh" id="msh_bassin_wall_h"]
+size = Vector3(40, 8, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_bassin_wall_v"]
+size = Vector3(0.4, 8, 30)
+[sub_resource type="BoxMesh" id="msh_bassin_wall_v"]
+size = Vector3(0.4, 8, 30)
+
+; Slope/drop ramp from D to bassin
+[sub_resource type="BoxShape3D" id="sha_drop_slope"]
+size = Vector3(6, 0.6, 10)
+[sub_resource type="BoxMesh" id="msh_drop_slope"]
+size = Vector3(6, 0.6, 10)
+
+; Boss trigger zone
+[sub_resource type="BoxShape3D" id="sha_boss_trigger"]
+size = Vector3(38, 6, 28)
+
+; Boss door
+[sub_resource type="BoxShape3D" id="sha_blocker"]
+size = Vector3(6, 6, 0.6)
+[sub_resource type="BoxMesh" id="msh_blocker"]
+size = Vector3(6, 6, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="mat_blocker"]
+albedo_color = Color(0.2, 0.3, 0.1, 0.85)
+emission_enabled = true
+emission = Color(0.4, 0.7, 0.3, 1)
+emission_energy_multiplier = 0.5
+
+; Materials
+[sub_resource type="StandardMaterial3D" id="mat_grass"]
+albedo_color = Color(0.22, 0.45, 0.18, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="mat_wood"]
+albedo_color = Color(0.42, 0.3, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_mud"]
+albedo_color = Color(0.18, 0.22, 0.12, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="mat_water"]
+albedo_color = Color(0.15, 0.3, 0.18, 0.6)
+emission_enabled = true
+emission = Color(0.1, 0.18, 0.08, 1)
+emission_energy_multiplier = 0.3
+
+; Water surface (large visual plane covering everything around islands)
+[sub_resource type="BoxShape3D" id="sha_water_plane"]
+size = Vector3(120, 0.4, 100)
+[sub_resource type="BoxMesh" id="msh_water_plane"]
+size = Vector3(120, 0.4, 100)
+
+; ============================================================================
+; ROOT
+; ============================================================================
+[node name="Level02Marais" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.3, -0.65, 0, 0.9, -0.42, 0.7, 0.3, 0.65, 0, 30, 0)
+light_color = Color(0.85, 0.95, 0.7, 1)
+light_energy = 0.5
+shadow_enabled = true
+
+; Faint omni lights for visibility through fog
+[node name="LightStart" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+light_color = Color(0.9, 0.85, 0.6, 1)
+light_energy = 1.0
+omni_range = 16
+
+[node name="LightCenter" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 30)
+light_color = Color(0.85, 0.95, 0.7, 1)
+light_energy = 1.3
+omni_range = 22
+
+[node name="LightBoss" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 75)
+light_color = Color(0.7, 0.85, 0.6, 1)
+light_energy = 2.0
+omni_range = 30
+
+; ============================================================================
+; WATER SURFACE — at Y=-2, vast plane covering area between islands
+; (visual only — actual water DoT can be added later via separate Area3D)
+; ============================================================================
+[node name="WaterSurface" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 40)
+collision_layer = 0
+collision_mask = 0
+[node name="Shape" type="CollisionShape3D" parent="WaterSurface"]
+shape = SubResource("sha_water_plane")
+disabled = true
+[node name="Mesh" type="MeshInstance3D" parent="WaterSurface"]
+mesh = SubResource("msh_water_plane")
+material_override = SubResource("mat_water")
+
+; ============================================================================
+; STRATE 0 — Îlots (Y=0)
+; ============================================================================
+
+; --- Îlot départ (south, spawn) ---
+[node name="IlotStart" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+[node name="Shape" type="CollisionShape3D" parent="IlotStart"]
+shape = SubResource("sha_ilot_M")
+[node name="Mesh" type="MeshInstance3D" parent="IlotStart"]
+mesh = SubResource("msh_ilot_M")
+material_override = SubResource("mat_grass")
+
+; --- Îlot A (north-west, totem P1) ---
+[node name="IlotA" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, -0.3, 22)
+[node name="Shape" type="CollisionShape3D" parent="IlotA"]
+shape = SubResource("sha_ilot_S")
+[node name="Mesh" type="MeshInstance3D" parent="IlotA"]
+mesh = SubResource("msh_ilot_S")
+material_override = SubResource("mat_grass")
+
+; --- Îlot B (east, totem P2 + mini-boss) ---
+[node name="IlotB" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, -0.3, 22)
+[node name="Shape" type="CollisionShape3D" parent="IlotB"]
+shape = SubResource("sha_ilot_S")
+[node name="Mesh" type="MeshInstance3D" parent="IlotB"]
+mesh = SubResource("msh_ilot_S")
+material_override = SubResource("mat_grass")
+
+; --- Îlot C (center-north, totem P3) ---
+[node name="IlotC" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 40)
+[node name="Shape" type="CollisionShape3D" parent="IlotC"]
+shape = SubResource("sha_ilot_M")
+[node name="Mesh" type="MeshInstance3D" parent="IlotC"]
+mesh = SubResource("msh_ilot_M")
+material_override = SubResource("mat_grass")
+
+; --- Îlot D (large, pont vers boss) ---
+[node name="IlotD" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 60)
+[node name="Shape" type="CollisionShape3D" parent="IlotD"]
+shape = SubResource("sha_ilot_L")
+[node name="Mesh" type="MeshInstance3D" parent="IlotD"]
+mesh = SubResource("msh_ilot_L")
+material_override = SubResource("mat_grass")
+
+; ============================================================================
+; BRIDGES (wooden, between islands)
+; ============================================================================
+
+; Start → A (west diagonal)
+[node name="BridgeStartA" type="StaticBody3D" parent="."]
+transform = Transform3D(0.85, 0, -0.5, 0, 1, 0, 0.5, 0, 0.85, -12, -0.2, 11)
+[node name="Shape" type="CollisionShape3D" parent="BridgeStartA"]
+shape = SubResource("sha_bridge_diag")
+[node name="Mesh" type="MeshInstance3D" parent="BridgeStartA"]
+mesh = SubResource("msh_bridge_diag")
+material_override = SubResource("mat_wood")
+
+; Start → B (east diagonal)
+[node name="BridgeStartB" type="StaticBody3D" parent="."]
+transform = Transform3D(0.85, 0, 0.5, 0, 1, 0, -0.5, 0, 0.85, 12, -0.2, 11)
+[node name="Shape" type="CollisionShape3D" parent="BridgeStartB"]
+shape = SubResource("sha_bridge_diag")
+[node name="Mesh" type="MeshInstance3D" parent="BridgeStartB"]
+mesh = SubResource("msh_bridge_diag")
+material_override = SubResource("mat_wood")
+
+; A → C (along Z)
+[node name="BridgeAC" type="StaticBody3D" parent="."]
+transform = Transform3D(0.85, 0, 0.5, 0, 1, 0, -0.5, 0, 0.85, -13, -0.2, 32)
+[node name="Shape" type="CollisionShape3D" parent="BridgeAC"]
+shape = SubResource("sha_bridge_diag")
+[node name="Mesh" type="MeshInstance3D" parent="BridgeAC"]
+mesh = SubResource("msh_bridge_diag")
+material_override = SubResource("mat_wood")
+
+; B → C (along Z)
+[node name="BridgeBC" type="StaticBody3D" parent="."]
+transform = Transform3D(0.85, 0, -0.5, 0, 1, 0, 0.5, 0, 0.85, 13, -0.2, 32)
+[node name="Shape" type="CollisionShape3D" parent="BridgeBC"]
+shape = SubResource("sha_bridge_diag")
+[node name="Mesh" type="MeshInstance3D" parent="BridgeBC"]
+mesh = SubResource("msh_bridge_diag")
+material_override = SubResource("mat_wood")
+
+; C → D (along Z)
+[node name="BridgeCD" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 50)
+[node name="Shape" type="CollisionShape3D" parent="BridgeCD"]
+shape = SubResource("sha_bridge_Z")
+[node name="Mesh" type="MeshInstance3D" parent="BridgeCD"]
+mesh = SubResource("msh_bridge_Z")
+material_override = SubResource("mat_wood")
+
+; ============================================================================
+; SLOPE DOWN — IlotD → Bassin (-6)
+; Located on the north side of IlotD, drops 6m over 10m run (~31° angle)
+; ============================================================================
+[node name="DropSlope" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.86, 0.5, 0, -0.5, 0.86, 0, -3, 71)
+[node name="Shape" type="CollisionShape3D" parent="DropSlope"]
+shape = SubResource("sha_drop_slope")
+[node name="Mesh" type="MeshInstance3D" parent="DropSlope"]
+mesh = SubResource("msh_drop_slope")
+material_override = SubResource("mat_mud")
+
+; ============================================================================
+; STRATE -1 — Bassin asséché (Y=-6), arène boss
+; ============================================================================
+[node name="Bassin" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Bassin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6.3, 90)
+[node name="Shape" type="CollisionShape3D" parent="Bassin/Floor"]
+shape = SubResource("sha_bassin")
+[node name="Mesh" type="MeshInstance3D" parent="Bassin/Floor"]
+mesh = SubResource("msh_bassin")
+material_override = SubResource("mat_mud")
+
+[node name="WallNorth" type="StaticBody3D" parent="Bassin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 105.2)
+[node name="Shape" type="CollisionShape3D" parent="Bassin/WallNorth"]
+shape = SubResource("sha_bassin_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="Bassin/WallNorth"]
+mesh = SubResource("msh_bassin_wall_h")
+material_override = SubResource("mat_mud")
+
+[node name="WallSouth" type="StaticBody3D" parent="Bassin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 74.8)
+[node name="Shape" type="CollisionShape3D" parent="Bassin/WallSouth"]
+shape = SubResource("sha_bassin_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="Bassin/WallSouth"]
+mesh = SubResource("msh_bassin_wall_h")
+material_override = SubResource("mat_mud")
+
+[node name="WallEast" type="StaticBody3D" parent="Bassin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.8, -2, 90)
+[node name="Shape" type="CollisionShape3D" parent="Bassin/WallEast"]
+shape = SubResource("sha_bassin_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="Bassin/WallEast"]
+mesh = SubResource("msh_bassin_wall_v")
+material_override = SubResource("mat_mud")
+
+[node name="WallWest" type="StaticBody3D" parent="Bassin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.8, -2, 90)
+[node name="Shape" type="CollisionShape3D" parent="Bassin/WallWest"]
+shape = SubResource("sha_bassin_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="Bassin/WallWest"]
+mesh = SubResource("msh_bassin_wall_v")
+material_override = SubResource("mat_mud")
+
+; ============================================================================
+; LEVERS (P1 P2 P3) — totems-sangsue sur îlots
+; ============================================================================
+[node name="P1_Totem" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2.2, 0, 0, 0, 1.5, -25, 0.1, 22)
+
+[node name="P2_Totem" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2.2, 0, 0, 0, 1.5, 25, 0.1, 22)
+
+[node name="P3_Totem" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2.2, 0, 0, 0, 1.5, 0, 0.1, 40)
+
+; ============================================================================
+; PORTE BOSS + PuzzleGate
+; ============================================================================
+[node name="BossDoor" parent="." instance=ExtResource("3_door")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 0, 67)
+
+[node name="PuzzleGate" type="Node" parent="."]
+script = ExtResource("6_puzzle")
+lever_paths = Array[NodePath]([NodePath("../P1_Totem"), NodePath("../P2_Totem"), NodePath("../P3_Totem")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
+
+; --- Boss instance (Sangsue géante — placeholder Golem renamed) ---
+[node name="BossSangsue" parent="." instance=ExtResource("4_boss")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6, 92)
+
+; --- BossArena lock ---
+[node name="BossArena" type="Node3D" parent="."]
+script = ExtResource("5_arena")
+boss_path = NodePath("../BossSangsue")
+trigger_zone_path = NodePath("TriggerZone")
+entrance_blocker_path = NodePath("EntranceBlocker")
+
+[node name="TriggerZone" type="Area3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3, 90)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/TriggerZone"]
+shape = SubResource("sha_boss_trigger")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3, 75)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/EntranceBlocker"]
+shape = SubResource("sha_blocker")
+[node name="Mesh" type="MeshInstance3D" parent="BossArena/EntranceBlocker"]
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_blocker")
+
+; ============================================================================
+; FRAGMENT méta — grotte cachée submergée (placeholder visuel)
+; ============================================================================
+[node name="FragmentMeta" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 16, -5.5, 95)
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_water")
+
+; ============================================================================
+; SPAWNS
+; ============================================================================
+[node name="StartChestSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 3)
+
+[node name="PlayerSpawnPoints" type="Node3D" parent="."]
+[node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.5, -2)
+[node name="Spawn1" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, -2)
+[node name="Spawn2" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0.5, 2)
+[node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 2)
+
+[node name="EnemySpawnPoints" type="Node3D" parent="."]
+; Mêlée sur îlots A, C, D
+[node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0.5, 22)
+[node name="EnemyB1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, 42)
+[node name="EnemyB2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.5, 60)
+; Ranged sur îlots B (avec le mini-boss visuel), D
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0.5, 22)
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 58)
+[node name="EnemyC2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 64)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+[node name="ChestStart" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.1, -3)
+[node name="ChestA" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 0.1, 24)
+[node name="ChestB" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0.1, 24)
+[node name="ChestC" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.1, 38)
+[node name="ChestD" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.1, 62)

@@ -36,6 +36,11 @@ func _ready() -> void:
 
 
 func _try_bind() -> void:
+	# Le signal process_frame peut fire alors que le node est en train d'être
+	# free (ex: change_scene_to_file au Game Over) — guard pour éviter le
+	# crash "Parameter data.tree is null".
+	if not is_inside_tree():
+		return
 	for node in get_tree().get_nodes_in_group(&"bosses"):
 		if not (node is BossBase):
 			continue

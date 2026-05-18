@@ -192,6 +192,18 @@ Détail des dossiers possédés par chaque machine : voir `docs/workflow/machine
 
 Post-POC : proc-gen niveau 1, puis niveaux 2-8 (thème + mécanique signature + fragment puzzle méta + boss), puzzle méta + fin spéciale, polish, online optionnel.
 
+## Skills disponibles (Claude Code)
+
+Skills projet installés dans `skills/` (source : [Jeffallan/claude-skills](https://github.com/Jeffallan/claude-skills), MIT). À utiliser **quand pertinent** :
+
+| Skill | Quand l'invoquer |
+|---|---|
+| `rust-engineer` | Modifs sur `rust/` (combo_engine, boss_ai, gdext) — ownership, lifetimes, async, FFI |
+| `game-developer` | Architecture gameplay (ECS, object pooling, state machines, physics, networking) — patterns transposables Unity/Unreal → Godot |
+| `debugging-wizard` | Debug d'un bug récurrent ou non-trivial avant de patcher à l'aveugle |
+
+Ajout d'une skill : `node ~/.claude/plugins/cache/claudeclaw/claudeclaw/1.0.0/skills/install-skill/install.mjs Jeffallan/claude-skills <skill-name> ./skills`
+
 ## Pour Claude (instructions agent)
 
 - **Avant toute modif**, lire `CLAUDE.md` + le ou les docs `docs/` concernés

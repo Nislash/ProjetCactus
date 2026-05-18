@@ -130,29 +130,11 @@ size = Vector3(0.5, 6, 3)
 albedo_color = Color(0.8, 0.8, 0.8, 1)
 roughness = 0.8
 
-[sub_resource type="BoxShape3D" id="sha_step_cave"]
-size = Vector3(1, 0.5, 4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_8cs1g"]
+size = Vector3(0.3, 12, 15.5)
 
-[sub_resource type="BoxMesh" id="msh_step_cave"]
-size = Vector3(1, 0.5, 4)
-
-[sub_resource type="BoxShape3D" id="sha_wall_stairs"]
-size = Vector3(5, 4, 0.5)
-
-[sub_resource type="BoxMesh" id="msh_wall_stairs"]
-size = Vector3(5, 4, 0.5)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_qs0n7"]
-size = Vector3(35, 0.3, 35)
-
-[sub_resource type="BoxMesh" id="BoxMesh_qs0n7"]
-size = Vector3(35, 0.3, 35)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_cvhp1"]
-size = Vector3(35, 12, 0.3)
-
-[sub_resource type="BoxMesh" id="BoxMesh_cvhp1"]
-size = Vector3(35, 12, 0.3)
+[sub_resource type="BoxMesh" id="BoxMesh_8cs1g"]
+size = Vector3(0.3, 12, 15.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_81wbi"]
 size = Vector3(35, 12, 0.3)
@@ -166,64 +148,43 @@ size = Vector3(0.3, 12, 35)
 [sub_resource type="BoxMesh" id="BoxMesh_d5ngh"]
 size = Vector3(0.3, 12, 35)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_8cs1g"]
-size = Vector3(0.3, 12, 15.5)
-
-[sub_resource type="BoxMesh" id="BoxMesh_8cs1g"]
-size = Vector3(0.3, 12, 15.5)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_30x5i"]
-size = Vector3(0.3, 12, 15.5)
-
-[sub_resource type="BoxMesh" id="BoxMesh_30x5i"]
 size = Vector3(0.3, 12, 15.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1dlm3"]
 size = Vector3(1.5, 8, 1.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qs0n7"]
-albedo_color = Color(0.45, 0.85, 1, 1)
-metallic = 0.3
-roughness = 0.2
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8cs1g"]
+transparency = 1
+albedo_color = Color(1, 0.3, 0.3, 0.5)
 emission_enabled = true
-emission = Color(0.2, 0.6, 0.9, 1)
-emission_energy_multiplier = 1.2
+emission = Color(0.8, 0.1, 0.1, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_1dlm3"]
-size = Vector3(1.5, 8, 1.5)
+[sub_resource type="BoxMesh" id="BoxMesh_30x5i"]
+size = Vector3(0.3, 12, 15.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_flgnr"]
 size = Vector3(1.5, 8, 1.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cvhp1"]
-albedo_color = Color(0.45, 0.85, 1, 1)
-metallic = 0.3
-roughness = 0.2
-emission_enabled = true
-emission = Color(0.2, 0.6, 0.9, 1)
-emission_energy_multiplier = 1.2
-
-[sub_resource type="BoxMesh" id="BoxMesh_flgnr"]
+[sub_resource type="BoxMesh" id="BoxMesh_1dlm3"]
 size = Vector3(1.5, 8, 1.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2ilxl"]
 size = Vector3(1.5, 8, 1.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_81wbi"]
-albedo_color = Color(0.45, 0.85, 1, 1)
-metallic = 0.3
-roughness = 0.2
-emission_enabled = true
-emission = Color(0.2, 0.6, 0.9, 1)
-emission_energy_multiplier = 1.2
-
-[sub_resource type="BoxMesh" id="BoxMesh_2ilxl"]
+[sub_resource type="BoxMesh" id="BoxMesh_flgnr"]
 size = Vector3(1.5, 8, 1.5)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_eay86"]
 size = Vector3(1.5, 8, 1.5)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d5ngh"]
+[sub_resource type="BoxMesh" id="BoxMesh_2ilxl"]
+size = Vector3(1.5, 8, 1.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_g2o83"]
+size = Vector3(34, 10, 34)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_81wbi"]
 albedo_color = Color(0.45, 0.85, 1, 1)
 metallic = 0.3
 roughness = 0.2
@@ -234,20 +195,234 @@ emission_energy_multiplier = 1.2
 [sub_resource type="BoxMesh" id="BoxMesh_eay86"]
 size = Vector3(1.5, 8, 1.5)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_g2o83"]
-size = Vector3(34, 10, 34)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_5gvlj"]
 size = Vector3(0.3, 8, 4)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8cs1g"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_d5ngh"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_g2o83"]
+size = Vector3(0.3, 8, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j28k5"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_30x5i"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_5gvlj"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_58ncf"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1dlm3"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_j28k5"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d3dm7"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_flgnr"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_58ncf"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1oh0u"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ilxl"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_d3dm7"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0lr2e"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eay86"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_1oh0u"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4k7ds"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g2o83"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_0lr2e"]
+size = Vector3(2, 12, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xtvv2"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4k7ds"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dyrw2"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_xtvv2"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_meio3"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_dyrw2"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_c4mcr"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_meio3"]
+size = Vector3(1, 0.5, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bk0x1"]
+size = Vector3(3, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_c4mcr"]
+size = Vector3(3, 0.5, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_044rm"]
+size = Vector3(4, 0.5, 17)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bk0x1"]
+size = Vector3(4, 0.5, 17)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kyede"]
+size = Vector3(5, 4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_044rm"]
+size = Vector3(5, 4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_15hpo"]
+size = Vector3(5, 4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_kyede"]
+size = Vector3(5, 4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fklot"]
+size = Vector3(0.5, 4, 17)
+
+[sub_resource type="BoxMesh" id="BoxMesh_15hpo"]
+size = Vector3(0.5, 4, 17)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ovc4q"]
+size = Vector3(0.5, 4, 13)
+
+[sub_resource type="BoxMesh" id="BoxMesh_fklot"]
+size = Vector3(0.5, 4, 13)
+
+; === CAVE — sub_resources dédiés (refait propre) ===
+[sub_resource type="BoxShape3D" id="sha_cave_floor"]
+size = Vector3(70, 0.5, 70)
+[sub_resource type="BoxMesh" id="msh_cave_floor"]
+size = Vector3(70, 0.5, 70)
+[sub_resource type="BoxShape3D" id="sha_cave_wall_long"]
+size = Vector3(70, 12, 0.3)
+[sub_resource type="BoxMesh" id="msh_cave_wall_long"]
+size = Vector3(70, 12, 0.3)
+[sub_resource type="BoxShape3D" id="sha_cave_wall_side"]
+size = Vector3(0.3, 12, 70)
+[sub_resource type="BoxMesh" id="msh_cave_wall_side"]
+size = Vector3(0.3, 12, 70)
+[sub_resource type="BoxShape3D" id="sha_cave_wall_nw"]
+size = Vector3(42, 12, 0.3)
+[sub_resource type="BoxMesh" id="msh_cave_wall_nw"]
+size = Vector3(42, 12, 0.3)
+[sub_resource type="BoxShape3D" id="sha_cave_wall_ne"]
+size = Vector3(24, 12, 0.3)
+[sub_resource type="BoxMesh" id="msh_cave_wall_ne"]
+size = Vector3(24, 12, 0.3)
+[sub_resource type="BoxShape3D" id="sha_cave_column"]
+size = Vector3(2, 12, 2)
+[sub_resource type="BoxMesh" id="msh_cave_column"]
+size = Vector3(2, 12, 2)
+[sub_resource type="StandardMaterial3D" id="mat_cave_column"]
+albedo_color = Color(0.45, 0.85, 1, 1)
+metallic = 0.3
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.6, 0.9, 1)
+emission_energy_multiplier = 1.2
+[sub_resource type="BoxShape3D" id="sha_cave_trigger"]
+size = Vector3(68, 10, 68)
+[sub_resource type="BoxShape3D" id="sha_cave_blocker"]
+size = Vector3(4, 6, 0.3)
+[sub_resource type="BoxMesh" id="msh_cave_blocker"]
+size = Vector3(4, 6, 0.3)
+[sub_resource type="StandardMaterial3D" id="mat_cave_blocker"]
 transparency = 1
 albedo_color = Color(1, 0.3, 0.3, 0.5)
 emission_enabled = true
 emission = Color(0.8, 0.1, 0.1, 1)
+emission_energy_multiplier = 1.0
 
-[sub_resource type="BoxMesh" id="BoxMesh_g2o83"]
-size = Vector3(0.3, 8, 4)
+; === ESCALIER CAVE — marches uniformes 0.5m ===
+[sub_resource type="BoxShape3D" id="sha_cave_step"]
+size = Vector3(0.5, 0.5, 4)
+[sub_resource type="BoxMesh" id="msh_cave_step"]
+size = Vector3(0.5, 0.5, 4)
+[sub_resource type="BoxShape3D" id="sha_cave_step_wall"]
+size = Vector3(4, 5, 0.3)
+[sub_resource type="BoxMesh" id="msh_cave_step_wall"]
+size = Vector3(4, 5, 0.3)
+[sub_resource type="BoxShape3D" id="sha_cave_landing"]
+size = Vector3(4, 0.5, 4)
+[sub_resource type="BoxMesh" id="msh_cave_landing"]
+size = Vector3(4, 0.5, 4)
+[sub_resource type="BoxShape3D" id="sha_cave_corridor"]
+size = Vector3(4, 0.5, 17)
+[sub_resource type="BoxMesh" id="msh_cave_corridor"]
+size = Vector3(4, 0.5, 17)
+[sub_resource type="BoxShape3D" id="sha_cave_stair_wall_x"]
+size = Vector3(8, 4, 0.3)
+[sub_resource type="BoxMesh" id="msh_cave_stair_wall_x"]
+size = Vector3(8, 4, 0.3)
+[sub_resource type="BoxShape3D" id="sha_cave_corr_wall_z"]
+size = Vector3(0.3, 4, 17)
+[sub_resource type="BoxMesh" id="msh_cave_corr_wall_z"]
+size = Vector3(0.3, 4, 17)
 
 [node name="TestOpenArena" type="Node3D" unique_id=897437672]
 
@@ -781,6 +956,9 @@ shape = SubResource("sha_jonction_ew")
 [node name="Mesh" type="MeshInstance3D" parent="SmallRoomW_JonctionBottom" unique_id=1288670222]
 mesh = SubResource("msh_jonction_ew")
 
+[node name="StartChestSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -25)
+
 [node name="PlayerSpawnPoints" type="Node3D" parent="." unique_id=298298128]
 
 [node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints" unique_id=451758619]
@@ -863,190 +1041,183 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.2, 51.5)
 lever_group = &"cave_door_s"
 
 [node name="SecretDoor" parent="." unique_id=1108735311 instance=ExtResource("201_door")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 5, 2, -48)
+transform = Transform3D(7.54979e-08, 0, 1, 0, 1, 0, -1, 0, 7.54979e-08, 5, 2, -48)
 lever_group = &"cave_door_s"
 override_material = SubResource("mat_wall_hidden")
-
-[node name="StairsCave" type="Node3D" parent="." unique_id=1186122018]
-
-[node name="Step0" type="StaticBody3D" parent="StairsCave" unique_id=1642989086]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, -0.75, -48)
-
-[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step0" unique_id=1060630681]
-shape = SubResource("sha_step_cave")
-
-[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step0" unique_id=1220519752]
-mesh = SubResource("msh_step_cave")
-
-[node name="Step1" type="StaticBody3D" parent="StairsCave" unique_id=1997143700]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -1.75, -48)
-
-[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step1" unique_id=752615203]
-shape = SubResource("sha_step_cave")
-
-[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step1" unique_id=977461632]
-mesh = SubResource("msh_step_cave")
-
-[node name="Step2" type="StaticBody3D" parent="StairsCave" unique_id=159848058]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -2.75, -48)
-
-[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step2" unique_id=1381968136]
-shape = SubResource("sha_step_cave")
-
-[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step2" unique_id=108842708]
-mesh = SubResource("msh_step_cave")
-
-[node name="Step3" type="StaticBody3D" parent="StairsCave" unique_id=884845314]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -3.75, -48)
-
-[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step3" unique_id=730341845]
-shape = SubResource("sha_step_cave")
-
-[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step3" unique_id=1306853976]
-mesh = SubResource("msh_step_cave")
-
-[node name="WallNorth" type="StaticBody3D" parent="StairsCave" unique_id=2121465719]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, -2, -45.75)
-
-[node name="Shape" type="CollisionShape3D" parent="StairsCave/WallNorth" unique_id=1388266057]
-shape = SubResource("sha_wall_stairs")
-
-[node name="Mesh" type="MeshInstance3D" parent="StairsCave/WallNorth" unique_id=1256461886]
-mesh = SubResource("msh_wall_stairs")
-
-[node name="WallSouth" type="StaticBody3D" parent="StairsCave" unique_id=905903135]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, -2, -50.25)
-
-[node name="Shape" type="CollisionShape3D" parent="StairsCave/WallSouth" unique_id=1628498292]
-shape = SubResource("sha_wall_stairs")
-
-[node name="Mesh" type="MeshInstance3D" parent="StairsCave/WallSouth" unique_id=1825101727]
-mesh = SubResource("msh_wall_stairs")
 
 [node name="Cave" type="Node3D" parent="." unique_id=144424294]
 
 [node name="Floor" type="StaticBody3D" parent="Cave" unique_id=629700282]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, -4.25, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.25, -100)
 
 [node name="Shape" type="CollisionShape3D" parent="Cave/Floor" unique_id=381549863]
-shape = SubResource("BoxShape3D_qs0n7")
+shape = SubResource("sha_cave_floor")
 
 [node name="Mesh" type="MeshInstance3D" parent="Cave/Floor" unique_id=1486589425]
-mesh = SubResource("BoxMesh_qs0n7")
+mesh = SubResource("msh_cave_floor")
 
-[node name="WallNorth" type="StaticBody3D" parent="Cave" unique_id=694965852]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 2, -30.5)
+[node name="Ceiling" type="StaticBody3D" parent="Cave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -100)
 
-[node name="Shape" type="CollisionShape3D" parent="Cave/WallNorth" unique_id=1561030020]
-shape = SubResource("BoxShape3D_cvhp1")
+[node name="Shape" type="CollisionShape3D" parent="Cave/Ceiling"]
+shape = SubResource("sha_cave_floor")
 
-[node name="Mesh" type="MeshInstance3D" parent="Cave/WallNorth" unique_id=1367843480]
-mesh = SubResource("BoxMesh_cvhp1")
+[node name="Mesh" type="MeshInstance3D" parent="Cave/Ceiling"]
+mesh = SubResource("msh_cave_floor")
 
 [node name="WallSouth" type="StaticBody3D" parent="Cave" unique_id=508246432]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 2, -65.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -135)
 
 [node name="Shape" type="CollisionShape3D" parent="Cave/WallSouth" unique_id=1796354383]
-shape = SubResource("BoxShape3D_81wbi")
+shape = SubResource("sha_cave_wall_long")
 
 [node name="Mesh" type="MeshInstance3D" parent="Cave/WallSouth" unique_id=614695469]
-mesh = SubResource("BoxMesh_81wbi")
+mesh = SubResource("msh_cave_wall_long")
 
 [node name="WallEast" type="StaticBody3D" parent="Cave" unique_id=461725013]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 2, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 2, -100)
 
 [node name="Shape" type="CollisionShape3D" parent="Cave/WallEast" unique_id=2044032656]
-shape = SubResource("BoxShape3D_d5ngh")
+shape = SubResource("sha_cave_wall_side")
 
 [node name="Mesh" type="MeshInstance3D" parent="Cave/WallEast" unique_id=22395931]
-mesh = SubResource("BoxMesh_d5ngh")
-
-[node name="WallWestNorth" type="StaticBody3D" parent="Cave" unique_id=1150909547]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -38.25)
-
-[node name="Shape" type="CollisionShape3D" parent="Cave/WallWestNorth" unique_id=1201816173]
-shape = SubResource("BoxShape3D_8cs1g")
-
-[node name="Mesh" type="MeshInstance3D" parent="Cave/WallWestNorth" unique_id=360409838]
-mesh = SubResource("BoxMesh_8cs1g")
-
-[node name="WallWestSouth" type="StaticBody3D" parent="Cave" unique_id=172254440]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -57.75)
-
-[node name="Shape" type="CollisionShape3D" parent="Cave/WallWestSouth" unique_id=854874171]
-shape = SubResource("BoxShape3D_30x5i")
-
-[node name="Mesh" type="MeshInstance3D" parent="Cave/WallWestSouth" unique_id=1197784322]
-mesh = SubResource("BoxMesh_30x5i")
+mesh = SubResource("msh_cave_wall_side")
 
 [node name="Lamp" type="OmniLight3D" parent="Cave" unique_id=677705839]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 4, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -100)
 light_color = Color(0.4, 1, 0.5, 1)
 light_energy = 3.0
-omni_range = 40.0
-
-[node name="ColumnNW" type="StaticBody3D" parent="Cave" unique_id=1056690492]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, -38)
-
-[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnNW" unique_id=144441904]
-shape = SubResource("BoxShape3D_1dlm3")
-
-[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnNW" unique_id=36269530]
-material_override = SubResource("StandardMaterial3D_qs0n7")
-mesh = SubResource("BoxMesh_1dlm3")
-
-[node name="ColumnNE" type="StaticBody3D" parent="Cave" unique_id=1717354964]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0, -38)
-
-[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnNE" unique_id=103899413]
-shape = SubResource("BoxShape3D_flgnr")
-
-[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnNE" unique_id=1309809180]
-material_override = SubResource("StandardMaterial3D_cvhp1")
-mesh = SubResource("BoxMesh_flgnr")
-
-[node name="ColumnSW" type="StaticBody3D" parent="Cave" unique_id=1492825651]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 0, -58)
-
-[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnSW" unique_id=1553972993]
-shape = SubResource("BoxShape3D_2ilxl")
-
-[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnSW" unique_id=1110387333]
-material_override = SubResource("StandardMaterial3D_81wbi")
-mesh = SubResource("BoxMesh_2ilxl")
-
-[node name="ColumnSE" type="StaticBody3D" parent="Cave" unique_id=857989974]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0, -58)
-
-[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnSE" unique_id=1440355536]
-shape = SubResource("BoxShape3D_eay86")
-
-[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnSE" unique_id=132180145]
-material_override = SubResource("StandardMaterial3D_d5ngh")
-mesh = SubResource("BoxMesh_eay86")
+omni_range = 80.0
 
 [node name="BossGolem" parent="Cave" unique_id=1932997227 instance=ExtResource("8_cvhp1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, -4, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4, -100)
 
 [node name="BossArena" type="Node3D" parent="Cave" unique_id=317860123]
 script = ExtResource("9_81wbi")
 
 [node name="TriggerZone" type="Area3D" parent="Cave/BossArena" unique_id=1228942057]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.5, 0, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -100)
 monitorable = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cave/BossArena/TriggerZone" unique_id=1353412982]
-shape = SubResource("BoxShape3D_g2o83")
+shape = SubResource("sha_cave_trigger")
 
 [node name="EntranceBlocker" type="StaticBody3D" parent="Cave/BossArena" unique_id=1331086772]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -48)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -1, -65)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Cave/BossArena/EntranceBlocker" unique_id=578720149]
-shape = SubResource("BoxShape3D_5gvlj")
+shape = SubResource("sha_cave_blocker")
 
 [node name="Mesh" type="MeshInstance3D" parent="Cave/BossArena/EntranceBlocker" unique_id=1214854340]
-material_override = SubResource("StandardMaterial3D_8cs1g")
-mesh = SubResource("BoxMesh_g2o83")
+material_override = SubResource("mat_cave_blocker")
+mesh = SubResource("msh_cave_blocker")
+
+[node name="WallWest" type="StaticBody3D" parent="Cave" unique_id=1913594329]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 2, -100)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/WallWest" unique_id=2147306884]
+shape = SubResource("sha_cave_wall_side")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/WallWest" unique_id=678856702]
+mesh = SubResource("msh_cave_wall_side")
+
+[node name="WallNorthWest" type="StaticBody3D" parent="Cave" unique_id=1907359126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 2, -65)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/WallNorthWest" unique_id=466206060]
+shape = SubResource("sha_cave_wall_nw")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/WallNorthWest" unique_id=191446045]
+mesh = SubResource("msh_cave_wall_nw")
+
+[node name="WallNorthEast" type="StaticBody3D" parent="Cave" unique_id=1030604145]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 2, -65)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/WallNorthEast" unique_id=583129885]
+shape = SubResource("sha_cave_wall_ne")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/WallNorthEast" unique_id=709034004]
+mesh = SubResource("msh_cave_wall_ne")
+
+[node name="ColumnNW" type="StaticBody3D" parent="Cave" unique_id=383467033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, -72)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnNW" unique_id=461593007]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnNW" unique_id=1505883831]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
+
+[node name="ColumnNE" type="StaticBody3D" parent="Cave" unique_id=490082195]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -72)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnNE" unique_id=1526921805]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnNE" unique_id=651597662]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
+
+[node name="ColumnSW" type="StaticBody3D" parent="Cave" unique_id=850935776]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, -128)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnSW" unique_id=2017277338]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnSW" unique_id=1673881478]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
+
+[node name="ColumnSE" type="StaticBody3D" parent="Cave" unique_id=514016073]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -128)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnSE" unique_id=1046840975]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnSE" unique_id=776503991]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
+
+[node name="ColumnN" type="StaticBody3D" parent="Cave" unique_id=1683912713]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -72)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnN" unique_id=1313313071]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnN" unique_id=1238352799]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
+
+[node name="ColumnS" type="StaticBody3D" parent="Cave" unique_id=611365383]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -128)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnS" unique_id=1948678437]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnS" unique_id=1149297526]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
+
+[node name="ColumnE" type="StaticBody3D" parent="Cave" unique_id=1210861498]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -100)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnE" unique_id=1259730714]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnE" unique_id=1644783101]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
+
+[node name="ColumnW" type="StaticBody3D" parent="Cave" unique_id=1422815134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, -100)
+
+[node name="Shape" type="CollisionShape3D" parent="Cave/ColumnW" unique_id=824372419]
+shape = SubResource("sha_cave_column")
+
+[node name="Mesh" type="MeshInstance3D" parent="Cave/ColumnW" unique_id=296838725]
+material_override = SubResource("mat_cave_column")
+mesh = SubResource("msh_cave_column")
 
 [node name="RelicChestSpawnPoints" type="Node3D" parent="." unique_id=1301666977]
 
@@ -1070,3 +1241,115 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 51)
 
 [node name="ChestSmallE" type="Marker3D" parent="RelicChestSpawnPoints" unique_id=391610278 groups=["relic_chest_spawns"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 0, 3)
+
+[node name="StairsCave" type="Node3D" parent="." unique_id=880547215]
+
+; 8 marches uniformes : 0.5m profondeur (X) × 0.5m hauteur (Y) × 4m large (Z)
+; Descendent depuis SmallRoomS (y=0, à droite de SecretDoor x=5) jusqu'à y=-4
+
+[node name="Step1" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.25, -0.25, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step1"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step1"]
+mesh = SubResource("msh_cave_step")
+
+[node name="Step2" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.75, -0.75, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step2"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step2"]
+mesh = SubResource("msh_cave_step")
+
+[node name="Step3" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.25, -1.25, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step3"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step3"]
+mesh = SubResource("msh_cave_step")
+
+[node name="Step4" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.75, -1.75, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step4"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step4"]
+mesh = SubResource("msh_cave_step")
+
+[node name="Step5" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.25, -2.25, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step5"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step5"]
+mesh = SubResource("msh_cave_step")
+
+[node name="Step6" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.75, -2.75, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step6"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step6"]
+mesh = SubResource("msh_cave_step")
+
+[node name="Step7" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.25, -3.25, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step7"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step7"]
+mesh = SubResource("msh_cave_step")
+
+[node name="Step8" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.75, -3.75, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Step8"]
+shape = SubResource("sha_cave_step")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Step8"]
+mesh = SubResource("msh_cave_step")
+
+; Palier carré 4×4 au pied de l'escalier (centré x=11 z=-48 y=-4.25 → top=-4)
+[node name="Landing" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -4.25, -48)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Landing"]
+shape = SubResource("sha_cave_landing")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Landing"]
+mesh = SubResource("msh_cave_landing")
+
+; Couloir vers le sud (virage 90°). Centre x=9 → aligne avec ouverture cave [7,11]
+; size 4×0.5×17 → x∈[7,11], z∈[-65,-48]
+[node name="Corridor" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, -4.25, -56.5)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/Corridor"]
+shape = SubResource("sha_cave_corridor")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/Corridor"]
+mesh = SubResource("msh_cave_corridor")
+
+; Murs latéraux de l'escalier (anti-chute, z=-46 et z=-50, sur 4m hauteur)
+[node name="StairsWallN" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -1.5, -46)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/StairsWallN"]
+shape = SubResource("sha_cave_step_wall")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/StairsWallN"]
+mesh = SubResource("msh_cave_step_wall")
+
+[node name="StairsWallS" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -1.5, -50)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/StairsWallS"]
+shape = SubResource("sha_cave_step_wall")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/StairsWallS"]
+mesh = SubResource("msh_cave_step_wall")
+
+; Murs du couloir (z=-65 à -48, hauteur 4m centré y=-2)
+[node name="CorridorWallE" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, -2, -56.5)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/CorridorWallE"]
+shape = SubResource("sha_cave_corr_wall_z")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/CorridorWallE"]
+mesh = SubResource("msh_cave_corr_wall_z")
+
+[node name="CorridorWallW" type="StaticBody3D" parent="StairsCave"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, -2, -56.5)
+[node name="Shape" type="CollisionShape3D" parent="StairsCave/CorridorWallW"]
+shape = SubResource("sha_cave_corr_wall_z")
+[node name="Mesh" type="MeshInstance3D" parent="StairsCave/CorridorWallW"]
+mesh = SubResource("msh_cave_corr_wall_z")
+
+[node name="DebugLeverBossSkip" parent="." unique_id=1693265070 instance=ExtResource("200_lever")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.2, -45.5)
+lever_group = &"cave_door_s"

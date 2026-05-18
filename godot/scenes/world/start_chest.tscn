@@ -1,0 +1,62 @@
+[gd_scene load_steps=10 format=3 uid="uid://start_chest_m2"]
+
+[ext_resource type="Script" path="res://scripts/core/start_chest.gd" id="1_chest"]
+
+; Socle (cube doré au sol)
+[sub_resource type="BoxShape3D" id="Shape_base"]
+size = Vector3(1.2, 0.8, 1.2)
+[sub_resource type="BoxMesh" id="Mesh_base"]
+size = Vector3(1.2, 0.8, 1.2)
+[sub_resource type="StandardMaterial3D" id="Mat_base"]
+albedo_color = Color(0.45, 0.32, 0.15, 1)
+metallic = 0.7
+roughness = 0.35
+
+; Indicateur (cube doré flottant + emission forte pour l'apercevoir de loin)
+[sub_resource type="BoxMesh" id="Mesh_indicator"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_indicator"]
+albedo_color = Color(1.0, 0.85, 0.3, 1)
+emission_enabled = true
+emission = Color(1.0, 0.85, 0.3, 1)
+emission_energy_multiplier = 3.5
+metallic = 0.8
+roughness = 0.15
+
+; Collision shape de l'Area3D (Interactable)
+[sub_resource type="SphereShape3D" id="Shape_area"]
+radius = 2.5
+
+[node name="StartChest" type="Area3D"]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("1_chest")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("Shape_area")
+
+; Socle physique (bloque le joueur)
+[node name="Base" type="StaticBody3D" parent="."]
+
+[node name="Shape" type="CollisionShape3D" parent="Base"]
+shape = SubResource("Shape_base")
+
+[node name="BaseMesh" type="MeshInstance3D" parent="Base"]
+mesh = SubResource("Mesh_base")
+material_override = SubResource("Mat_base")
+
+; Indicateur visuel (au-dessus du socle, emissif pour repere visuel)
+[node name="Indicator" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("Mesh_indicator")
+material_override = SubResource("Mat_indicator")
+
+; Lumière émissive pour reperage de loin
+[node name="Light" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+light_color = Color(1.0, 0.85, 0.3, 1)
+light_energy = 2.0
+omni_range = 8

@@ -1,0 +1,362 @@
+[gd_scene load_steps=30 format=3 uid="uid://lv04forge01"]
+
+[ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="2_lever"]
+[ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="3_door"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
+[ext_resource type="Script" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+[ext_resource type="Script" path="res://scripts/core/mechanic_rising_lava.gd" id="7_lava"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_horizon_color = Color(0.35, 0.12, 0.05, 1)
+ground_horizon_color = Color(0.15, 0.05, 0.02, 1)
+sky_top_color = Color(0.18, 0.06, 0.02, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.9, 0.45, 0.2, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 2
+
+; ============================================================================
+; SUB_RESOURCES — étages 16x14 environ
+; ============================================================================
+[sub_resource type="BoxShape3D" id="sha_etage"]
+size = Vector3(20, 0.6, 16)
+[sub_resource type="BoxMesh" id="msh_etage"]
+size = Vector3(20, 0.6, 16)
+
+[sub_resource type="BoxShape3D" id="sha_etage_l"]
+size = Vector3(24, 0.6, 20)
+[sub_resource type="BoxMesh" id="msh_etage_l"]
+size = Vector3(24, 0.6, 20)
+
+[sub_resource type="BoxShape3D" id="sha_boss_floor"]
+size = Vector3(28, 0.6, 24)
+[sub_resource type="BoxMesh" id="msh_boss_floor"]
+size = Vector3(28, 0.6, 24)
+
+; Outer tower walls (tall, around perimeter of all 5 strates)
+[sub_resource type="BoxShape3D" id="sha_tower_wall_h"]
+size = Vector3(28, 24, 0.4)
+[sub_resource type="BoxMesh" id="msh_tower_wall_h"]
+size = Vector3(28, 24, 0.4)
+
+[sub_resource type="BoxShape3D" id="sha_tower_wall_v"]
+size = Vector3(0.4, 24, 24)
+[sub_resource type="BoxMesh" id="msh_tower_wall_v"]
+size = Vector3(0.4, 24, 24)
+
+; Stairs/ramp (4m drop over 7m run ≈ 30°)
+[sub_resource type="BoxShape3D" id="sha_stair"]
+size = Vector3(5, 0.6, 8)
+[sub_resource type="BoxMesh" id="msh_stair"]
+size = Vector3(5, 0.6, 8)
+
+; Boss trigger
+[sub_resource type="BoxShape3D" id="sha_boss_trigger"]
+size = Vector3(26, 4, 22)
+
+; Door blocker
+[sub_resource type="BoxShape3D" id="sha_blocker"]
+size = Vector3(5, 5, 0.6)
+[sub_resource type="BoxMesh" id="msh_blocker"]
+size = Vector3(5, 5, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="mat_blocker"]
+albedo_color = Color(0.3, 0.1, 0.05, 0.8)
+emission_enabled = true
+emission = Color(1, 0.4, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+; Materials
+[sub_resource type="StandardMaterial3D" id="mat_iron"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+metallic = 0.65
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="mat_brick"]
+albedo_color = Color(0.45, 0.15, 0.08, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="mat_forge_glow"]
+albedo_color = Color(0.95, 0.4, 0.15, 1)
+emission_enabled = true
+emission = Color(1, 0.5, 0.2, 1)
+emission_energy_multiplier = 1.8
+
+; ============================================================================
+; ROOT
+; ============================================================================
+[node name="Level04Forge" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7, -0.3, -0.65, 0, 0.9, -0.42, 0.7, 0.3, 0.65, 0, 50, 0)
+light_color = Color(1, 0.55, 0.25, 1)
+light_energy = 0.4
+shadow_enabled = true
+
+; Mécanique signature : lave qui monte (start_delay 60s, duration 5min)
+[node name="MechanicRisingLava" type="Node3D" parent="."]
+script = ExtResource("7_lava")
+plane_size_xz = Vector2(30, 100)
+start_y = -8.0
+end_y = 16.0
+duration_sec = 300.0
+start_delay_sec = 60.0
+damage_per_sec = 50
+damage_tick_sec = 0.4
+
+; Lights par strate (forges incandescentes)
+[node name="LightFonderie" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+light_color = Color(1, 0.55, 0.2, 1)
+light_energy = 2.0
+omni_range = 18
+
+[node name="LightAtelier0" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 14)
+light_color = Color(1, 0.55, 0.2, 1)
+light_energy = 1.8
+omni_range = 16
+
+[node name="LightAtelier1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, 28)
+light_color = Color(1, 0.55, 0.2, 1)
+light_energy = 1.8
+omni_range = 16
+
+[node name="LightAtelier2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 42)
+light_color = Color(1, 0.55, 0.2, 1)
+light_energy = 1.8
+omni_range = 16
+
+[node name="LightBoss" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 60)
+light_color = Color(1, 0.4, 0.15, 1)
+light_energy = 2.5
+omni_range = 26
+
+; ============================================================================
+; STRATE -1 — Fonderie (Y=-4, spawn + P1)
+; ============================================================================
+[node name="Fonderie" type="Node3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="Fonderie"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.3, 0)
+[node name="Shape" type="CollisionShape3D" parent="Fonderie/Floor"]
+shape = SubResource("sha_etage_l")
+[node name="Mesh" type="MeshInstance3D" parent="Fonderie/Floor"]
+mesh = SubResource("msh_etage_l")
+material_override = SubResource("mat_brick")
+
+; ============================================================================
+; STAIRS Fonderie (Y=-4) → Atelier0 (Y=0), going +Z
+; ============================================================================
+[node name="Stair01" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.88, 0.47, 0, -0.47, 0.88, 8, -2, 12)
+[node name="Shape" type="CollisionShape3D" parent="Stair01"]
+shape = SubResource("sha_stair")
+[node name="Mesh" type="MeshInstance3D" parent="Stair01"]
+mesh = SubResource("msh_stair")
+material_override = SubResource("mat_iron")
+
+; ============================================================================
+; STRATE 0 — Atelier0 (Y=0, P2)
+; ============================================================================
+[node name="Atelier0" type="Node3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="Atelier0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 14)
+[node name="Shape" type="CollisionShape3D" parent="Atelier0/Floor"]
+shape = SubResource("sha_etage")
+[node name="Mesh" type="MeshInstance3D" parent="Atelier0/Floor"]
+mesh = SubResource("msh_etage")
+material_override = SubResource("mat_brick")
+
+[node name="Stair02" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.88, 0.47, 0, -0.47, 0.88, -8, 2, 26)
+[node name="Shape" type="CollisionShape3D" parent="Stair02"]
+shape = SubResource("sha_stair")
+[node name="Mesh" type="MeshInstance3D" parent="Stair02"]
+mesh = SubResource("msh_stair")
+material_override = SubResource("mat_iron")
+
+; ============================================================================
+; STRATE +1 — Atelier1 (Y=4, P3)
+; ============================================================================
+[node name="Atelier1" type="Node3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="Atelier1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.7, 28)
+[node name="Shape" type="CollisionShape3D" parent="Atelier1/Floor"]
+shape = SubResource("sha_etage")
+[node name="Mesh" type="MeshInstance3D" parent="Atelier1/Floor"]
+mesh = SubResource("msh_etage")
+material_override = SubResource("mat_brick")
+
+[node name="Stair03" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.88, 0.47, 0, -0.47, 0.88, 8, 6, 40)
+[node name="Shape" type="CollisionShape3D" parent="Stair03"]
+shape = SubResource("sha_stair")
+[node name="Mesh" type="MeshInstance3D" parent="Stair03"]
+mesh = SubResource("msh_stair")
+material_override = SubResource("mat_iron")
+
+; ============================================================================
+; STRATE +2 — Atelier2 (Y=8, P4)
+; ============================================================================
+[node name="Atelier2" type="Node3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="Atelier2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.7, 42)
+[node name="Shape" type="CollisionShape3D" parent="Atelier2/Floor"]
+shape = SubResource("sha_etage")
+[node name="Mesh" type="MeshInstance3D" parent="Atelier2/Floor"]
+mesh = SubResource("msh_etage")
+material_override = SubResource("mat_brick")
+
+[node name="Stair04" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.88, 0.47, 0, -0.47, 0.88, -8, 10, 54)
+[node name="Shape" type="CollisionShape3D" parent="Stair04"]
+shape = SubResource("sha_stair")
+[node name="Mesh" type="MeshInstance3D" parent="Stair04"]
+mesh = SubResource("msh_stair")
+material_override = SubResource("mat_iron")
+
+; ============================================================================
+; STRATE +3 — Sommet (Y=12, arène boss Forgeron)
+; ============================================================================
+[node name="RoomBoss" type="Node3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 11.7, 60)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/Floor"]
+shape = SubResource("sha_boss_floor")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/Floor"]
+mesh = SubResource("msh_boss_floor")
+material_override = SubResource("mat_brick")
+
+[node name="WallNorth" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 72.2)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallNorth"]
+shape = SubResource("sha_tower_wall_h")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallNorth"]
+mesh = SubResource("msh_tower_wall_h")
+material_override = SubResource("mat_iron")
+
+[node name="WallEast" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.2, 14, 60)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallEast"]
+shape = SubResource("sha_tower_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallEast"]
+mesh = SubResource("msh_tower_wall_v")
+material_override = SubResource("mat_iron")
+
+[node name="WallWest" type="StaticBody3D" parent="RoomBoss"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.2, 14, 60)
+[node name="Shape" type="CollisionShape3D" parent="RoomBoss/WallWest"]
+shape = SubResource("sha_tower_wall_v")
+[node name="Mesh" type="MeshInstance3D" parent="RoomBoss/WallWest"]
+mesh = SubResource("msh_tower_wall_v")
+material_override = SubResource("mat_iron")
+
+; ============================================================================
+; LEVERS (P1 P2 P3 P4) — 4 forges
+; ============================================================================
+[node name="P1_Forge" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, -8, -3.8, -4)
+
+[node name="P2_Forge" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, 8, 0.1, 14)
+
+[node name="P3_Forge" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, -8, 4.1, 28)
+
+[node name="P4_Forge" parent="." instance=ExtResource("2_lever")]
+transform = Transform3D(1.5, 0, 0, 0, 2, 0, 0, 0, 1.5, 8, 8.1, 42)
+
+; ============================================================================
+; PORTE BOSS + PuzzleGate
+; ============================================================================
+[node name="BossDoor" parent="." instance=ExtResource("3_door")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1, 0, 13.5, 50)
+
+[node name="PuzzleGate" type="Node" parent="."]
+script = ExtResource("6_puzzle")
+lever_paths = Array[NodePath]([NodePath("../P1_Forge"), NodePath("../P2_Forge"), NodePath("../P3_Forge"), NodePath("../P4_Forge")])
+door_paths = Array[NodePath]([NodePath("../BossDoor")])
+
+; --- Boss Forgeron infernal ---
+[node name="BossForgeron" parent="." instance=ExtResource("4_boss")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 64)
+
+[node name="BossArena" type="Node3D" parent="."]
+script = ExtResource("5_arena")
+boss_path = NodePath("../BossForgeron")
+trigger_zone_path = NodePath("TriggerZone")
+entrance_blocker_path = NodePath("EntranceBlocker")
+
+[node name="TriggerZone" type="Area3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 60)
+monitorable = false
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/TriggerZone"]
+shape = SubResource("sha_boss_trigger")
+
+[node name="EntranceBlocker" type="StaticBody3D" parent="BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14, 50)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BossArena/EntranceBlocker"]
+shape = SubResource("sha_blocker")
+[node name="Mesh" type="MeshInstance3D" parent="BossArena/EntranceBlocker"]
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_blocker")
+
+; ============================================================================
+; FRAGMENT méta (placeholder, derrière forge P3)
+; ============================================================================
+[node name="FragmentMeta" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, -10, 4.5, 28)
+mesh = SubResource("msh_blocker")
+material_override = SubResource("mat_forge_glow")
+
+; ============================================================================
+; SPAWNS
+; ============================================================================
+[node name="StartChestSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.5, 2)
+
+[node name="PlayerSpawnPoints" type="Node3D" parent="."]
+[node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -3.5, -4)
+[node name="Spawn1" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -3.5, -4)
+[node name="Spawn2" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -3.5, 4)
+[node name="Spawn3" type="Marker3D" parent="PlayerSpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -3.5, 4)
+
+[node name="EnemySpawnPoints" type="Node3D" parent="."]
+[node name="EnemyB0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 14)
+[node name="EnemyB1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 28)
+[node name="EnemyB2" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 8.5, 42)
+[node name="EnemyC0" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.5, 18)
+[node name="EnemyC1" type="Marker3D" parent="EnemySpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 8.5, 42)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="."]
+[node name="ChestFonderie" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, -3.9, 0)
+[node name="ChestA0" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, 14)
+[node name="ChestA1" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 4.1, 28)
+[node name="ChestA2" type="Marker3D" parent="RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 8.1, 42)

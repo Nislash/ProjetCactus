@@ -548,6 +548,9 @@ mesh = SubResource("msh_cor_ce_wall")
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1140]
 navigation_mesh = SubResource("nav_mesh")
 
+[node name="StartChestSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 2)
+
 [node name="PlayerSpawnPoints" type="Node3D" parent="." unique_id=1150]
 
 [node name="Spawn0" type="Marker3D" parent="PlayerSpawnPoints" unique_id=1151]

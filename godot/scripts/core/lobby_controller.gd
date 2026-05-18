@@ -5,12 +5,12 @@ extends Control
 ## Phases :
 ## - JOIN : aucun joueur encore inscrit. Les manettes peuvent presser Start
 ##   pour rejoindre. Boutons menu invisibles tant que personne n'est joint.
-## - MENU : 1+ joueur joint. 2 gros boutons (Tuto, Lancer le Run) +
+## - MENU : 1+ joueur joint. 2 gros boutons (Niveau 1, Lancer le Run) +
 ##   dropdown level select + boutons secondaires (Leaderboard, Settings).
 ## - PANEL : un sous-panel (leaderboard / settings) est ouvert. B pour
 ##   revenir au menu.
 ##
-## Tuto et Run set RunState.selected_level_path puis change_scene_to_file
+## Niveau 1 et Run set RunState.selected_level_path puis change_scene_to_file
 ## vers res://scenes/run/run_shell.tscn — le shell instancie le level.
 ##
 ## Pour ajouter un nouveau level jouable via "Lancer le Run", ajoutez une
@@ -23,7 +23,10 @@ extends Control
 ## par player_id.
 
 const RUN_SHELL_SCENE := "res://scenes/run/run_shell.tscn"
-const LEVEL_TUTO := "res://scenes/levels/test_open_arena.tscn"
+## Niveau du bouton "Tutoriel" : l'ancien niveau 1 (test_open_arena) sert
+## maintenant de tutoriel — petite arène ouverte avec boss Golem, parfait
+## pour apprendre tir / sort / combo / revive avant les niveaux complets.
+const TUTORIAL_PATH := "res://scenes/levels/test_open_arena.tscn"
 const MAX_PLAYERS: int = 4
 
 ## Liste des niveaux jouables via le bouton "Lancer le Run". Le dropdown se
@@ -32,7 +35,14 @@ const MAX_PLAYERS: int = 4
 ## Ajoutez une entree quand un nouveau niveau est pret. Le numero affiche
 ## sert juste de tag (le path est la source de verite).
 const LEVELS: Array = [
-	{"id": 1, "name": "POC niveau 1 (caverne crystalline)", "path": "res://scenes/levels/level_01_poc/level_01_poc.tscn"},
+	{"id": 1, "name": "N1 — Caverne crystalline", "path": "res://scenes/levels/level_01_caverne/level_01_caverne.tscn"},
+	{"id": 2, "name": "N2 — Marais toxique", "path": "res://scenes/levels/level_02_marais/level_02_marais.tscn"},
+	{"id": 3, "name": "N3 — Temple gravité réduite", "path": "res://scenes/levels/level_03_temple/level_03_temple.tscn"},
+	{"id": 4, "name": "N4 — Forge en fusion", "path": "res://scenes/levels/level_04_forge/level_04_forge.tscn"},
+	{"id": 5, "name": "N5 — Bibliothèque hantée", "path": "res://scenes/levels/level_05_biblio/level_05_biblio.tscn"},
+	{"id": 6, "name": "N6 — Montagne frozen", "path": "res://scenes/levels/level_06_montagne/level_06_montagne.tscn"},
+	{"id": 7, "name": "N7 — Labyrinthe miroirs", "path": "res://scenes/levels/level_07_miroirs/level_07_miroirs.tscn"},
+	{"id": 8, "name": "N8 — Vide cosmique", "path": "res://scenes/levels/level_08_vide/level_08_vide.tscn"},
 ]
 
 enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
@@ -133,7 +143,9 @@ func _refresh_status() -> void:
 
 
 func _on_tuto_pressed() -> void:
-	_launch_level(LEVEL_TUTO)
+	# Bouton "Tutoriel" : lance test_open_arena (mini-arène + boss Golem).
+	# Sert d'introduction aux mécaniques avant les 8 niveaux complets.
+	_launch_level(TUTORIAL_PATH)
 
 
 func _on_run_pressed() -> void:

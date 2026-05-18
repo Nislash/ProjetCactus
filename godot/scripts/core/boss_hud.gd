@@ -30,6 +30,8 @@ func _process(_delta: float) -> void:
 
 
 func _try_find_boss() -> void:
+	if not is_inside_tree():
+		return
 	for node in get_tree().get_nodes_in_group(&"bosses"):
 		if not (node is BossBase):
 			continue

@@ -1,7 +1,10 @@
-[gd_scene format=3 uid="uid://cr8bg6vwe157r"]
+[gd_scene load_steps=4 format=3 uid="uid://cr8bg6vwe157r"]
 
 [ext_resource type="Script" uid="uid://crwsy3umlcte4" path="res://scripts/core/boss_golem.gd" id="1_8ggej"]
 [ext_resource type="Script" uid="uid://duufd13mvbexe" path="res://scripts/core/health_component.gd" id="2_p0orm"]
+[ext_resource type="Script" path="res://scripts/core/character_visual.gd" id="3_visual"]
+[ext_resource type="Script" path="res://scripts/core/character_animator.gd" id="4_animator"]
+[ext_resource type="Resource" uid="uid://char_anim_sentinel" path="res://resources/characters/sentinel.tres" id="5_animset"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8ggej"]
 radius = 2.0
@@ -47,8 +50,18 @@ shape = SubResource("CapsuleShape3D_8ggej")
 
 [node name="Mesh" type="MeshInstance3D" parent="." unique_id=105077980]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+visible = false
 material_override = SubResource("StandardMaterial3D_8ggej")
 mesh = SubResource("CapsuleMesh_8ggej")
+
+[node name="Visual" type="Node3D" parent="."]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+script = ExtResource("3_visual")
+anim_set = ExtResource("5_animset")
+
+[node name="Animator" type="Node" parent="."]
+script = ExtResource("4_animator")
+visual_path = NodePath("../Visual")
 
 [node name="CrystalBack" type="MeshInstance3D" parent="." unique_id=988232664]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -1.8)
@@ -63,3 +76,7 @@ mesh = SubResource("BoxMesh_p0orm")
 
 [node name="Health" type="Node" parent="." unique_id=552139802]
 script = ExtResource("2_p0orm")
+
+[node name="BossAI" type="BossAI" parent="." unique_id=2140679379]
+melee_range = 6.0
+stop_chase_distance = 5.0

@@ -1,5 +1,7 @@
 use godot::prelude::*;
 
+mod boss_ai;
+
 struct CactusExtension;
 
 #[gdextension]
