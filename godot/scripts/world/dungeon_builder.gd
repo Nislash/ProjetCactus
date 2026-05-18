@@ -83,7 +83,75 @@ func build_async() -> void:
 	await _build_cells_async()
 	_spawn_entities()
 	_add_floor_colliders()
+	_add_stair_teleporters()
 	emit_signal("build_completed")
+
+
+## Pour chaque transition verticale (stairs/ladder/elevator/jump/drop),
+## place une Area3D au-dessus de la cellule pos_from. Quand le joueur entre
+## dedans, il est téléporté à la position pos_to (strate cible).
+##
+## Solution MVP : pas de vraies pentes 3D, c'est un téléport instantané.
+## À remplacer par des MeshInstance3D inclinés + trous dans le sol plus tard.
+func _add_stair_teleporters() -> void:
+	var cs: Vector3 = layout.cell_size
+	for stair in layout.stairs:
+		var kind: String = stair.get("kind", "stairs")
+		# zero_g_drift est aussi dans layout.stairs mais on ne le pose pas
+		# comme téléporteur (déplacement libre en N8 par design).
+		if kind == "zero_g_drift":
+			continue
+
+		var from_pos := Vector3(
+			(float(stair["from_x"]) + 0.5) * cs.x,
+			float(stair["from_y"]) * cs.y + 1.0,
+			(float(stair["from_z"]) + 0.5) * cs.z,
+		)
+		var to_pos := Vector3(
+			(float(stair["to_x"]) + 0.5) * cs.x,
+			float(stair["to_y"]) * cs.y + 1.0,
+			(float(stair["to_z"]) + 0.5) * cs.z,
+		)
+		_spawn_teleporter(from_pos, to_pos, "%s_%s_to_%s" % [kind, stair["from_room"], stair["to_room"]])
+		# Bidirectionnel sauf one-way drop.
+		if kind != "one_way_drop":
+			_spawn_teleporter(to_pos, from_pos, "%s_%s_to_%s_back" % [kind, stair["to_room"], stair["from_room"]])
+
+
+func _spawn_teleporter(from_pos: Vector3, to_pos: Vector3, label: String) -> void:
+	var area := Area3D.new()
+	area.name = "Teleport_" + label
+	area.position = from_pos
+	# Cooldown pour éviter un ping-pong infini.
+	area.set_meta("target", to_pos)
+	area.set_meta("cooldown_until", 0.0)
+	var shape_node := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(layout.cell_size.x * 0.8, 2.5, layout.cell_size.z * 0.8)
+	shape_node.shape = box
+	area.add_child(shape_node)
+	area.body_entered.connect(_on_teleporter_body_entered.bind(area))
+	_entities_root.add_child(area)
+
+
+func _on_teleporter_body_entered(body: Node, area: Area3D) -> void:
+	# Évite la téléport en boucle : cooldown 0.5s après chaque téléport.
+	var now: float = Time.get_ticks_msec() / 1000.0
+	if now < float(area.get_meta("cooldown_until", 0.0)):
+		return
+	if not (body is CharacterBody3D):
+		return
+	var target: Vector3 = area.get_meta("target", Vector3.ZERO)
+	# Met le joueur au target. set_meta cooldown sur l'area cible aussi pour
+	# éviter le ping-pong direct.
+	body.global_position = target
+	area.set_meta("cooldown_until", now + 0.5)
+	# Cherche l'area opposée (même target en from_pos) pour la mettre aussi en cooldown.
+	for sibling in _entities_root.get_children():
+		if sibling is Area3D and sibling != area:
+			var sib_from: Vector3 = (sibling as Area3D).global_position
+			if sib_from.distance_to(target) < 1.0:
+				(sibling as Area3D).set_meta("cooldown_until", now + 0.5)
 
 
 ## Ajoute un éclairage minimaliste (sun + ambient) pour que la scène ne soit
