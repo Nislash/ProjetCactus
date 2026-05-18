@@ -171,15 +171,14 @@ func _make_default_mesh_library() -> MeshLibrary:
 			mat.emission = spec["color"]
 			mat.emission_energy_multiplier = 0.4
 		box.material = mat
-		var id := lib.get_last_unused_item_id()
 		# Force un id explicite : on veut tid en clé exacte pour set_cell_item.
 		lib.create_item(tid)
 		lib.set_item_name(tid, _tile_name(tid))
 		lib.set_item_mesh(tid, box)
-		# Offset Y pour aligner le mesh à la cellule : sol au bas, mur centré.
+		# Offset Y : aligne le BAS du mesh au plancher de la cellule
+		#   (= y_idx * cs.y). Pour ça, on offset depuis le centre de la cellule
+		#   (qui est à y_idx*cs.y + cs.y/2) de `h/2 - cs.y/2`.
 		var y_offset: float = h * 0.5 - cs.y * 0.5
-		if spec["wall"]:
-			y_offset = 0.0  # centré dans la cellule
 		var xform := Transform3D(Basis(), Vector3(0, y_offset, 0))
 		lib.set_item_mesh_transform(tid, xform)
 	return lib
@@ -203,47 +202,67 @@ func _tile_name(tid: int) -> String:
 		_: return "tile_%d" % tid
 
 
-## Ajoute des collisions box invisibles sur les murs pour que le player ne
-## traverse pas. Solution rapide : un StaticBody3D par cellule WALL.
-## Pas optimal pour la perf mais OK pour validation visuelle.
+## Ajoute des colliders par cellule :
+## - Cellules walkable (floor/corridor/secret/door/stair_*/drop/jump_pad/drift) :
+##   une box plate à hauteur du mesh sol (top à y_idx*cs.y + 0.2).
+## - Cellules murs (wall/boss_door/secret_door) : box pleine occupant toute
+##   la cellule (de y_idx*cs.y à (y_idx+1)*cs.y).
+##
+## Le joueur marche donc sur le mesh visuellement (top du sol à 0.1m audessus
+## du fond de la cellule) et les murs le bloquent latéralement.
 func _add_floor_colliders() -> void:
 	var size: Vector3i = layout.grid_size
 	var cs: Vector3 = layout.cell_size
-	# Un grand sol invisible par strate pour empêcher de tomber.
-	for y in range(size.y):
-		var floor_body := StaticBody3D.new()
-		floor_body.name = "FloorCollider_y%d" % y
-		var shape_node := CollisionShape3D.new()
-		var shape := BoxShape3D.new()
-		shape.size = Vector3(size.x * cs.x, 0.2, size.z * cs.z)
-		shape_node.shape = shape
-		shape_node.position = Vector3(
-			size.x * cs.x * 0.5,
-			y * cs.y - cs.y * 0.5 + 0.1,
-			size.z * cs.z * 0.5,
-		)
-		floor_body.add_child(shape_node)
-		add_child(floor_body)
-	# Walls : un StaticBody3D par cellule WALL.
+
+	var floors_body := StaticBody3D.new()
+	floors_body.name = "FloorColliders"
+	add_child(floors_body)
+
 	var walls_body := StaticBody3D.new()
-	walls_body.name = "Walls"
+	walls_body.name = "WallColliders"
 	add_child(walls_body)
+
+	# Set de tiles qui sont "marchables" (le joueur a un sol à fouler dessus).
+	var walkable_tiles := {
+		TILE_FLOOR: true, TILE_CORRIDOR: true, TILE_SECRET: true,
+		TILE_DOOR: true, TILE_STAIR_UP: true, TILE_STAIR_DOWN: true,
+		TILE_DROP: true, TILE_DROP_LANDING: true, TILE_JUMP_PAD: true,
+		TILE_DRIFT: true,
+	}
+	# Set de tiles qui sont "murs pleins" (bloquent le passage).
+	var wall_tiles := {
+		TILE_WALL: true, TILE_BOSS_DOOR: true, TILE_SECRET_DOOR: true,
+	}
+
 	for y in range(size.y):
 		for z in range(size.z):
 			for x in range(size.x):
 				var tid := layout.get_tile(x, y, z)
-				if tid != TILE_WALL and tid != TILE_BOSS_DOOR and tid != TILE_SECRET_DOOR:
-					continue
-				var shape_node := CollisionShape3D.new()
-				var shape := BoxShape3D.new()
-				shape.size = Vector3(cs.x, cs.y, cs.z)
-				shape_node.shape = shape
-				shape_node.position = Vector3(
-					(float(x) + 0.5) * cs.x,
-					(float(y) + 0.5) * cs.y,
-					(float(z) + 0.5) * cs.z,
-				)
-				walls_body.add_child(shape_node)
+				if walkable_tiles.has(tid):
+					var fs := CollisionShape3D.new()
+					var fbox := BoxShape3D.new()
+					fbox.size = Vector3(cs.x, 0.2, cs.z)
+					fs.shape = fbox
+					# Top du collider à y_idx*cs.y + 0.2 → joueur posé au-dessus
+					# du mesh sol (qui top à 0.1).
+					fs.position = Vector3(
+						(float(x) + 0.5) * cs.x,
+						float(y) * cs.y + 0.1,
+						(float(z) + 0.5) * cs.z,
+					)
+					floors_body.add_child(fs)
+				elif wall_tiles.has(tid):
+					var ws := CollisionShape3D.new()
+					var wbox := BoxShape3D.new()
+					wbox.size = Vector3(cs.x, cs.y, cs.z)
+					ws.shape = wbox
+					# Centre du mur à mi-hauteur de la cellule.
+					ws.position = Vector3(
+						(float(x) + 0.5) * cs.x,
+						(float(y) + 0.5) * cs.y,
+						(float(z) + 0.5) * cs.z,
+					)
+					walls_body.add_child(ws)
 
 
 func _build_cells_async() -> void:
@@ -265,13 +284,18 @@ func _spawn_entities() -> void:
 	# PlayerSpawnPoints/Spawn0..Spawn3 (cf split_screen_manager.gd).
 	if layout.spawn_room in layout.rooms:
 		var sr: Dictionary = layout.rooms[layout.spawn_room]
-		var center: Vector3 = _grid_to_world(
-			sr["x"] + int(sr["w"]) / 2,
-			sr["y"],
-			sr["z"] + int(sr["d"]) / 2,
+		var cs: Vector3 = layout.cell_size
+		# Position : centre XZ de la spawn_room, Y juste au-dessus du sol de
+		# la strate (sol mesh top à y_idx*cs.y + 0.1, joueur posé à
+		# y_idx*cs.y + 1.0 pour avoir ses pieds au sol).
+		var cx: int = sr["x"] + int(sr["w"]) / 2
+		var cz: int = sr["z"] + int(sr["d"]) / 2
+		var y_idx: int = sr["y"]
+		var center := Vector3(
+			(float(cx) + 0.5) * cs.x,
+			float(y_idx) * cs.y + 1.0,
+			(float(cz) + 0.5) * cs.z,
 		)
-		# Léger Y au-dessus du sol pour pas spawner dans le mesh.
-		center.y += 0.5
 		var spawns_root := Node3D.new()
 		spawns_root.name = "PlayerSpawnPoints"
 		_entities_root.add_child(spawns_root)
