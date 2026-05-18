@@ -179,13 +179,11 @@ impl INode3D for BossAI {
             BossPhase::Idle | BossPhase::Dead | BossPhase::Stunned => {
                 self.act_state = ActState::Idle;
                 self.stop_movement();
-                return;
             }
             BossPhase::Transition1to2 | BossPhase::Transition2to3 => {
                 // Pendant la transition : le boss est invulnérable et ne
                 // fait rien. À implémenter avec un timer plus tard.
                 self.stop_movement();
-                return;
             }
             BossPhase::Phase1 | BossPhase::Phase2 | BossPhase::Phase3Enrage => {
                 // Combat actif.
@@ -346,24 +344,22 @@ impl BossAI {
         };
         let cfg = att.config();
         match self.act_state {
-            ActState::AttackWindup => {
-                if self.state_time >= cfg.windup {
-                    self.act_state = ActState::AttackExecute;
-                    self.state_time = 0.0;
-                    // L'exécution : on demande au boss GDScript d'appliquer
-                    // l'effet (AoE damage, projectile spawn, etc.).
-                    if let Some(boss) = self.boss_parent.as_mut() {
-                        boss.call(
-                            "ai_on_attack_execute",
-                            &[
-                                cfg.name.to_variant(),
-                                boss_pos.to_variant(),
-                                target_pos.to_variant(),
-                                cfg.aoe_radius.to_variant(),
-                                cfg.damage.to_variant(),
-                            ],
-                        );
-                    }
+            ActState::AttackWindup if self.state_time >= cfg.windup => {
+                self.act_state = ActState::AttackExecute;
+                self.state_time = 0.0;
+                // L'exécution : on demande au boss GDScript d'appliquer
+                // l'effet (AoE damage, projectile spawn, etc.).
+                if let Some(boss) = self.boss_parent.as_mut() {
+                    boss.call(
+                        "ai_on_attack_execute",
+                        &[
+                            cfg.name.to_variant(),
+                            boss_pos.to_variant(),
+                            target_pos.to_variant(),
+                            cfg.aoe_radius.to_variant(),
+                            cfg.damage.to_variant(),
+                        ],
+                    );
                 }
             }
             ActState::AttackExecute => {
@@ -382,18 +378,16 @@ impl BossAI {
                     }
                 }
             }
-            ActState::AttackRecovery => {
-                if self.state_time >= cfg.recovery {
-                    // Cooldown du type d'attaque concerné.
-                    if cfg.is_melee {
-                        self.melee_cooldown_left = cfg.cooldown;
-                    } else {
-                        self.ranged_cooldown_left = cfg.cooldown;
-                    }
-                    self.current_attack = None;
-                    self.act_state = ActState::Chase;
-                    self.state_time = 0.0;
+            ActState::AttackRecovery if self.state_time >= cfg.recovery => {
+                // Cooldown du type d'attaque concerné.
+                if cfg.is_melee {
+                    self.melee_cooldown_left = cfg.cooldown;
+                } else {
+                    self.ranged_cooldown_left = cfg.cooldown;
                 }
+                self.current_attack = None;
+                self.act_state = ActState::Chase;
+                self.state_time = 0.0;
             }
             _ => {}
         }
