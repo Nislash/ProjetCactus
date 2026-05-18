@@ -414,14 +414,16 @@ func _spawn_player_markers() -> void:
 ##     une room combat — RunShell tirera 4 au hasard.
 ##   - 'StartChestSpawn' (nom) : décalé du centre de la spawn_room (qui peut
 ##     être occupé par téléporteur).
+##
+## Y des markers : `_object_floor_y(y_idx)` = juste au-dessus du mesh sol
+## (origin des coffres/leviers est à leur base).
 func _spawn_run_chest_markers() -> void:
 	var cs: Vector3 = layout.cell_size
 
 	# StartChestSpawn : dans la spawn_room, décalé du centre.
 	if layout.spawn_room in layout.rooms:
 		var sr: Dictionary = layout.rooms[layout.spawn_room]
-		var y_floor: float = float(sr["y"]) * cs.y + 1.0
-		# 2 cellules avant le centre, contre un mur.
+		var y_floor: float = _object_floor_y(sr["y"])
 		var sx: int = int(sr["x"]) + 2
 		var sz: int = int(sr["z"]) + 2
 		var marker := Marker3D.new()
@@ -429,8 +431,7 @@ func _spawn_run_chest_markers() -> void:
 		marker.position = Vector3((float(sx) + 0.5) * cs.x, y_floor, (float(sz) + 0.5) * cs.z)
 		_entities_root.add_child(marker)
 
-	# 4 markers relic_chest_spawns dans des rooms variées (entree, combat, etc.).
-	# RunShell tire au hasard et les utilise.
+	# Markers relic_chest_spawns dans des rooms variées (entree, combat, etc.).
 	var candidate_rooms: Array = []
 	for rid in layout.rooms.keys():
 		var rm: Dictionary = layout.rooms[rid]
@@ -440,8 +441,7 @@ func _spawn_run_chest_markers() -> void:
 	for i in range(candidate_rooms.size()):
 		var rid: String = candidate_rooms[i]
 		var rm: Dictionary = layout.rooms[rid]
-		var y_floor: float = float(rm["y"]) * cs.y + 1.0
-		# Décalé du centre (où peut être un téléporteur).
+		var y_floor: float = _object_floor_y(rm["y"])
 		var cx: int = int(rm["x"]) + 1
 		var cz: int = int(rm["z"]) + int(rm["d"]) - 2
 		var m := Marker3D.new()
@@ -449,6 +449,13 @@ func _spawn_run_chest_markers() -> void:
 		m.position = Vector3((float(cx) + 0.5) * cs.x, y_floor, (float(cz) + 0.5) * cs.z)
 		m.add_to_group(&"relic_chest_spawns")
 		_entities_root.add_child(m)
+
+
+## Y world pour un objet posé au sol (coffres, leviers, etc.).
+## Le mesh sol a son top à y_idx*cs.y + 0.2 (mesh épais 0.1 centré 0.05 au-dessus
+## de y_idx*cs.y + 0.05). On pose la BASE de l'objet à top du sol.
+func _object_floor_y(y_idx: int) -> float:
+	return float(y_idx) * layout.cell_size.y + 0.2
 
 
 ## Instancie les cristaux (Lever scenes) pour chaque puzzle_trigger Pn,
@@ -467,7 +474,7 @@ func _spawn_puzzle_triggers_and_gate() -> void:
 		if not (room_id in layout.rooms):
 			continue
 		var rm: Dictionary = layout.rooms[room_id]
-		var y_floor: float = float(rm["y"]) * cs.y + 1.0
+		var y_floor: float = _object_floor_y(rm["y"])
 		# Place le lever au coin opposé du centre pour ne pas chevaucher
 		# d'éventuels téléporteurs.
 		var lx: int = int(rm["x"]) + 1
@@ -510,7 +517,9 @@ func _spawn_enemies() -> void:
 		var enemy_scene: PackedScene = enemy_ranged_scene if is_ranged else enemy_melee_scene
 		if enemy_scene == null:
 			continue
-		var y_floor: float = float(rm["y"]) * cs.y + 1.0
+		# Ennemis : on les pose un peu plus haut que les objets statiques pour
+		# que la gravité les pose sur le sol même si leur collision est large.
+		var y_floor: float = float(rm["y"]) * cs.y + 0.5
 		# Spawn aux 4 coins de la zone walkable (intérieur de la room).
 		var x0: int = int(rm["x"]) + 1
 		var x1: int = int(rm["x"]) + int(rm["w"]) - 2
@@ -539,7 +548,8 @@ func _spawn_boss() -> void:
 			continue
 		var cx: int = int(rm["x"]) + int(rm["w"]) / 2
 		var cz: int = int(rm["z"]) + int(rm["d"]) / 2
-		var y_floor: float = float(rm["y"]) * cs.y + 1.0
+		# Boss au sol — il a son origin à sa base (StaticBody/CharacterBody).
+		var y_floor: float = _object_floor_y(rm["y"])
 		var boss := boss_scene.instantiate()
 		boss.name = "Boss_%s" % rid
 		_entities_root.add_child(boss)
