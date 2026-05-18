@@ -35,14 +35,14 @@ const MAX_PLAYERS: int = 4
 ## Ajoutez une entree quand un nouveau niveau est pret. Le numero affiche
 ## sert juste de tag (le path est la source de verite).
 const LEVELS: Array = [
-	{"id": 1, "name": "N1 — Caverne crystalline", "path": "res://scenes/levels/level_01_caverne/level_01_caverne.tscn"},
-	{"id": 2, "name": "N2 — Marais toxique", "path": "res://scenes/levels/level_02_marais/level_02_marais.tscn"},
-	{"id": 3, "name": "N3 — Temple gravité réduite", "path": "res://scenes/levels/level_03_temple/level_03_temple.tscn"},
-	{"id": 4, "name": "N4 — Forge en fusion", "path": "res://scenes/levels/level_04_forge/level_04_forge.tscn"},
-	{"id": 5, "name": "N5 — Bibliothèque hantée", "path": "res://scenes/levels/level_05_biblio/level_05_biblio.tscn"},
-	{"id": 6, "name": "N6 — Montagne frozen", "path": "res://scenes/levels/level_06_montagne/level_06_montagne.tscn"},
-	{"id": 7, "name": "N7 — Labyrinthe miroirs", "path": "res://scenes/levels/level_07_miroirs/level_07_miroirs.tscn"},
-	{"id": 8, "name": "N8 — Vide cosmique", "path": "res://scenes/levels/level_08_vide/level_08_vide.tscn"},
+	{"id": 1, "name": "N1 — Caverne crystalline [archive]", "path": "res://archive/levels/level_01_caverne/level_01_caverne.tscn"},
+	{"id": 2, "name": "N2 — Marais toxique [archive]", "path": "res://archive/levels/level_02_marais/level_02_marais.tscn"},
+	{"id": 3, "name": "N3 — Temple gravité réduite [archive]", "path": "res://archive/levels/level_03_temple/level_03_temple.tscn"},
+	{"id": 4, "name": "N4 — Forge en fusion [archive]", "path": "res://archive/levels/level_04_forge/level_04_forge.tscn"},
+	{"id": 5, "name": "N5 — Bibliothèque hantée [archive]", "path": "res://archive/levels/level_05_biblio/level_05_biblio.tscn"},
+	{"id": 6, "name": "N6 — Montagne frozen [archive]", "path": "res://archive/levels/level_06_montagne/level_06_montagne.tscn"},
+	{"id": 7, "name": "N7 — Labyrinthe miroirs [archive]", "path": "res://archive/levels/level_07_miroirs/level_07_miroirs.tscn"},
+	{"id": 8, "name": "N8 — Vide cosmique [archive]", "path": "res://archive/levels/level_08_vide/level_08_vide.tscn"},
 ]
 
 enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
