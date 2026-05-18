@@ -21,8 +21,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DRAWIO = REPO_ROOT / "docs" / "design" / "levels" / "topology.drawio"
 BUILD_DIR = Path(__file__).resolve().parent / "build"
+GODOT_OUT_DIR = REPO_ROOT / "godot" / "data" / "levels"
 
-STEPS_AVAILABLE = ["parser", "layout", "corridors", "validate"]
+STEPS_AVAILABLE = ["parser", "layout", "corridors", "validate", "export"]
 
 
 def step_parser(drawio: Path, out: Path, strict: bool) -> int:
@@ -140,6 +141,19 @@ def main(argv: list[str] | None = None) -> int:
         import json as _json
         max_retries = _json.loads(config.read_text(encoding="utf-8")).get("validation", {}).get("retry_max", 10)
         rc = step_validate(levels_json, layouts_dir, geometry_dir, config, max_retries, args.seed)
+        if rc != 0 and args.strict:
+            return rc
+
+    if args.step in ("export", "all"):
+        sys.stderr.write("\n=== Étape 5 : export Godot .tres ===\n")
+        from export.godot_resource import main as export_main
+        GODOT_OUT_DIR.mkdir(parents=True, exist_ok=True)
+        rc = export_main([
+            str(levels_json),
+            "--layouts", str(layouts_dir),
+            "--geometry", str(geometry_dir),
+            "--out-dir", str(GODOT_OUT_DIR),
+        ])
         if rc != 0 and args.strict:
             return rc
 
