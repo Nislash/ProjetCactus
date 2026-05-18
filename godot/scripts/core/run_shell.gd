@@ -41,7 +41,10 @@ func _load_level(path: String) -> void:
 	# Dispatch : .tres = LevelLayout généré par la pipeline → DungeonBuilder
 	#           .tscn = ancienne scène pré-construite → load+instance direct
 	if path.ends_with(".tres"):
-		_load_generated_level(path)
+		# IMPORTANT : await sinon _load_level retourne avant que build_async
+		# ait spawné les markers (StartChestSpawn, relic_chest_spawns, etc.)
+		# et _spawn_relic_chests/_spawn_start_chest ne trouverait rien.
+		await _load_generated_level(path)
 		return
 
 	var scene: PackedScene = load(path)
