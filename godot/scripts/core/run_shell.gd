@@ -29,7 +29,10 @@ func _ready() -> void:
 	if level_path.is_empty():
 		push_warning("[RunShell] RunState.selected_level_path vide — fallback sur %s" % FALLBACK_LEVEL)
 		level_path = FALLBACK_LEVEL
-	_load_level(level_path)
+	# Await pour les niveaux .tres qui ont une coroutine build_async dans le
+	# DungeonBuilder. Pour les .tscn, _load_level retourne immédiatement
+	# (await sur void = no-op).
+	await _load_level(level_path)
 	_spawn_relic_chests()
 	_spawn_start_chest()
 

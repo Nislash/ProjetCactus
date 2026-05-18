@@ -41,15 +41,27 @@ const CELLS_PER_FRAME: int = 200
 ## MeshLibrary indexée par tile_id (Godot mappe naturellement set_cell_item).
 @export var mesh_library: MeshLibrary
 
+## Chemins par défaut. Si non override par scène appelante, le builder utilise
+## les paths suivants pour instancier les entités du niveau.
+const DEFAULT_LEVER_SCENE := "res://scenes/world/lever.tscn"
+const DEFAULT_ENEMY_MELEE := "res://scenes/enemies/enemy_melee.tscn"
+const DEFAULT_ENEMY_RANGED := "res://scenes/enemies/enemy_ranged.tscn"
+const DEFAULT_BOSS_SCENE := "res://scenes/boss/boss_golem.tscn"
+
 ## Scènes pour le contenu instanciable. Chaque entrée = path vers une PackedScene.
 @export var spawn_scene: PackedScene
-@export var enemy_scenes: Dictionary = {}  ## hint_name -> PackedScene
 @export var loot_scene: PackedScene
-@export var puzzle_trigger_scenes: Dictionary = {}  ## "P1" -> PackedScene
 @export var mini_boss_scene: PackedScene
 @export var meta_fragment_scene: PackedScene
 @export var checkpoint_scene: PackedScene
 @export var boss_door_scene: PackedScene
+## Si null → chargé depuis DEFAULT_BOSS_SCENE au _ready.
+@export var boss_scene: PackedScene
+## Si null → chargé depuis DEFAULT_LEVER_SCENE (cristaux à briser pour N1, etc.).
+@export var puzzle_trigger_scene: PackedScene
+## Si null → chargés depuis DEFAULT_ENEMY_MELEE/RANGED.
+@export var enemy_melee_scene: PackedScene
+@export var enemy_ranged_scene: PackedScene
 
 signal build_completed
 signal build_failed(reason: String)
@@ -66,6 +78,16 @@ func _ready() -> void:
 	_entities_root = Node3D.new()
 	_entities_root.name = "Entities"
 	add_child(_entities_root)
+
+	# Charge les scenes par défaut si non override.
+	if puzzle_trigger_scene == null:
+		puzzle_trigger_scene = load(DEFAULT_LEVER_SCENE) as PackedScene
+	if enemy_melee_scene == null:
+		enemy_melee_scene = load(DEFAULT_ENEMY_MELEE) as PackedScene
+	if enemy_ranged_scene == null:
+		enemy_ranged_scene = load(DEFAULT_ENEMY_RANGED) as PackedScene
+	if boss_scene == null:
+		boss_scene = load(DEFAULT_BOSS_SCENE) as PackedScene
 
 
 ## Lance la construction. À await depuis l'appelant.
@@ -348,83 +370,221 @@ func _build_cells_async() -> void:
 
 
 func _spawn_entities() -> void:
-	# Spawn joueurs : crée la structure attendue par SplitScreenManager :
-	# PlayerSpawnPoints/Spawn0..Spawn3 (cf split_screen_manager.gd).
+	_spawn_player_markers()
+	_spawn_run_chest_markers()
+	_spawn_puzzle_triggers_and_gate()
+	_spawn_enemies()
+	_spawn_boss()
+
+
+## PlayerSpawnPoints/Spawn0..3 dans les COINS de la spawn_room (loin du
+## téléporteur central si la spawn_room a une stair au centre).
+func _spawn_player_markers() -> void:
+	if not (layout.spawn_room in layout.rooms):
+		return
+	var sr: Dictionary = layout.rooms[layout.spawn_room]
+	var cs: Vector3 = layout.cell_size
+	var y_idx: int = sr["y"]
+	var y_floor: float = float(y_idx) * cs.y + 1.0
+	# Cellules walkables intérieures de la room : (rx+1..rx+w-2, rz+1..rz+d-2).
+	var x0: int = int(sr["x"]) + 1
+	var x1: int = int(sr["x"]) + int(sr["w"]) - 2
+	var z0: int = int(sr["z"]) + 1
+	var z1: int = int(sr["z"]) + int(sr["d"]) - 2
+	# Coins de la zone walkable (donc loin du centre où peut être un téléporteur).
+	var corners := [
+		Vector2i(x0, z0),
+		Vector2i(x1, z0),
+		Vector2i(x0, z1),
+		Vector2i(x1, z1),
+	]
+	var spawns_root := Node3D.new()
+	spawns_root.name = "PlayerSpawnPoints"
+	_entities_root.add_child(spawns_root)
+	for i in range(4):
+		var c: Vector2i = corners[i]
+		var m := Marker3D.new()
+		m.name = "Spawn%d" % i
+		m.position = Vector3((float(c.x) + 0.5) * cs.x, y_floor, (float(c.y) + 0.5) * cs.z)
+		spawns_root.add_child(m)
+
+
+## Markers consommés par RunShell pour spawn coffres reliques + coffre début.
+##   - 'relic_chest_spawns' (group) : un par room qui a 'loot_major' ou est
+##     une room combat — RunShell tirera 4 au hasard.
+##   - 'StartChestSpawn' (nom) : décalé du centre de la spawn_room (qui peut
+##     être occupé par téléporteur).
+func _spawn_run_chest_markers() -> void:
+	var cs: Vector3 = layout.cell_size
+
+	# StartChestSpawn : dans la spawn_room, décalé du centre.
 	if layout.spawn_room in layout.rooms:
 		var sr: Dictionary = layout.rooms[layout.spawn_room]
-		var cs: Vector3 = layout.cell_size
-		# Position : centre XZ de la spawn_room, Y juste au-dessus du sol de
-		# la strate (sol mesh top à y_idx*cs.y + 0.1, joueur posé à
-		# y_idx*cs.y + 1.0 pour avoir ses pieds au sol).
-		var cx: int = sr["x"] + int(sr["w"]) / 2
-		var cz: int = sr["z"] + int(sr["d"]) / 2
-		var y_idx: int = sr["y"]
-		var center := Vector3(
-			(float(cx) + 0.5) * cs.x,
-			float(y_idx) * cs.y + 1.0,
-			(float(cz) + 0.5) * cs.z,
-		)
-		var spawns_root := Node3D.new()
-		spawns_root.name = "PlayerSpawnPoints"
-		_entities_root.add_child(spawns_root)
-		var offsets := [
-			Vector3(-1.0, 0, -1.0),
-			Vector3( 1.0, 0, -1.0),
-			Vector3(-1.0, 0,  1.0),
-			Vector3( 1.0, 0,  1.0),
-		]
-		for i in range(4):
-			var m := Marker3D.new()
-			m.name = "Spawn%d" % i
-			m.position = center + offsets[i]
-			spawns_root.add_child(m)
+		var y_floor: float = float(sr["y"]) * cs.y + 1.0
+		# 2 cellules avant le centre, contre un mur.
+		var sx: int = int(sr["x"]) + 2
+		var sz: int = int(sr["z"]) + 2
+		var marker := Marker3D.new()
+		marker.name = "StartChestSpawn"
+		marker.position = Vector3((float(sx) + 0.5) * cs.x, y_floor, (float(sz) + 0.5) * cs.z)
+		_entities_root.add_child(marker)
 
-	# Boss doors : instancie une porte interactive là où le tile BOSS_DOOR est posé.
-	for door in layout.doors:
-		if not door.get("locked", false):
-			continue
-		if boss_door_scene == null:
-			continue
-		var inst := boss_door_scene.instantiate()
-		inst.position = _grid_to_world(door["x"], door["y"], door["z"])
-		if inst.has_method("setup"):
-			inst.call("setup", door.get("unlock_keys", []))
-		_entities_root.add_child(inst)
+	# 4 markers relic_chest_spawns dans des rooms variées (entree, combat, etc.).
+	# RunShell tire au hasard et les utilise.
+	var candidate_rooms: Array = []
+	for rid in layout.rooms.keys():
+		var rm: Dictionary = layout.rooms[rid]
+		var t: String = rm.get("type", "")
+		if t in ["spawn", "combat_small", "combat_large", "loot", "secret"]:
+			candidate_rooms.append(rid)
+	for i in range(candidate_rooms.size()):
+		var rid: String = candidate_rooms[i]
+		var rm: Dictionary = layout.rooms[rid]
+		var y_floor: float = float(rm["y"]) * cs.y + 1.0
+		# Décalé du centre (où peut être un téléporteur).
+		var cx: int = int(rm["x"]) + 1
+		var cz: int = int(rm["z"]) + int(rm["d"]) - 2
+		var m := Marker3D.new()
+		m.name = "RelicChestSpawn_%s" % rid
+		m.position = Vector3((float(cx) + 0.5) * cs.x, y_floor, (float(cz) + 0.5) * cs.z)
+		m.add_to_group(&"relic_chest_spawns")
+		_entities_root.add_child(m)
 
-	# Contents par room : itère sur les rooms qui ont des entrées dans contents.
+
+## Instancie les cristaux (Lever scenes) pour chaque puzzle_trigger Pn,
+## crée un PuzzleGate node qui les wire à la boss_door.
+func _spawn_puzzle_triggers_and_gate() -> void:
+	if puzzle_trigger_scene == null:
+		return
+	var cs: Vector3 = layout.cell_size
+
+	var levers: Array[NodePath] = []
 	for room_id in layout.contents.keys():
 		var content: Dictionary = layout.contents[room_id]
+		var triggers: Array = content.get("puzzle_triggers", [])
+		if triggers.is_empty():
+			continue
 		if not (room_id in layout.rooms):
 			continue
 		var rm: Dictionary = layout.rooms[room_id]
-		var room_center: Vector3 = _grid_to_world(
-			rm["x"] + int(rm["w"]) / 2,
-			rm["y"],
-			rm["z"] + int(rm["d"]) / 2,
+		var y_floor: float = float(rm["y"]) * cs.y + 1.0
+		# Place le lever au coin opposé du centre pour ne pas chevaucher
+		# d'éventuels téléporteurs.
+		var lx: int = int(rm["x"]) + 1
+		var lz: int = int(rm["z"]) + 1
+		for trig_id in triggers:
+			var lever = puzzle_trigger_scene.instantiate()
+			lever.name = "Lever_%s_%s" % [room_id, trig_id]
+			lever.position = Vector3((float(lx) + 0.5) * cs.x, y_floor, (float(lz) + 0.5) * cs.z)
+			_entities_root.add_child(lever)
+			levers.append(lever.get_path())
+			lx += 1  # décale chaque lever d'1 cellule si plusieurs dans la même room
+
+	if levers.is_empty():
+		return
+
+	# Cherche la boss_door pour la wirer comme cible du puzzle gate.
+	# Le tile BOSS_DOOR est posé par le builder ; on récupère via layout.doors.
+	# Pour le MVP : pas de scène Door instanciée — on désactivera les colliders
+	# de tile BOSS_DOOR via _open_boss_door() au signal puzzle_solved.
+	var gate := PuzzleGate.new()
+	gate.name = "PuzzleGate"
+	gate.lever_paths = levers
+	# door_paths reste vide : on gère l'ouverture via _open_boss_door.
+	gate.puzzle_solved.connect(_open_all_boss_doors)
+	_entities_root.add_child(gate)
+
+
+## Spawn ennemis dans les rooms combat. Mêlée par défaut, ranged si
+## la room a un mini_boss (cf N1 : g2 = ranged + mini-boss).
+func _spawn_enemies() -> void:
+	var cs: Vector3 = layout.cell_size
+	for rid in layout.rooms.keys():
+		var rm: Dictionary = layout.rooms[rid]
+		var t: String = rm.get("type", "")
+		if t not in ["combat_small", "combat_large"]:
+			continue
+		var content: Dictionary = layout.contents.get(rid, {})
+		var is_ranged: bool = content.get("mini_boss", false)
+		var n_enemies: int = 3 if t == "combat_large" else 2
+		var enemy_scene: PackedScene = enemy_ranged_scene if is_ranged else enemy_melee_scene
+		if enemy_scene == null:
+			continue
+		var y_floor: float = float(rm["y"]) * cs.y + 1.0
+		# Spawn aux 4 coins de la zone walkable (intérieur de la room).
+		var x0: int = int(rm["x"]) + 1
+		var x1: int = int(rm["x"]) + int(rm["w"]) - 2
+		var z0: int = int(rm["z"]) + 1
+		var z1: int = int(rm["z"]) + int(rm["d"]) - 2
+		var positions := [
+			Vector2i(x0, z0), Vector2i(x1, z0),
+			Vector2i(x0, z1), Vector2i(x1, z1),
+		]
+		for i in range(min(n_enemies, positions.size())):
+			var p: Vector2i = positions[i]
+			var enemy = enemy_scene.instantiate()
+			enemy.global_position = Vector3((float(p.x) + 0.5) * cs.x, y_floor, (float(p.y) + 0.5) * cs.z)
+			# Note : add_child APRES setting position pour avoir un transform valide.
+			_entities_root.add_child(enemy)
+
+
+## Spawn le boss au centre de l'arène boss_arena.
+func _spawn_boss() -> void:
+	if boss_scene == null:
+		return
+	var cs: Vector3 = layout.cell_size
+	for rid in layout.rooms.keys():
+		var rm: Dictionary = layout.rooms[rid]
+		if rm.get("type", "") != "boss_arena":
+			continue
+		var cx: int = int(rm["x"]) + int(rm["w"]) / 2
+		var cz: int = int(rm["z"]) + int(rm["d"]) / 2
+		var y_floor: float = float(rm["y"]) * cs.y + 1.0
+		var boss := boss_scene.instantiate()
+		boss.name = "Boss_%s" % rid
+		_entities_root.add_child(boss)
+		(boss as Node3D).global_position = Vector3(
+			(float(cx) + 0.5) * cs.x, y_floor,
+			(float(cz) + 0.5) * cs.z
 		)
-		_instance_if_present(content, "mini_boss", mini_boss_scene, room_center)
-		_instance_if_present(content, "meta_fragment", meta_fragment_scene, room_center)
-		_instance_if_present(content, "checkpoint", checkpoint_scene, room_center)
-		if content.get("loot_major", 0) > 0 and loot_scene != null:
-			var inst := loot_scene.instantiate()
-			inst.position = room_center
-			_entities_root.add_child(inst)
-		for trig_id in content.get("puzzle_triggers", []):
-			var s: PackedScene = puzzle_trigger_scenes.get(trig_id, null)
-			if s != null:
-				var inst2 := s.instantiate()
-				inst2.position = room_center
-				_entities_root.add_child(inst2)
 
 
-func _instance_if_present(content: Dictionary, key: String, scene: PackedScene, pos: Vector3) -> void:
-	if scene == null:
+## Quand le PuzzleGate signale puzzle_solved, désactive tous les colliders
+## de cellules tile BOSS_DOOR (rend la porte traversable).
+func _open_all_boss_doors() -> void:
+	print("[DungeonBuilder] Puzzle résolu → boss doors ouvertes")
+	var walls_body: Node = get_node_or_null("WallColliders")
+	if walls_body == null:
 		return
-	if not content.get(key, false):
-		return
-	var inst := scene.instantiate()
-	inst.position = pos
-	_entities_root.add_child(inst)
+	# Approche brute : pour chaque door dans layout.doors locked=true, retire
+	# les CollisionShape3D dont la position correspond.
+	var cs: Vector3 = layout.cell_size
+	for door in layout.doors:
+		if not door.get("locked", false):
+			continue
+		var dx: int = int(door["x"])
+		var dy: int = int(door["y"])
+		var dz: int = int(door["z"])
+		# La door layout est un nœud 3x3 — on désactive les colliders de
+		# toutes les cellules tile BOSS_DOOR sur ce range.
+		for ox in range(3):
+			for oz in range(3):
+				var cell_x := dx + ox
+				var cell_z := dz + oz
+				if layout.get_tile(cell_x, dy, cell_z) != TILE_BOSS_DOOR:
+					continue
+				var pos := Vector3(
+					(float(cell_x) + 0.5) * cs.x,
+					(float(dy) + 0.5) * cs.y,
+					(float(cell_z) + 0.5) * cs.z,
+				)
+				_disable_collider_at(walls_body, pos)
+
+
+func _disable_collider_at(body: Node, target_pos: Vector3) -> void:
+	for child in body.get_children():
+		if child is CollisionShape3D and (child as CollisionShape3D).position.distance_to(target_pos) < 0.1:
+			(child as CollisionShape3D).disabled = true
 
 
 func _grid_to_world(x: int, y: int, z: int) -> Vector3:
