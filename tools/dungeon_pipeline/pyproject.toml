@@ -1,0 +1,15 @@
+[project]
+name = "dungeon-pipeline"
+version = "0.1.0"
+description = "ProjetCactus level generation pipeline: drawio -> JSON canonique -> layout -> couloirs -> validation -> GridMap 3D Godot"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=4.1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+pythonpath = ["."]
+addopts = "-ra --strict-markers"
