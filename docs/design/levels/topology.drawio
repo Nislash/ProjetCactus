@@ -538,6 +538,9 @@
         <mxCell id="ej9" edge="1" parent="1" source="plat2a" style="endArrow=none;html=1;dashed=1;dashPattern=2 2;fontSize=10;fontStyle=2;" target="frag" value="jump caché">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
+        <mxCell id="ej0" value="couloir" style="endArrow=none;html=1;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="parvis" target="piedestal0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="note1" parent="1" style="text;html=1;align=left;whiteSpace=wrap;fontSize=11;fontColor=#212121;" value="PUZZLE : déposer/aligner 3 idoles (P1 RDC, P2 +1, P3 +2) sur leurs piédestaux → un pont de lumière émerge vers le sanctuaire céleste +3.&#xa;Mécanique signature : gravité réduite → sauts très longs (jusqu&#39;à 8m), balles courbées par gravité douce." vertex="1">
           <mxGeometry height="80" width="1320" x="40" y="740" as="geometry" />
         </mxCell>
@@ -680,7 +683,7 @@
         <mxCell id="aile0e" value="Aile est 0&#xa;(salles de lecture)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#1B5E20;fontColor=#1B5E20;" vertex="1" parent="1">
           <mxGeometry x="700" y="640" width="200" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="lift_lbl" value="Ascenseur central" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#1976D2;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+        <mxCell id="lift_lbl" value="Ascenseur central" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1976D2;fontColor=#1976D2;fontStyle=1;fontSize=10;" vertex="1" parent="1">
           <mxGeometry x="970" y="120" width="60" height="600" as="geometry" />
         </mxCell>
         <mxCell id="aile1w" value="Aile ouest +1&#xa;(grimoire P2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF59D;strokeColor=#F57F17;fontColor=#F57F17;" vertex="1" parent="1">
@@ -1026,9 +1029,6 @@
         <mxCell id="ess3" value="passage caché" style="endArrow=none;html=1;dashed=1;dashPattern=2 2;fontSize=10;fontStyle=2;" edge="1" parent="1" source="ss_z" target="frag">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="essf" value="faux passage" style="endArrow=none;html=1;dashed=1;dashPattern=2 2;strokeColor=#9E9E9E;fontSize=10;fontStyle=2;fontColor=#9E9E9E;" edge="1" parent="1" source="ss_y" target="ss_x">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="note1" value="PUZZLE D&#39;IDENTIFICATION : tuer les 3 doppelgangers leurres (P1, P2, P3) — chacun laisse un indice visuel sur le vrai (reflet inversé, ombre, voix). Le vrai apparaît dans la maison D élargie.&#xa;Mécanique signature : reflets ennemis qui copient le joueur, faux passages dans les sous-sols." style="text;html=1;align=left;whiteSpace=wrap;fontSize=11;fontColor=#212121;" vertex="1" parent="1">
           <mxGeometry x="40" y="740" width="1320" height="80" as="geometry" />
         </mxCell>
@@ -1109,7 +1109,7 @@
         <mxCell id="dlock1" value="" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E53935;strokeWidth=4;" vertex="1" parent="1">
           <mxGeometry x="560" y="290" width="60" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="dlock_lbl" value="P1..P7 alignés&#xa;= les 7 niveaux précédents" style="text;html=1;align=center;fontSize=10;fontStyle=1;fontColor=#B71C1C;" vertex="1" parent="1">
+        <mxCell id="dlock_lbl" value="P1+P2+P3+P4+P5+P6+P7 alignés&#xa;= les 7 niveaux précédents" style="text;html=1;align=center;fontSize=10;fontStyle=1;fontColor=#B71C1C;" vertex="1" parent="1">
           <mxGeometry x="500" y="350" width="180" height="30" as="geometry" />
         </mxCell>
         <mxCell id="boss" value="ARÈNE BOSS FINAL&#xa;(cœur cosmique)" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fillColor=#E53935;strokeColor=#000000;strokeWidth=4;fontColor=#FFFFFF;fontStyle=1;" vertex="1" parent="1">
@@ -1146,6 +1146,9 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="ev9" value="entrée cœur" style="endArrow=classic;html=1;startArrow=none;strokeWidth=3;strokeColor=#FFD700;fontSize=10;fontStyle=1;fontColor=#F57F17;" edge="1" parent="1" source="dlock1" target="boss">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ev10" value="entrée cœur" style="endArrow=classic;html=1;startArrow=none;strokeWidth=3;strokeColor=#FFD700;fontSize=10;fontStyle=1;fontColor=#F57F17;" edge="1" parent="1" source="ap5" target="dlock1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="note1" value="PUZZLE FINAL : aligner les 7 fragments cosmiques P1..P7 (un par niveau précédent, clin d&#39;œil narratif) → le cœur s&#39;ouvre.&#xa;Mécanique signature : zéro gravité (déplacement par poussée/dérive), atmosphère limitée → timer de respiration entre astéroïdes → forcer les transitions rapides.&#xa;Le fragment méta n°8 est AU CŒUR : le boss tombe → fin spéciale déclenchée si les 8 fragments ont été ramassés." style="text;html=1;align=left;whiteSpace=wrap;fontSize=11;fontColor=#212121;" vertex="1" parent="1">

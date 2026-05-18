@@ -35,14 +35,25 @@ const MAX_PLAYERS: int = 4
 ## Ajoutez une entree quand un nouveau niveau est pret. Le numero affiche
 ## sert juste de tag (le path est la source de verite).
 const LEVELS: Array = [
-	{"id": 1, "name": "N1 — Caverne crystalline", "path": "res://scenes/levels/level_01_caverne/level_01_caverne.tscn"},
-	{"id": 2, "name": "N2 — Marais toxique", "path": "res://scenes/levels/level_02_marais/level_02_marais.tscn"},
-	{"id": 3, "name": "N3 — Temple gravité réduite", "path": "res://scenes/levels/level_03_temple/level_03_temple.tscn"},
-	{"id": 4, "name": "N4 — Forge en fusion", "path": "res://scenes/levels/level_04_forge/level_04_forge.tscn"},
-	{"id": 5, "name": "N5 — Bibliothèque hantée", "path": "res://scenes/levels/level_05_biblio/level_05_biblio.tscn"},
-	{"id": 6, "name": "N6 — Montagne frozen", "path": "res://scenes/levels/level_06_montagne/level_06_montagne.tscn"},
-	{"id": 7, "name": "N7 — Labyrinthe miroirs", "path": "res://scenes/levels/level_07_miroirs/level_07_miroirs.tscn"},
-	{"id": 8, "name": "N8 — Vide cosmique", "path": "res://scenes/levels/level_08_vide/level_08_vide.tscn"},
+	# Niveaux générés par la pipeline (tools/dungeon_pipeline/) — placés en premier
+	# car ce sont les versions actives. Format .tres consommé par DungeonBuilder.
+	{"id": 1, "name": "N1 [GEN] Caverne crystalline", "path": "res://data/levels/level_1.tres"},
+	{"id": 2, "name": "N2 [GEN] Marais toxique", "path": "res://data/levels/level_2.tres"},
+	{"id": 3, "name": "N3 [GEN] Temple gravité réduite", "path": "res://data/levels/level_3.tres"},
+	{"id": 4, "name": "N4 [GEN] Forge en fusion", "path": "res://data/levels/level_4.tres"},
+	{"id": 5, "name": "N5 [GEN] Bibliothèque hantée", "path": "res://data/levels/level_5.tres"},
+	{"id": 6, "name": "N6 [GEN] Montagne frozen", "path": "res://data/levels/level_6.tres"},
+	{"id": 7, "name": "N7 [GEN] Labyrinthe miroirs", "path": "res://data/levels/level_7.tres"},
+	{"id": 8, "name": "N8 [GEN] Vide cosmique", "path": "res://data/levels/level_8.tres"},
+	# Anciens blockouts archivés (référence visuelle, ne seront pas testés).
+	{"id": 101, "name": "N1 — Caverne crystalline [archive]", "path": "res://archive/levels/level_01_caverne/level_01_caverne.tscn"},
+	{"id": 102, "name": "N2 — Marais toxique [archive]", "path": "res://archive/levels/level_02_marais/level_02_marais.tscn"},
+	{"id": 103, "name": "N3 — Temple gravité réduite [archive]", "path": "res://archive/levels/level_03_temple/level_03_temple.tscn"},
+	{"id": 104, "name": "N4 — Forge en fusion [archive]", "path": "res://archive/levels/level_04_forge/level_04_forge.tscn"},
+	{"id": 105, "name": "N5 — Bibliothèque hantée [archive]", "path": "res://archive/levels/level_05_biblio/level_05_biblio.tscn"},
+	{"id": 106, "name": "N6 — Montagne frozen [archive]", "path": "res://archive/levels/level_06_montagne/level_06_montagne.tscn"},
+	{"id": 107, "name": "N7 — Labyrinthe miroirs [archive]", "path": "res://archive/levels/level_07_miroirs/level_07_miroirs.tscn"},
+	{"id": 108, "name": "N8 — Vide cosmique [archive]", "path": "res://archive/levels/level_08_vide/level_08_vide.tscn"},
 ]
 
 enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }

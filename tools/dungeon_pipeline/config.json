@@ -1,0 +1,39 @@
+{
+  "_doc": "Configuration de la pipeline. Aucun magic number dans le code.",
+  "room_sizes": {
+    "spawn": [7, 7],
+    "combat_small": [9, 9],
+    "combat_large": [12, 12],
+    "boss_arena": [15, 15],
+    "loot": [5, 5],
+    "secret": [4, 4],
+    "corridor": [3, 3]
+  },
+  "stratum_height_cells": 24,
+  "room_spacing_cells": 3,
+  "grid": {
+    "cell_size_world": [4.0, 3.0, 4.0],
+    "_doc": "GridMap cell: 4m x 3m haut x 4m. 1 strate = 1 cellule en Y."
+  },
+  "force_directed": {
+    "iterations_max": 500,
+    "epsilon": 0.5,
+    "k_spring": 0.05,
+    "k_repulse": 2000,
+    "step_size": 0.1,
+    "cross_stratum_spring_factor": 0.5,
+    "door_size_cells": 3
+  },
+  "astar": {
+    "wall_adjacency_penalty": 5
+  },
+  "drunkard": {
+    "length_factor_min": 1.5,
+    "length_factor_max": 2.0,
+    "target_bias": 0.3,
+    "max_iterations": 200
+  },
+  "validation": {
+    "retry_max": 10
+  }
+}
