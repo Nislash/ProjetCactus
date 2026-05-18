@@ -68,37 +68,116 @@ def test_eight_levels_processed(parsed):
 
 
 # ============================================================================
-# Niveaux qui doivent parser OK (pas d'ambiguïté drawio)
+# Tous les 8 niveaux doivent parser OK (les ambiguïtés initiales ont été
+# patchées dans le drawio — cf commit "fix(drawio): résoudre 4 ambiguïtés
+# N3/N5/N7/N8 détectées par le parser").
 # ============================================================================
 
-@pytest.mark.parametrize("diagram_id", ["n1", "n2", "n6"])
-def test_levels_without_ambiguities_parse_ok(parsed, diagram_id):
+@pytest.mark.parametrize("diagram_id", ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8"])
+def test_all_levels_parse_ok(parsed, diagram_id):
     lv = _level(parsed, diagram_id)
     err = _error(parsed, diagram_id)
-    assert lv is not None, f"{diagram_id} devrait parser OK, erreur: {err['error'] if err else 'inconnue'}"
+    assert lv is not None, (
+        f"{diagram_id} devrait parser OK. Erreur : {err['error'] if err else 'inconnue'}"
+    )
+
+
+def test_no_errors_globally(parsed):
+    assert parsed["errors"] == [], f"Aucune erreur attendue. Vu : {parsed['errors']}"
 
 
 # ============================================================================
-# Niveaux qui doivent échouer (ambiguïtés connues du drawio)
+# La logique de détection d'ambiguïtés reste critique : on la valide
+# en construisant des fixtures synthétiques minimales en mémoire.
 # ============================================================================
 
-@pytest.mark.parametrize("diagram_id,expected_substring", [
-    ("n3", "inatteignable"),       # plateformes non connectées latéralement
-    ("n5", "unknown"),             # shaft #BBDEFB non classifié
-    ("n7", "false_passage"),       # kind d'edge non supporté
-    ("n8", "inatteignable"),       # plateformes ap1..ap7 non connectées au boss/dlock
-])
-def test_levels_with_ambiguities_raise(parsed, diagram_id, expected_substring):
-    err = _error(parsed, diagram_id)
-    lv = _level(parsed, diagram_id)
-    assert err is not None, (
-        f"{diagram_id} devrait échouer. Il a parsé OK avec "
-        f"{len(lv['rooms']) if lv else '?'} rooms."
+def _build_minimal_drawio(diagram_xml: str) -> str:
+    return f'<?xml version="1.0" encoding="UTF-8"?><mxfile><diagram id="t1" name="Test">{diagram_xml}</diagram></mxfile>'
+
+
+def _parse_string(xml_str: str) -> dict:
+    import tempfile
+    import os
+    from parser.drawio_to_json import parse_drawio
+    fd, path = tempfile.mkstemp(suffix=".drawio")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(xml_str)
+        return parse_drawio(Path(path))
+    finally:
+        os.unlink(path)
+
+
+_BAND_0 = '<mxCell id="b0" value="STRATE 0" style="rounded=0;fillColor=#E8F5E9;verticalAlign=top;align=left;" vertex="1" parent="1"><mxGeometry x="0" y="0" width="800" height="600" as="geometry"/></mxCell>'
+
+
+def test_ambiguity_unknown_shape_raises():
+    """Un vertex non classifiable (ex. shaft #BBDEFB rounded=0) doit lever."""
+    xml = _build_minimal_drawio(
+        f'<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>{_BAND_0}'
+        '<mxCell id="shaft" value="Shaft" style="rounded=0;fillColor=#BBDEFB;" vertex="1" parent="1">'
+        '<mxGeometry x="100" y="100" width="50" height="200" as="geometry"/></mxCell>'
+        '</root></mxGraphModel>'
     )
-    assert expected_substring.lower() in err["error"].lower(), (
-        f"Erreur {diagram_id} attendue contenant {expected_substring!r}. "
-        f"Reçu : {err['error']}"
+    res = _parse_string(xml)
+    assert res["errors"], "Un vertex unknown doit produire une erreur"
+    assert "unknown" in res["errors"][0]["error"].lower()
+
+
+def test_ambiguity_false_passage_raises():
+    """Une edge avec kind=false_passage doit lever."""
+    xml = _build_minimal_drawio(
+        f'<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>{_BAND_0}'
+        '<mxCell id="r1" value="Spawn" style="rounded=1;" vertex="1" parent="1">'
+        '<mxGeometry x="10" y="10" width="50" height="50" as="geometry"/></mxCell>'
+        '<mxCell id="sp" value="P×4" style="ellipse;" vertex="1" parent="1">'
+        '<mxGeometry x="20" y="20" width="20" height="20" as="geometry"/></mxCell>'
+        '<mxCell id="r2" value="Boss" style="shape=hexagon;strokeWidth=4;" vertex="1" parent="1">'
+        '<mxGeometry x="200" y="10" width="100" height="50" as="geometry"/></mxCell>'
+        '<mxCell id="e1" value="faux passage" style="dashed=1;dashPattern=2 2;strokeColor=#9E9E9E;" edge="1" parent="1" source="r1" target="r2"/>'
+        '</root></mxGraphModel>'
     )
+    res = _parse_string(xml)
+    assert res["errors"]
+    assert "false_passage" in res["errors"][0]["error"].lower()
+
+
+def test_ambiguity_disconnected_raises():
+    """Un graphe non connexe depuis le spawn doit lever."""
+    xml = _build_minimal_drawio(
+        f'<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>{_BAND_0}'
+        '<mxCell id="r1" value="Spawn" style="rounded=1;" vertex="1" parent="1">'
+        '<mxGeometry x="10" y="10" width="50" height="50" as="geometry"/></mxCell>'
+        '<mxCell id="sp" value="P×4" style="ellipse;" vertex="1" parent="1">'
+        '<mxGeometry x="20" y="20" width="20" height="20" as="geometry"/></mxCell>'
+        '<mxCell id="r2" value="Boss" style="shape=hexagon;strokeWidth=4;" vertex="1" parent="1">'
+        '<mxGeometry x="200" y="10" width="100" height="50" as="geometry"/></mxCell>'
+        '</root></mxGraphModel>'
+    )
+    res = _parse_string(xml)
+    assert res["errors"]
+    assert "inatteignable" in res["errors"][0]["error"].lower()
+
+
+def test_ambiguity_boss_door_no_keys_raises():
+    """Une boss_door sans label P1+P2+... voisin doit lever."""
+    xml = _build_minimal_drawio(
+        f'<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>{_BAND_0}'
+        '<mxCell id="r1" value="Spawn" style="rounded=1;" vertex="1" parent="1">'
+        '<mxGeometry x="10" y="10" width="50" height="50" as="geometry"/></mxCell>'
+        '<mxCell id="sp" value="P×4" style="ellipse;" vertex="1" parent="1">'
+        '<mxGeometry x="20" y="20" width="20" height="20" as="geometry"/></mxCell>'
+        '<mxCell id="d1" style="rhombus;strokeWidth=4;strokeColor=#E53935;" vertex="1" parent="1">'
+        '<mxGeometry x="100" y="10" width="40" height="40" as="geometry"/></mxCell>'
+        '<mxCell id="r2" value="Boss" style="shape=hexagon;strokeWidth=4;" vertex="1" parent="1">'
+        '<mxGeometry x="200" y="10" width="100" height="50" as="geometry"/></mxCell>'
+        '<mxCell id="e1" style="" edge="1" parent="1" source="r1" target="d1"/>'
+        '<mxCell id="e2" style="" edge="1" parent="1" source="d1" target="r2"/>'
+        '</root></mxGraphModel>'
+    )
+    res = _parse_string(xml)
+    assert res["errors"]
+    assert "keys" in res["errors"][0]["error"].lower()
 
 
 # ============================================================================
