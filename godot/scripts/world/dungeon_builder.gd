@@ -79,10 +79,60 @@ func build_async() -> void:
 	_gridmap.cell_size = layout.cell_size
 	_gridmap.mesh_library = mesh_library
 
+	_add_default_lighting()
 	await _build_cells_async()
 	_spawn_entities()
 	_add_floor_colliders()
 	emit_signal("build_completed")
+
+
+## Ajoute un éclairage minimaliste (sun + ambient) pour que la scène ne soit
+## pas noire. À remplacer par un WorldEnvironment thématique par niveau plus
+## tard (caverne sombre, dôme céleste, néon spatial, etc.).
+func _add_default_lighting() -> void:
+	# WorldEnvironment : ambient + sky de base.
+	var env := Environment.new()
+	env.background_mode = Environment.BG_SKY
+	var sky := Sky.new()
+	var sky_mat := ProceduralSkyMaterial.new()
+	sky_mat.sky_top_color = Color(0.35, 0.5, 0.7)
+	sky_mat.sky_horizon_color = Color(0.7, 0.7, 0.65)
+	sky_mat.ground_horizon_color = Color(0.3, 0.25, 0.2)
+	sky_mat.ground_bottom_color = Color(0.1, 0.08, 0.06)
+	sky.sky_material = sky_mat
+	env.sky = sky
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.6, 0.6, 0.7)
+	env.ambient_light_energy = 0.8
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	var world_env := WorldEnvironment.new()
+	world_env.name = "WorldEnvironment"
+	world_env.environment = env
+	add_child(world_env)
+
+	# Soleil principal : DirectionalLight3D inclinée.
+	var sun := DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-55, -30, 0)
+	sun.light_energy = 1.2
+	sun.shadow_enabled = true
+	add_child(sun)
+
+	# Lumière d'appoint hémisphérique pour adoucir les ombres (juste un point
+	# light en haut au centre du dungeon).
+	var size: Vector3i = layout.grid_size
+	var cs: Vector3 = layout.cell_size
+	var fill := OmniLight3D.new()
+	fill.name = "FillLight"
+	fill.position = Vector3(
+		size.x * cs.x * 0.5,
+		size.y * cs.y + 10.0,
+		size.z * cs.z * 0.5,
+	)
+	fill.omni_range = max(size.x * cs.x, size.z * cs.z) * 1.5
+	fill.light_energy = 0.6
+	fill.light_color = Color(0.95, 0.92, 0.85)
+	add_child(fill)
 
 
 ## Génère une MeshLibrary minimaliste : 1 BoxMesh par tile_id, coloré pour
