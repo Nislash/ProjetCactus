@@ -20,7 +20,9 @@
     "epsilon": 0.5,
     "k_spring": 0.05,
     "k_repulse": 2000,
-    "stratum_pull": 0.1
+    "step_size": 0.1,
+    "cross_stratum_spring_factor": 0.5,
+    "door_size_cells": 3
   },
   "astar": {
     "wall_adjacency_penalty": 5

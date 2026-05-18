@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DRAWIO = REPO_ROOT / "docs" / "design" / "levels" / "topology.drawio"
 BUILD_DIR = Path(__file__).resolve().parent / "build"
 
-STEPS_AVAILABLE = ["parser"]
+STEPS_AVAILABLE = ["parser", "layout"]
 
 
 def step_parser(drawio: Path, out: Path, strict: bool) -> int:
@@ -33,18 +33,38 @@ def step_parser(drawio: Path, out: Path, strict: bool) -> int:
     return parser_main(argv)
 
 
+def step_layout(levels_json: Path, out_dir: Path, seed: int) -> int:
+    from layout.force_directed import main as layout_main
+    return layout_main([str(levels_json), "--out-dir", str(out_dir), "--seed", str(seed)])
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--drawio", type=Path, default=DEFAULT_DRAWIO, help="Source drawio file")
     ap.add_argument("--step", choices=STEPS_AVAILABLE + ["all"], default="all")
     ap.add_argument("--strict", action="store_true", help="Exit 1 if any step errors")
+    ap.add_argument("--seed", type=int, default=42, help="Seed pour l'étape layout (chaque niveau N a seed=base+N-1)")
     args = ap.parse_args(argv)
 
     BUILD_DIR.mkdir(parents=True, exist_ok=True)
+    levels_json = BUILD_DIR / "levels.json"
+    layouts_dir = BUILD_DIR / "layouts"
+
     if args.step in ("parser", "all"):
-        rc = step_parser(args.drawio, BUILD_DIR / "levels.json", args.strict)
+        sys.stderr.write("=== Étape 1 : parser drawio -> JSON ===\n")
+        rc = step_parser(args.drawio, levels_json, args.strict)
         if rc != 0 and args.strict:
             return rc
+
+    if args.step in ("layout", "all"):
+        sys.stderr.write("\n=== Étape 2 : layout force-directed ===\n")
+        if not levels_json.exists():
+            sys.stderr.write(f"ERREUR: {levels_json} absent. Lance d'abord --step parser.\n")
+            return 1
+        rc = step_layout(levels_json, layouts_dir, args.seed)
+        if rc != 0 and args.strict:
+            return rc
+
     return 0
 
 
