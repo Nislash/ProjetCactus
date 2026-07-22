@@ -101,11 +101,31 @@ Problème : ça n'apprend ni les combos, ni le FF, ni le revive, ni la mécaniqu
 
 ---
 
-## 5. Feuille de route — 8 paliers avec Definition of Done
+## 5. Stratégie modèles IA (Opus 4.8 / Fable 5)
 
-Chaque étape est shippable/testable seule. « Done » = **vérifié**, pas « codé ». Playtest humain 2–4 joueurs là où marqué.
+Deux modèles, deux rôles. **Opus 4.8 est le défaut** (inclus dans la souscription → gratuit au point d'usage). **Fable 5 est mesuré** (budget ~100 $) et réservé aux tâches à fort levier — dont, explicitement, **le travail créatif de structure géographique et topographique** du niveau, où sa puissance créative fait la différence.
+
+| | Opus 4.8 (défaut) | Fable 5 (réservé, mesuré) |
+|---|---|---|
+| Prix (in/out par 1M) | 5 $ / 25 $ · **inclus** | 10 $ / 50 $ · **budget 100 $** |
+| Rôle | Cheval de trait : exécution, wiring, `.tres`, scripts, docs, MCP Godot, review courante | Spécialiste : **création géo/topographique**, Rust dur (`boss_ai`, `combo_engine`), algo (navmesh sur relief), archi, passes de review |
+| Bonus | Fast mode (sortie ~2,5× plus rapide) | Pas de fast mode |
+
+**Règles :**
+- **On démarre toujours sur Opus.** On passe à Fable seulement si la tâche est marquée `Fable` ci-dessous, ou si Opus cale visiblement (escalade).
+- **Créatif géo/topo = Fable.** La silhouette de la caverne, le relief vallonné, la composition des sightlines, l'emplacement des puits de ciel et des landmarks, la logique de « où va le joueur et pourquoi » — c'est là qu'on exploite la créativité de Fable (E0 concept + E2 design).
+- **Borne chaque run Fable** (`effort: high`, cahier des charges complet d'entrée, prompt caching) — l'output à 50 $/1M est ce qui vide le budget.
+- **Sessions dédiées** : ne pas alterner Opus↔Fable dans une même session (ça invalide le cache).
+- **Calibration d'abord** : ~15 $ en A/B Fable vs Opus sur 2-3 tâches dures avant d'engager le reste.
+
+---
+
+## 6. Feuille de route — 8 paliers avec Definition of Done
+
+Chaque étape est shippable/testable seule. « Done » = **vérifié**, pas « codé ». Playtest humain 2–4 joueurs là où marqué. Chaque étape indique le **modèle** à utiliser.
 
 ### E0 — Cadrage & art bible
+**Modèle : Mixte.** Opus pour rédiger la bible et chiffrer le budget technique. **Fable pour le concept créatif géo/topographique** : silhouette de la caverne, langage de relief, parti-pris des puits de ciel et des landmarks.
 Trancher A, poser la DA et le budget technique avant de produire.
 - [ ] **Décision A vs B actée** et notée dans `docs/design/levels.md`
 - [ ] Art bible `docs/design/level01_art_bible.md` : palette, matériaux, refs, échelle
@@ -113,6 +133,7 @@ Trancher A, poser la DA et le budget technique avant de produire.
 - [ ] Liste priorisée des assets (terrain, cristaux, props, boss, coffres)
 
 ### E1 — Meshy branché · agent texture autonome
+**Modèle : Opus (défaut).** Plomberie MCP, manifest, LFS, licence — pas besoin de Fable.
 Intégrer le MCP et prouver la boucle sur **un** asset avant d'industrialiser.
 - [ ] MCP Meshy configuré, clé en **env**, **PR `.mcp.json` isolée** mergée
 - [ ] Un asset test **généré → téléchargé → importé → visible en jeu**, texturé
@@ -120,6 +141,7 @@ Intégrer le MCP et prouver la boucle sur **un** asset avant d'industrialiser.
 - [ ] LFS vérifié ; **licence commerciale Meshy confirmée**
 
 ### E2 — Blockout de la grande caverne fermée & vallonée
+**Modèle : Fable (étape phare) → Opus pour l'exécution.** **Fable conçoit la structure géographique et topographique** : plan de la caverne, sculpture du relief vallonné, sightlines, composition des landmarks et des puits de ciel, placement intentionnel des 4–6 POI, et la logique algorithmique du **navmesh sur relief**. **Opus exécute** ensuite le placement via MCP Godot. *(C'est l'étape où le budget Fable travaille le plus.)*
 Géométrie grise à la **bonne échelle** : un volume unique, voûte 10–15 m, **sol vallonné praticable partout**, **fermé** (aucune sortie, aucune chute), avec les **trous de voûte** vers le ciel déjà troués. Landmarks + 4–6 POI. Édition via **MCP Godot** (pas de `.tscn` à la main).
 - [ ] Caverne **traversable de bout en bout** (spawn → boss), sans cul-de-sac cassé
 - [ ] **Voûte à 10–15 m**, sol **vallonné** (pentes/bosses/creux) où le joueur va **partout**
@@ -129,6 +151,7 @@ Géométrie grise à la **bonne échelle** : un volume unique, voûte 10–15 m,
 - [ ] 4–6 POI placés avec intention (loot, combat, puzzle, respiration)
 
 ### E3 — Texturing passe 1 · roche, glows muraux, puits de jour
+**Modèle : Opus (défaut).** Boucle Meshy retexture, matériaux, éclairage, brume. *Option Fable* : une courte passe créative de direction d'éclairage/ambiance si on veut pousser le mood.
 Matériaux PBR sol/murs/roche (Meshy retexture + trim sheets), **éclairage à deux sources** (glows sur les murs + shafts de lumière extérieure par les trous), brume au service de la mécanique.
 - [ ] Sol/murs/roche **texturés PBR** — plus de BoxMesh gris sur le chemin critique
 - [ ] **Glows muraux** (cristaux/veines) posés comme **vraies sources** qui guident dans les zones sombres
@@ -137,6 +160,7 @@ Matériaux PBR sol/murs/roche (Meshy retexture + trim sheets), **éclairage à d
 - [ ] Perf tenue en **4-split** (mesure avant/après, budget E0)
 
 ### E4 — Hero assets & props
+**Modèle : Opus (défaut).** Génération Meshy, retexture, composition de sous-scènes. *Option Fable* : concepting créatif des variantes de formations cristallines si on veut des silhouettes plus originales.
 Objets signature via Meshy (text-to-3d + retexture), instanciés en sous-scènes (composition).
 - [ ] ≥ 3 variantes de formations cristallines + props, en `.tscn` réutilisables
 - [ ] Coffres départ/reliques **retexturés**, cohérents art bible
@@ -144,6 +168,7 @@ Objets signature via Meshy (text-to-3d + retexture), instanciés en sous-scènes
 - [ ] Assets tracés au manifest ; LFS OK ; scène sans erreur (MCP `get_errors`)
 
 ### E5 — Onboarding diégétique
+**Modèle : Opus (défaut).** Construction de l'antichambre, scripting des beats, wiring, skip. *Option Fable* : design créatif du rythme/mise en scène des 8 beats si on veut peaufiner l'émotion.
 Antichambre + 8 beats ; glyphes manette ; skippable mémorisé par device.
 - [ ] Un **nouveau joueur seul** comprend bouger / tirer / combo / revive **sans aide externe**
 - [ ] Le combo est **montré et ressenti** dans la 1re minute
@@ -151,6 +176,7 @@ Antichambre + 8 beats ; glyphes manette ; skippable mémorisé par device.
 - [ ] Skip fonctionnel/mémorisé ; **playtest 2–4 joueurs** confirme la clarté
 
 ### E6 — Gameplay open-world
+**Modèle : Mixte.** **Fable** pour le Rust dur (**`boss_ai`**), le design créatif des rencontres/tension et la mise en scène de la révélation du boss (adossée aux sightlines conçues en E2). **Opus** pour le wiring des encounters, le placement et les récompenses.
 Rencontres réparties, récompenses d'exploration, puzzle 3 cristaux à l'échelle du monde, révélation du boss mise en scène.
 - [ ] Boucle complète : **explorer → combattre → puzzle → boss → victoire**
 - [ ] L'exploration **récompense** (loot caché hors chemin critique)
@@ -158,6 +184,7 @@ Rencontres réparties, récompenses d'exploration, puzzle 3 cristaux à l'échel
 - [ ] Difficulté validée en **playtest 2–4 joueurs** (ni triviale, ni injuste avec FF)
 
 ### E7 — Polish, perf & packaging cadeau
+**Modèle : Opus (défaut) + une passe de review Fable.** Opus pour audio/post-process/perf/bugs/build. **Fable** pour une **passe de review finale** du plus gros livrable (caverne + boss) avant la remise.
 Audio d'ambiance, post-process, réglage 4-split, chasse aux bugs, build + parcours de démo.
 - [ ] Ambiance audio + post-process ; **60 fps tenus en 4-split** sur la machine cible
 - [ ] Zéro erreur console, zéro asset manquant ; run complète sans crash
@@ -166,7 +193,7 @@ Audio d'ambiance, post-process, réglage 4-split, chasse aux bugs, build + parco
 
 ---
 
-## 6. Risques & garde-fous
+## 7. Risques & garde-fous
 
 | Risque | Garde-fou |
 |---|---|
@@ -180,7 +207,7 @@ Audio d'ambiance, post-process, réglage 4-split, chasse aux bugs, build + parco
 
 ---
 
-## 7. Le cadeau — script de démo 3 min
+## 8. Le cadeau — script de démo 3 min
 
 1. **Le réveil** — Start → un cristal s'allume. C'est vivant.
 2. **La 1re minute qui apprend** — bouger, tirer un cristal, ramasser le feu → l'arme se transforme (signature offerte d'entrée).
