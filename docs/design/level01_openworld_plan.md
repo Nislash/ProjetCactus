@@ -1,7 +1,9 @@
-# Niveau 1 « Caverne Cristalline » — Plan open-world + texturing
+# Niveau 1 « Caverne Cristalline » — Plan grande caverne semi-ouverte + texturing
 
 > **Statut : PLAN (aucun code).** Owner : à définir (chevauche Machine A systèmes + Machine B contenu).
-> Objectif : emmener le niveau 1 — le plus abouti — d'un blockout jouable à une **zone open-world texturée PBR**, avec pipeline de textures autonome (Meshy) et **onboarding diégétique** repensé. Vertical slice « cadeau ».
+> Objectif : emmener le niveau 1 — le plus abouti — d'un blockout jouable à une **grande caverne fermée, vallonée et semi-ouverte**, texturée PBR, avec pipeline de textures autonome (Meshy) et **onboarding diégétique** repensé. Vertical slice « cadeau ».
+>
+> **« Open world » était un abus de langage** : on ne veut pas un monde ouvert, mais **une seule grande caverne continue** — fermée (on ne peut pas en sortir ni tomber), au sol vallonné praticable partout, avec des **zones ouvertes à ciel ouvert** là où la voûte est percée.
 >
 > Version présentable (artifact) : voir le lien partagé dans la session Claude Code.
 
@@ -29,15 +31,26 @@ Deux versions coexistent + une base de systèmes déjà solide. Le manque n'est 
 
 ---
 
-## 2. Décision structurante — quel « open world » ?
+## 2. Direction actée — la grande caverne semi-ouverte
 
-| Option | Description | Verdict |
-|---|---|---|
-| **A. La grande caverne continue** *(recommandé)* | Une caverne vaste, verticale, non-linéaire, faite main comme **vitrine**. Sightlines, landmarks cristallins, POI, exploration libre, visibilité limitée = vraie tension. | Le « waouh » maximal, parfait à offrir. |
-| **B. Le donjon gonflé** | Garder la pipeline, l'ouvrir : salles larges, murs percés, seamless, plus de verticalité. | Plus safe, réutilisable, mais reste « donjon aéré ». Fallback. |
+Décision prise : **une seule grande caverne continue faite main** (option A), en vitrine. On **sort le niveau 1 de la pipeline** (qui reste la source des niveaux 2–8, documentée comme cas à part). Ce n'est pas un monde ouvert : c'est un **volume fermé, cohérent et entièrement praticable**.
 
-**Reco : A pour le niveau 1**, tout en **gardant la pipeline vivante pour les niveaux 2–8**.
-Le texturing Meshy et l'onboarding sont valables quelle que soit l'option — trancher A ne fait rien perdre.
+### 2.1. Cadrage spatial (contraintes dures)
+
+| Contrainte | Spec |
+|---|---|
+| **Hauteur de voûte** | **10–15 m** au-dessus du sol praticable (échelle qui rend le lieu imposant sans écraser le combat) |
+| **Sol** | **Vallonné** — pentes douces, bosses, creux ; **praticable partout**, pas de zone décorative inaccessible |
+| **Bornes** | Caverne **fermée** : parois + voûte referment le volume, **impossible de sortir** de la zone jouable |
+| **Anti-chute** | **Aucune chute possible** — pas de vide ni de gouffre sans fond ; les creux sont des cuvettes bordées, jamais des trous mortels. Pas de kill-floor à gérer parce qu'il n'y a nulle part où tomber |
+| **Zones ouvertes** | **Trous dans la voûte/les parois** → on **voit le ciel** par endroits ; respirations visuelles + gameplay |
+
+### 2.2. Éclairage (deux sources diégétiques)
+
+1. **Glows sur les murs** — des éléments qui **émettent de la lumière** sur la roche (cristaux, veines, champignons/lichens luminescents) : ce sont les **vraies sources** qui guident le joueur dans les zones sombres → colonne vertébrale de la mécanique **visibilité limitée**.
+2. **Lumière extérieure** — **puits de jour** entrant par les trous de la voûte : shafts volumétriques, flaques de lumière naturelle au sol, contraste fort avec les zones profondes.
+
+Le texturing Meshy et l'onboarding sont valables tels quels sous cette direction.
 
 ---
 
@@ -106,18 +119,21 @@ Intégrer le MCP et prouver la boucle sur **un** asset avant d'industrialiser.
 - [ ] `assets_manifest.yaml` en place (prompt + task-id + licence par asset)
 - [ ] LFS vérifié ; **licence commerciale Meshy confirmée**
 
-### E2 — Blockout open-world de la grande caverne
-Géométrie grise à la **bonne échelle** : continue, verticale, landmarks + 4–6 POI. Édition via **MCP Godot** (pas de `.tscn` à la main).
+### E2 — Blockout de la grande caverne fermée & vallonée
+Géométrie grise à la **bonne échelle** : un volume unique, voûte 10–15 m, **sol vallonné praticable partout**, **fermé** (aucune sortie, aucune chute), avec les **trous de voûte** vers le ciel déjà troués. Landmarks + 4–6 POI. Édition via **MCP Godot** (pas de `.tscn` à la main).
 - [ ] Caverne **traversable de bout en bout** (spawn → boss), sans cul-de-sac cassé
-- [ ] Verticalité réelle : ≥ 2 altitudes, un landmark visible de loin
-- [ ] Navmesh + collisions OK ; **playtest 2–4 joueurs** : pas de blocage, split-screen lisible
+- [ ] **Voûte à 10–15 m**, sol **vallonné** (pentes/bosses/creux) où le joueur va **partout**
+- [ ] Volume **fermé** : impossible de sortir, **impossible de tomber** (creux = cuvettes bordées, zéro vide)
+- [ ] ≥ 1 **zone ouverte à ciel ouvert** trouée dans la voûte, visible de loin comme landmark
+- [ ] Navmesh + collisions OK sur terrain vallonné ; **playtest 2–4 joueurs** : pas de blocage, pas de coincement dans les pentes, split-screen lisible
 - [ ] 4–6 POI placés avec intention (loot, combat, puzzle, respiration)
 
-### E3 — Texturing passe 1 · terrain, lumière, brume
-Matériaux PBR sol/murs/roche (Meshy retexture + trim sheets), refonte éclairage, brouillard au service de la mécanique.
+### E3 — Texturing passe 1 · roche, glows muraux, puits de jour
+Matériaux PBR sol/murs/roche (Meshy retexture + trim sheets), **éclairage à deux sources** (glows sur les murs + shafts de lumière extérieure par les trous), brume au service de la mécanique.
 - [ ] Sol/murs/roche **texturés PBR** — plus de BoxMesh gris sur le chemin critique
-- [ ] Éclairage retravaillé : les cristaux **éclairent réellement** la scène
-- [ ] Brouillard/portée de vue branchés sur la **mécanique signature**, réglés jouables
+- [ ] **Glows muraux** (cristaux/veines) posés comme **vraies sources** qui guident dans les zones sombres
+- [ ] **Puits de jour** par les trous de voûte : shafts volumétriques + flaques de lumière au sol, fort contraste jour/profondeur
+- [ ] Brume/portée de vue branchées sur la **mécanique signature** (visibilité limitée), réglées jouables
 - [ ] Perf tenue en **4-split** (mesure avant/après, budget E0)
 
 ### E4 — Hero assets & props
@@ -157,7 +173,8 @@ Audio d'ambiance, post-process, réglage 4-split, chasse aux bugs, build + parco
 | **Perf** — le 4-split fait mal (textures + brume × 4) | Budget dès E0, mesures E3/E7, fallback renderer Mobile prévu |
 | **Assets** — style Meshy incohérent | Vocabulaire de prompt figé (art bible), retexture > regénérer, manifest reproductible |
 | **Licence** — droits commerciaux IA | Valider les conditions Meshy avant E1, tracer la licence par asset |
-| **Scope** — open-world sans fin | 4–6 POI max au POC, DoD stricte, reste en phase 2 |
+| **Scope** — la caverne grossit sans fin | 4–6 POI max au POC, volume fermé borné, DoD stricte, reste en phase 2 |
+| **Terrain** — sol vallonné = joueur qui se coince / nav cassée | Pentes douces plafonnées, navmesh régénéré + testé sur le relief, playtest E2 dédié |
 | **Repo** — conflits Godot | Édition via MCP Godot, PR isolée `.mcp.json`/`project.godot`, respect machine-split |
 | **Pipeline** — casser N2–8 | La pipeline reste la source des autres niveaux ; N1 = cas showcase documenté |
 
