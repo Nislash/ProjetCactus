@@ -116,7 +116,7 @@ Deux modèles, deux rôles. **Opus 4.8 est le défaut** (inclus dans la souscrip
 - **Créatif géo/topo = Fable.** La silhouette de la caverne, le relief vallonné, la composition des sightlines, l'emplacement des puits de ciel et des landmarks, la logique de « où va le joueur et pourquoi » — c'est là qu'on exploite la créativité de Fable (E0 concept + E2 design).
 - **Borne chaque run Fable** (`effort: high`, cahier des charges complet d'entrée, prompt caching) — l'output à 50 $/1M est ce qui vide le budget.
 - **Sessions dédiées** : ne pas alterner Opus↔Fable dans une même session (ça invalide le cache).
-- **Calibration d'abord** : ~15 $ en A/B Fable vs Opus sur 2-3 tâches dures avant d'engager le reste.
+- **Jauge le burn sur la première session Fable** (Session 1) pour caler le budget des suivantes — pas d'A/B, on ne refait pas une tâche déjà faite.
 
 ### 5.1. Regroupement en sessions cohérentes par modèle
 
@@ -124,7 +124,6 @@ Les étapes E0–E7 sont **mixtes** par nature, mais on ne veut pas basculer Opu
 
 | # | Session | Modèle | Regroupe | Produit |
 |---|---|---|---|---|
-| 0 | **Calibration** | ◆ Fable (~15 $) | 2-3 tâches A/B, dont **un test de concept topographique** | mesure du burn + validation créative |
 | 1 | **Direction créative** | ◆ Fable | E0 concept géo/topo · **E2 design topo + logique navmesh** · direction créative d'E3 (mood), E4 (silhouettes), E5 (rythme) | spec topographique + bible de direction artistique |
 | 2 | **Construction** | ● Opus | E0 rédaction bible/budget · E1 Meshy · **E2 exécution MCP Godot** · E3 texturing · E4 assets · E5 onboarding | caverne texturée jouable |
 | 3 | **Boss & tension** | ◆ Fable | E6 **`boss_ai`** (Rust) · design rencontres/tension · mise en scène révélation | IA boss + design combat |
@@ -132,11 +131,11 @@ Les étapes E0–E7 sont **mixtes** par nature, mais on ne veut pas basculer Opu
 | 5 | **Review finale** | ◆ Fable | E7 passe de review caverne + boss | validation avant remise |
 
 **Logique du séquencement** :
-- **Toute la direction créative est front-loadée dans la Session 1** (Fable) : topo, relief, mood, silhouettes, rythme — produits en un seul passage pendant que le contexte créatif est chaud. Opus n'a plus besoin de Fable pour construire E1→E5.
+- **Toute la direction créative est front-loadée dans la Session 1** (Fable) : topo, relief, mood, silhouettes, rythme — produits en un seul passage pendant que le contexte créatif est chaud. On y **surveille le burn** pour caler le budget des sessions Fable suivantes. Opus n'a plus besoin de Fable pour construire E1→E5.
 - **Session 2 (Opus)** est la longue phase d'exécution : elle lit la spec/bible produite en Session 1 et construit tout.
 - **Sessions 3-4** répètent le motif sur le gameplay : Fable conçoit l'IA + le combat, Opus câble.
 - **Session 5 (Fable)** clôt par la review.
-- Budget Fable **concentré sur 3 sessions bornées** (1, 3, 5) + calibration → facile à suivre et à plafonner.
+- Budget Fable **concentré sur 3 sessions bornées** (1, 3, 5) → facile à suivre et à plafonner.
 
 ---
 
