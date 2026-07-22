@@ -118,6 +118,26 @@ Deux modèles, deux rôles. **Opus 4.8 est le défaut** (inclus dans la souscrip
 - **Sessions dédiées** : ne pas alterner Opus↔Fable dans une même session (ça invalide le cache).
 - **Calibration d'abord** : ~15 $ en A/B Fable vs Opus sur 2-3 tâches dures avant d'engager le reste.
 
+### 5.1. Regroupement en sessions cohérentes par modèle
+
+Les étapes E0–E7 sont **mixtes** par nature, mais on ne veut pas basculer Opus↔Fable en cours de route (cache invalidé, budget gaspillé, contexte créatif perdu). On **réordonne le travail en 5 sessions mono-modèle**, en respectant les dépendances (le créatif Fable précède l'exécution Opus qu'il alimente).
+
+| # | Session | Modèle | Regroupe | Produit |
+|---|---|---|---|---|
+| 0 | **Calibration** | ◆ Fable (~15 $) | 2-3 tâches A/B, dont **un test de concept topographique** | mesure du burn + validation créative |
+| 1 | **Direction créative** | ◆ Fable | E0 concept géo/topo · **E2 design topo + logique navmesh** · direction créative d'E3 (mood), E4 (silhouettes), E5 (rythme) | spec topographique + bible de direction artistique |
+| 2 | **Construction** | ● Opus | E0 rédaction bible/budget · E1 Meshy · **E2 exécution MCP Godot** · E3 texturing · E4 assets · E5 onboarding | caverne texturée jouable |
+| 3 | **Boss & tension** | ◆ Fable | E6 **`boss_ai`** (Rust) · design rencontres/tension · mise en scène révélation | IA boss + design combat |
+| 4 | **Gameplay & finition** | ● Opus | E6 wiring encounters/placement/récompenses · E7 audio/perf/bugs/build | run complète + build jouable |
+| 5 | **Review finale** | ◆ Fable | E7 passe de review caverne + boss | validation avant remise |
+
+**Logique du séquencement** :
+- **Toute la direction créative est front-loadée dans la Session 1** (Fable) : topo, relief, mood, silhouettes, rythme — produits en un seul passage pendant que le contexte créatif est chaud. Opus n'a plus besoin de Fable pour construire E1→E5.
+- **Session 2 (Opus)** est la longue phase d'exécution : elle lit la spec/bible produite en Session 1 et construit tout.
+- **Sessions 3-4** répètent le motif sur le gameplay : Fable conçoit l'IA + le combat, Opus câble.
+- **Session 5 (Fable)** clôt par la review.
+- Budget Fable **concentré sur 3 sessions bornées** (1, 3, 5) + calibration → facile à suivre et à plafonner.
+
 ---
 
 ## 6. Feuille de route — 8 paliers avec Definition of Done
