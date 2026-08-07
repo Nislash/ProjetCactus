@@ -56,7 +56,7 @@ generator:
 # Exemple d'entrée complète (à décommenter et adapter lors du probe E1) :
 #
 # - name: crystal_wall_a
-#   path: "res://assets/level01/meshes/crystal_wall_a.glb"
+#   path: "res://scenes/props/crystal_wall_a.tscn"
 #   type: retexture
 #   base_mesh: "res://assets/level01/meshes/src/crystal_wall_a_base.glb"
 #   prompt: "..."
@@ -73,7 +73,7 @@ generator:
 
 assets:
   - name: crystal_wall_a
-    path: "res://assets/level01/meshes/crystal_wall_a.glb"
+    path: "res://scenes/props/crystal_wall_a.tscn"
     type: geo
     prompt: >-
       A cluster of sharp faceted crystal shards growing out of a chunk of dark
@@ -90,18 +90,17 @@ assets:
     format: glb
     tri_count: 1906         # 838 872 avant remesh
     bounds_m: [1.90, 1.40, 1.29]
-    texture_size: 2048      # normal en 4096 -> a reduire, cf tache dediee
-    file_size_mb: 39        # TROP LOURD, cf tache de reduction des textures
+    texture_size: 1024      # albedo/normal 1024, roughness/metallic/emission 512
     credits_spent: 35
     license: meshy-paid-full-ownership
     created: 2026-08-07
-    used_in: []
+    used_in: ["res://scenes/props/crystal_wall_a.tscn"]
     notes: >-
       Cristal mural, silhouette compacte. Premier asset de la boucle E1 :
       c'est lui qui a revele que target_polycount est ignore par text_to_3d.
 
   - name: crystal_spire_b
-    path: "res://assets/level01/meshes/crystal_spire_b.glb"
+    path: "res://scenes/props/crystal_spire_b.tscn"
     type: geo
     prompt: >-
       A tall slender spire of crystal rising from a jagged rock base. Single
@@ -118,17 +117,16 @@ assets:
     format: glb
     tri_count: 1847
     bounds_m: [0.79, 1.90, 0.76]
-    texture_size: 2048
-    file_size_mb: 22
+    texture_size: 1024
     credits_spent: 35
     license: meshy-paid-full-ownership
     created: 2026-08-08
-    used_in: []
+    used_in: ["res://scenes/props/crystal_spire_b.tscn"]
     notes: >-
       Variante verticale. Silhouette elancee, se lit de loin et en contre-jour.
 
   - name: crystal_fan_c
-    path: "res://assets/level01/meshes/crystal_fan_c.glb"
+    path: "res://scenes/props/crystal_fan_c.tscn"
     type: geo
     prompt: >-
       A low wide fan of crystal shards splayed outward across a flat slab of
@@ -145,38 +143,101 @@ assets:
     format: glb
     tri_count: 2025
     bounds_m: [1.90, 1.15, 1.29]
-    texture_size: 2048
-    file_size_mb: 34
+    texture_size: 1024
     credits_spent: 35
     license: meshy-paid-full-ownership
     created: 2026-08-08
-    used_in: []
+    used_in: ["res://scenes/props/crystal_fan_c.tscn"]
     notes: >-
       Variante rasante. Complete les silhouettes A (compacte) et B (verticale) :
       les trois couvrent la DoD E4 "au moins 3 variantes de formations".
 
-# --- Taches Meshy payees et NON encore telechargees --------------------------
-# Les modeles restent disponibles chez Meshy via ces task_id. Chacune doit
-# encore passer par un remesh (5 cr) avant import : la geometrie brute est
-# inutilisable (cf docs/tech/meshy_setup.md section 4bis).
-pending_downloads:
   - name: stalactite_cluster
-    preview_task_id: "019fde5b-7235-7bdc-8185-76a8c8dce3ea"   # 20 cr
-    refine_task_id: "019fde5e-b95a-7ee7-9608-d8fc9d571387"    # 10 cr, DA glaciaire
+    path: "res://scenes/props/stalactite_cluster.tscn"
+    type: geo
+    prompt: >-
+      A cluster of cave stalactites and stalagmites in dark blue-grey stone,
+      tapering dripstone cones of varying length, wet mineral surface, subtle
+      pale banding, stylized realism, game asset
+    texture_prompt: >-
+      Frozen cave dripstone: pale icy blue-white translucent ice sheathing dark
+      desaturated blue-grey stone, frost rime, wet frozen sheen, very low
+      saturation, cold moonlit tones, no warm colors
+    meshy_task_id: "019fde5b-7235-7bdc-8185-76a8c8dce3ea"
+    refine_task_id: "019fde5e-b95a-7ee7-9608-d8fc9d571387"
+    remesh_task_id: "019fde9b-ca86-7729-82be-0799c7afc71e"
+    format: glb
+    tri_count: 1471
+    texture_size: 1024
+    emissive: false
+    credits_spent: 35
+    license: meshy-paid-full-ownership
+    created: 2026-08-08
+    used_in: ["res://scenes/props/stalactite_cluster.tscn"]
+    notes: >-
+      Motif vertical dominant de la foret Z2 (topographie section 3). DA
+      glaciaire. Non emissif : la roche n'eclaire pas, seul le cristal le fait.
+
   - name: rock_rubble
-    preview_task_id: "019fde5b-7e77-7894-a4d1-8808428c98e6"   # 20 cr
-    refine_task_id: "019fde5e-c609-7969-9004-434c02e72d3b"    # 10 cr, DA glaciaire
+    path: "res://scenes/props/rock_rubble.tscn"
+    type: geo
+    prompt: >-
+      A pile of broken cave rock rubble and angular scree, mixed boulder sizes
+      settled into a low mound, dark blue-grey matte stone, chipped fractured
+      faces, dust, stylized realism, game asset
+    texture_prompt: >-
+      Frozen cave rubble: dark desaturated blue-grey fractured stone dusted with
+      frost and packed snow in the crevices, matte, very low saturation, cold
+      moonlit tones, no warm colors
+    meshy_task_id: "019fde5b-7e77-7894-a4d1-8808428c98e6"
+    refine_task_id: "019fde5e-c609-7969-9004-434c02e72d3b"
+    remesh_task_id: "019fde9b-d758-75a1-9c51-26d3f7df0884"
+    format: glb
+    tri_count: 894
+    texture_size: 1024
+    emissive: false
+    credits_spent: 35
+    license: meshy-paid-full-ownership
+    created: 2026-08-08
+    used_in: ["res://scenes/props/rock_rubble.tscn"]
+    notes: >-
+      Eboulis de remplissage. Le moins lourd des six (894 tris) : c'est celui
+      qu'on semera le plus.
+
   - name: crystal_monolith_landmark
-    preview_task_id: "019fde5b-8b30-78a2-8ab0-4441c4fee637"   # 20 cr
-    refine_task_id: "019fde5e-d231-796b-bbe5-993d87ce50a5"    # 10 cr, DA glaciaire
+    path: "res://scenes/props/crystal_monolith_landmark.tscn"
+    type: geo
+    prompt: >-
+      A colossal monolithic crystal pillar erupting from a broken rock plinth,
+      monumental landmark scale, one massive fractured shard surrounded by
+      smaller blades, sharp prismatic facets, translucent cyan crystal, dark
+      blue-grey matte stone, stylized realism, game asset
+    texture_prompt: >-
+      Monumental frozen crystal pillar: translucent pale ice-blue crystal with
+      faint luminous inner glow, frost-etched facets, dark desaturated blue-grey
+      stone plinth, very low saturation, cold moonlit tones, no warm colors
+    meshy_task_id: "019fde5b-8b30-78a2-8ab0-4441c4fee637"
+    refine_task_id: "019fde5e-d231-796b-bbe5-993d87ce50a5"
+    remesh_task_id: "019fde9b-e503-751a-a9b6-641d9e46913a"
+    format: glb
+    tri_count: 4126
+    texture_size: 2048      # HERO : vu de loin ET de pres, budget double
+    emissive: true
+    collision: trimesh      # sa silhouette porte le gameplay, pas une enveloppe convexe
+    credits_spent: 35
+    license: meshy-paid-full-ownership
+    created: 2026-08-08
+    used_in: ["res://scenes/props/crystal_monolith_landmark.tscn"]
+    notes: >-
+      LE landmark du niveau : le Monolithe de la rive nord du lac, visible en
+      halo depuis presque partout (topographie section 5). Seul hero asset.
 
 # --- Suivi budget ------------------------------------------------------------
 # Renseigné au fil de l'eau. Le solde de départ vient de meshy_check_balance.
 budget:
   credits_at_start: 1100
   credits_at_start_date: 2026-08-07
-  credits_spent_total: 195
-  # 3 cristaux livres a 35 cr (20 generation + 10 refine + 5 remesh)
-  # + 3 props generes et textures mais pas encore remeshes/telecharges (30 cr chacun).
-  # Budget accorde par l'utilisateur : 300 credits.
+  credits_spent_total: 210
+  # 6 assets livres a 35 cr chacun (20 generation + 10 refine + 5 remesh).
   budget_granted: 300
+  budget_remaining: 90

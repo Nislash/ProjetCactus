@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_monolith_landmark_albedo.png" id="1_bxjv3"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_monolith_landmark_emission.png" id="2_sqrfy"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_monolith_landmark_metallic.png" id="3_74jbq"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_monolith_landmark_normal.png" id="4_umjhc"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_monolith_landmark_roughness.png" id="5_e1fki"]
+
+[resource]
+albedo_texture = ExtResource("1_bxjv3")
+metallic_texture = ExtResource("3_74jbq")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("5_e1fki")
+roughness_texture_channel = 1
+emission_enabled = true
+emission_energy_multiplier = 1.6
+emission_texture = ExtResource("2_sqrfy")
+normal_enabled = true
+normal_texture = ExtResource("4_umjhc")
