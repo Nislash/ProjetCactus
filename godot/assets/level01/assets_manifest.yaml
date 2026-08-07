@@ -80,29 +80,103 @@ assets:
       blue-grey cave rock. Wall-mounted formation, angular prismatic facets,
       translucent cyan crystal, rough matte stone base, stylized realism, game
       asset
-    meshy_task_id: "019fde51-5700-79f3-8a5b-84e2bf5ee9de"   # text-to-3d, meshy-6, 20 crédits
-    remesh_task_id: "019fde54-1e8b-7bae-929c-6a1917a70f21"  # remesh 2000 tris, 5 crédits
+    texture_prompt: >-
+      Translucent glowing cyan crystal facets, bright emissive edges, deep blue
+      crystal core, cold dark blue-grey matte cave rock base with fine grain,
+      high contrast between the luminous crystal and the unlit stone
+    meshy_task_id: "019fde51-5700-79f3-8a5b-84e2bf5ee9de"   # text-to-3d meshy-6, 20 cr
+    refine_task_id: "019fde56-fe91-7aee-8c15-4d6b0a6f735e"  # refine PBR, 10 cr
+    remesh_task_id: "019fde59-77e9-7b68-9f07-738388716afd"  # remesh 2000 tris, 5 cr
     format: glb
-    tri_count: 2046          # 838 872 avant remesh — cf notes
+    tri_count: 1906         # 838 872 avant remesh
     bounds_m: [1.90, 1.40, 1.29]
-    textures:
-      - "res://assets/level01/meshes/crystal_wall_a_normal.png"  # 4,4 Mo, à réduire en 2K
-    texture_size: 4096       # au-dessus de la règle 2K de l'art bible, à corriger
-    credits_spent: 25
+    texture_size: 2048      # normal en 4096 -> a reduire, cf tache dediee
+    file_size_mb: 39        # TROP LOURD, cf tache de reduction des textures
+    credits_spent: 35
     license: meshy-paid-full-ownership
     created: 2026-08-07
-    used_in: []              # pas encore instancié — sous-scène à créer en E4
+    used_in: []
     notes: >-
-      Probe E1 : premier asset de la boucle bout-en-bout. NON TEXTURÉ (albedo) —
-      text_to_3d ne produit qu'un preview ; le texturing demande un
-      text_to_3d_refine (+10 crédits), non lancé. Seule une normal map est
-      livrée. Sert de preuve de pipeline et de base retexturable, pas d'asset
-      final.
+      Cristal mural, silhouette compacte. Premier asset de la boucle E1 :
+      c'est lui qui a revele que target_polycount est ignore par text_to_3d.
+
+  - name: crystal_spire_b
+    path: "res://assets/level01/meshes/crystal_spire_b.glb"
+    type: geo
+    prompt: >-
+      A tall slender spire of crystal rising from a jagged rock base. Single
+      dominant vertical shard flanked by two smaller ones, sharp prismatic
+      facets, translucent cyan crystal, dark blue-grey matte stone, stylized
+      realism, game asset
+    texture_prompt: >-
+      Translucent glowing cyan crystal facets, bright emissive edges, deep blue
+      crystal core, cold dark blue-grey matte cave rock base with fine grain,
+      high contrast between the luminous crystal and the unlit stone
+    meshy_task_id: "019fde57-0d11-77cc-810e-2fd225169ae4"
+    refine_task_id: "019fde59-8189-7834-94f1-c4e159adc0cb"
+    remesh_task_id: "019fde5b-d2f8-7e9b-b28e-be66ff574a8b"
+    format: glb
+    tri_count: 1847
+    bounds_m: [0.79, 1.90, 0.76]
+    texture_size: 2048
+    file_size_mb: 22
+    credits_spent: 35
+    license: meshy-paid-full-ownership
+    created: 2026-08-08
+    used_in: []
+    notes: >-
+      Variante verticale. Silhouette elancee, se lit de loin et en contre-jour.
+
+  - name: crystal_fan_c
+    path: "res://assets/level01/meshes/crystal_fan_c.glb"
+    type: geo
+    prompt: >-
+      A low wide fan of crystal shards splayed outward across a flat slab of
+      cave rock, radiating fractured blades close to the ground, sharp
+      prismatic facets, translucent cyan crystal, dark blue-grey matte stone,
+      stylized realism, game asset
+    texture_prompt: >-
+      Translucent glowing cyan crystal facets, bright emissive edges, deep blue
+      crystal core, cold dark blue-grey matte cave rock base with fine grain,
+      high contrast between the luminous crystal and the unlit stone
+    meshy_task_id: "019fde57-1a2f-7af0-b9e2-252d09a9a4e8"
+    refine_task_id: "019fde59-8a0f-7b6c-a681-19523f6e65da"
+    remesh_task_id: "019fde5b-db8f-78c1-9e6f-f609ad3f1160"
+    format: glb
+    tri_count: 2025
+    bounds_m: [1.90, 1.15, 1.29]
+    texture_size: 2048
+    file_size_mb: 34
+    credits_spent: 35
+    license: meshy-paid-full-ownership
+    created: 2026-08-08
+    used_in: []
+    notes: >-
+      Variante rasante. Complete les silhouettes A (compacte) et B (verticale) :
+      les trois couvrent la DoD E4 "au moins 3 variantes de formations".
+
+# --- Taches Meshy payees et NON encore telechargees --------------------------
+# Les modeles restent disponibles chez Meshy via ces task_id. Chacune doit
+# encore passer par un remesh (5 cr) avant import : la geometrie brute est
+# inutilisable (cf docs/tech/meshy_setup.md section 4bis).
+pending_downloads:
+  - name: stalactite_cluster
+    preview_task_id: "019fde5b-7235-7bdc-8185-76a8c8dce3ea"   # 20 cr
+    refine_task_id: "019fde5e-b95a-7ee7-9608-d8fc9d571387"    # 10 cr, DA glaciaire
+  - name: rock_rubble
+    preview_task_id: "019fde5b-7e77-7894-a4d1-8808428c98e6"   # 20 cr
+    refine_task_id: "019fde5e-c609-7969-9004-434c02e72d3b"    # 10 cr, DA glaciaire
+  - name: crystal_monolith_landmark
+    preview_task_id: "019fde5b-8b30-78a2-8ab0-4441c4fee637"   # 20 cr
+    refine_task_id: "019fde5e-d231-796b-bbe5-993d87ce50a5"    # 10 cr, DA glaciaire
 
 # --- Suivi budget ------------------------------------------------------------
 # Renseigné au fil de l'eau. Le solde de départ vient de meshy_check_balance.
 budget:
   credits_at_start: 1100
   credits_at_start_date: 2026-08-07
-  credits_spent_total: 25
-  # 20 (text_to_3d meshy-6) + 5 (remesh). Solde attendu : 1075.
+  credits_spent_total: 195
+  # 3 cristaux livres a 35 cr (20 generation + 10 refine + 5 remesh)
+  # + 3 props generes et textures mais pas encore remeshes/telecharges (30 cr chacun).
+  # Budget accorde par l'utilisateur : 300 credits.
+  budget_granted: 300
