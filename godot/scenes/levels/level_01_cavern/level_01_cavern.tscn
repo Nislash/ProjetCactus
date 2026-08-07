@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dkv06g0ld2ajb"]
 
 [ext_resource type="Script" uid="uid://bl8eqw121kq6k" path="res://scripts/world/cavern_terrain_builder.gd" id="1_yaq6u"]
+[ext_resource type="Script" uid="uid://l4t1uowcqn03" path="res://scripts/world/cavern_navigation.gd" id="2_kfaml"]
 
 [node name="Level01Cavern" type="Node3D" unique_id=1001146890]
 
@@ -8,7 +9,6 @@
 
 [node name="CavernTerrain" type="Node3D" parent="World" unique_id=624303523]
 script = ExtResource("1_yaq6u")
-data = "res://data/levels/level01_cavern_terrain.tres"
 
 [node name="PlayerSpawnPoints" type="Node3D" parent="World" unique_id=1756495549]
 
@@ -58,3 +58,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 3.2, 0)
 
 [node name="BossSpawn" type="Marker3D" parent="World/BossArena" unique_id=1716069950]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, -3.3, 0)
+
+[node name="Navigation" type="NavigationRegion3D" parent="World" unique_id=955642027]
+script = ExtResource("2_kfaml")
