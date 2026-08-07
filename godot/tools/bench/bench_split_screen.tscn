@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dxwivkf5l7am3"]
+
+[ext_resource type="Script" uid="uid://pxwstxqn6yet" path="res://tools/bench/split_screen_benchmark.gd" id="1_dhj2v"]
+
+[node name="SplitScreenBenchmark" type="Node" unique_id=1150613839]
+script = ExtResource("1_dhj2v")
