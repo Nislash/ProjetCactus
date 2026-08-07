@@ -26,8 +26,17 @@ extends Resource
 ## Champ de hauteurs du sol praticable.
 @export var floor_field: CavernHeightfieldSpec
 
-## Champ de hauteurs de la voûte. Son maillage visuel est troué aux `sky_wells`,
-## mais sa collision reste pleine : on voit le ciel, on ne sort jamais.
+## Champ de **hauteur libre** de la voûte, PAS une altitude absolue : la voûte
+## finale vaut `sol + hauteur libre`, bornée à [member min_headroom] /
+## [member max_headroom].
+##
+## C'est ce qui rend la contrainte dure « voûte à 10-15 m du sol praticable »
+## **structurelle** plutôt que le résultat d'un réglage : une voûte cotée en
+## absolu se désynchronise du sol dès qu'on retouche le relief, et la violation
+## ne se voit pas. Ici elle est impossible.
+##
+## Son maillage visuel est troué aux `sky_wells`, mais sa collision reste
+## pleine : on voit le ciel, on ne sort jamais.
 @export var vault_field: CavernHeightfieldSpec
 
 ## Puits de ciel : ouvertures percées dans le MAILLAGE de la voûte uniquement.

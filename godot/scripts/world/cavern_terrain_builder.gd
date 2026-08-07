@@ -53,7 +53,7 @@ func build() -> void:
 
 	var dims: Vector2i = grid_dimensions(data)
 	var floor_heights: PackedFloat32Array = sample_field(data, data.floor_field)
-	var vault_heights: PackedFloat32Array = sample_field(data, data.vault_field)
+	var vault_heights: PackedFloat32Array = compose_vault(data, floor_heights)
 
 	_build_surface("Floor", floor_heights, dims, floor_material, false, true)
 	# La voûte est retournée (faces vers le bas) et trouée visuellement.
@@ -210,6 +210,20 @@ static func _basin_offset(basin: CavernBasin, p: Vector2) -> float:
 	if outside_m >= basin.rim_width:
 		return 0.0
 	return basin.rim_height * smoothstep(1.0, 0.0, clampf(outside_m / basin.rim_width, 0.0, 1.0))
+
+
+## Compose la voûte : `sol + hauteur libre`, la hauteur libre étant bornée aux
+## limites déclarées. Le bornage n'est pas une sécurité décorative : c'est ce qui
+## rend la contrainte « voûte à 10-15 m du sol » **impossible à violer**, quelle
+## que soit la retouche apportée au relief ensuite.
+static func compose_vault(terrain: CavernTerrainData, floor_heights: PackedFloat32Array) -> PackedFloat32Array:
+	var headroom: PackedFloat32Array = sample_field(terrain, terrain.vault_field)
+	var vault: PackedFloat32Array = PackedFloat32Array()
+	vault.resize(floor_heights.size())
+	for i in floor_heights.size():
+		var clearance: float = clampf(headroom[i], terrain.min_headroom, terrain.max_headroom)
+		vault[i] = floor_heights[i] + clearance
+	return vault
 
 
 ## Vrai si le point tombe dans un puits de ciel (utilisé pour trouer la voûte).
