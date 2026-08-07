@@ -190,5 +190,5 @@ pas au jugé, au moment de la mesure post-texturing (E3).
 
 - [x] Décision A notée dans `docs/design/levels.md` (section « Décision actée — Niveau 1 »)
 - [x] Palette, matériaux, contraintes, budget de départ, liste d'assets (ce document)
-- [ ] Budget technique **confirmé** sur la machine cible (remplacer les valeurs de départ)
-- [ ] Brief créatif §6bis exécuté par Fable → carte topographique validée (alimente #96 E2)
+- [x] Budget technique **confirmé** sur la machine cible (mesures 2026-08-07, §5 + `docs/tech/perf_budget.md`, PR #107)
+- [x] Brief créatif §6bis exécuté par Fable → [`level01_topography.md`](level01_topography.md) (2026-08-08 ; validation finale au playtest E2)
