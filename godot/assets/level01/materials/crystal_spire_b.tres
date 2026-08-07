@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_spire_b_albedo.png" id="1_c18ja"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_spire_b_emission.png" id="2_di2rs"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_spire_b_metallic.png" id="3_8pg08"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_spire_b_normal.png" id="4_sul42"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_spire_b_roughness.png" id="5_xsbc0"]
+
+[resource]
+albedo_texture = ExtResource("1_c18ja")
+metallic_texture = ExtResource("3_8pg08")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("5_xsbc0")
+roughness_texture_channel = 1
+emission_enabled = true
+emission_energy_multiplier = 1.6
+emission_texture = ExtResource("2_di2rs")
+normal_enabled = true
+normal_texture = ExtResource("4_sul42")

@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_wall_a_albedo.png" id="1_a366q"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_wall_a_emission.png" id="2_jale0"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_wall_a_metallic.png" id="3_waee3"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_wall_a_normal.png" id="4_6uhq1"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_wall_a_roughness.png" id="5_jpl64"]
+
+[resource]
+albedo_texture = ExtResource("1_a366q")
+metallic_texture = ExtResource("3_waee3")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("5_jpl64")
+roughness_texture_channel = 1
+emission_enabled = true
+emission_energy_multiplier = 1.6
+emission_texture = ExtResource("2_jale0")
+normal_enabled = true
+normal_texture = ExtResource("4_6uhq1")

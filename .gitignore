@@ -62,3 +62,17 @@ node_modules/
 # ============================================================
 # perso windows
 .claude/settings.local.json
+
+# Sources Meshy brutes : .glb texturés en 4096² (22-39 Mo pièce) et les PNG que
+# l'importeur Godot en ré-extrait. Ce sont des ARTEFACTS retéléchargeables,
+# tracés par meshy_task_id dans godot/assets/level01/assets_manifest.yaml.
+# Le dépôt ne versionne que le produit fini du bake (tools/bake_level01_props.gd) :
+# maillages .res, textures redimensionnées, matériaux .tres et sous-scènes.
+# Cf docs/tech/meshy_setup.md.
+godot/assets/level01/meshes/*.glb
+godot/assets/level01/meshes/*.glb.import
+godot/assets/level01/meshes/*_Baked_*.png
+godot/assets/level01/meshes/*_Baked_*.png.import
+godot/assets/level01/meshes/*_normal.png
+godot/assets/level01/meshes/*_normal.png.import
+godot/assets/level01/meshes/src/

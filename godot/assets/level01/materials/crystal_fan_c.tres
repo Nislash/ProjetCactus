@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_fan_c_albedo.png" id="1_n7c4i"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_fan_c_emission.png" id="2_r1d7r"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_fan_c_metallic.png" id="3_kbdi5"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_fan_c_normal.png" id="4_v0oqj"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/crystal_fan_c_roughness.png" id="5_mey2j"]
+
+[resource]
+albedo_texture = ExtResource("1_n7c4i")
+metallic_texture = ExtResource("3_kbdi5")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("5_mey2j")
+roughness_texture_channel = 1
+emission_enabled = true
+emission_energy_multiplier = 1.6
+emission_texture = ExtResource("2_r1d7r")
+normal_enabled = true
+normal_texture = ExtResource("4_v0oqj")

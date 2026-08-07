@@ -192,6 +192,59 @@ Solde après probe : **1 075 crédits**.
 La normal map livrée fait **4096²** (4,4 Mo), au-dessus de la règle « 2K max par matériau » de l'art
 bible. À réduire avant la production E3/E4.
 
+## 4ter. Le bake — de l'artefact Meshy à l'asset de jeu (2026-08-08)
+
+Un `.glb` Meshy texturé **ne s'embarque pas tel quel**. Mesure : 3 props pesaient **185 Mo**, parce que
+le `.glb` embarque des textures en 4096² — y compris pour de la donnée basse fréquence — et que Godot
+les ré-extrait ensuite en PNG à côté. La même matière était donc stockée **deux fois**.
+
+`godot/tools/bake_level01_props.gd` transforme les sources brutes en assets de jeu :
+
+```bash
+godot --headless --path godot --script tools/bake_level01_props.gd -- --pass=textures
+godot --headless --path godot --import          # Godot doit importer les PNG…
+godot --headless --path godot --script tools/bake_level01_props.gd -- --pass=assets
+```
+
+Deux passes parce qu'un matériau ne peut référencer une texture qu'une fois celle-ci importée.
+
+### Budget de résolution par rôle
+
+| Canal | Standard | Hero | Pourquoi |
+|---|---|---|---|
+| albédo | 1024 | 2048 | porte le détail que l'œil lit |
+| normale | 1024 | 2048 | idem |
+| rugosité / métallique | 512 | 512 | **données basse fréquence** — en 4096² elles ne rendent rien de visible et coûtent 64× la surface d'un 512² |
+| émission | 512 | 1024 | le glow est diffus par nature |
+
+**L'émission est déclarée par asset**, jamais héritée de Meshy qui l'active partout : l'art bible est
+explicite, *le cristal éclaire, la roche non*. Un caillou « émissif » coûterait une lecture de texture
+pour du noir et trahirait la grammaire lumineuse du niveau.
+
+### Résultat mesuré
+
+| | avant | après |
+|---|---|---|
+| poids versionné | 185 Mo (3 props) | **45 Mo (6 props)** |
+| par asset | 61,7 Mo | **7,5 Mo** |
+| VRAM estimée (6 assets) | — | **~30 Mo** (budget E0 : ≤ 700 Mo) |
+
+### Ce que le dépôt versionne, et ce qu'il ne versionne pas
+
+**Versionné** — le produit fini : maillages `.res` (géométrie seule), textures redimensionnées,
+matériaux `.tres`, et les sous-scènes `scenes/props/*.tscn` prêtes à instancier.
+
+**Non versionné** (cf `.gitignore`) — les `.glb` bruts et les PNG que l'importeur en ré-extrait. Ce
+sont des **artefacts retéléchargeables**, tracés par `meshy_task_id` dans le manifest. Les conserver
+ferait croître le dépôt de ~30 Mo par asset sans que le jeu ne s'en serve jamais.
+
+> ⚠️ Corollaire : **le manifest devient la seule trace des sources.** Une entrée effacée = un asset
+> qu'on ne sait plus régénérer. C'est le prix de la règle « pas d'entrée, pas de merge ».
+
+La compression VRAM est **explicite** (`compress/mode=2`, `compress/normal_map=1` sur les normales)
+plutôt que laissée à la détection 3D de Godot — pour que le budget VRAM soit le même sur toutes les
+machines et ne dépende pas de l'ordre dans lequel les scènes ont été ouvertes.
+
 ## 5. Boucle de l'agent texture
 
 ```

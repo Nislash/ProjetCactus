@@ -1,0 +1,15 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/level01/textures/rock_rubble_albedo.png" id="1_jlssy"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/rock_rubble_metallic.png" id="2_3yjhs"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/rock_rubble_normal.png" id="3_x6dgi"]
+[ext_resource type="Texture2D" path="res://assets/level01/textures/rock_rubble_roughness.png" id="4_qxbqy"]
+
+[resource]
+albedo_texture = ExtResource("1_jlssy")
+metallic_texture = ExtResource("2_3yjhs")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("4_qxbqy")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("3_x6dgi")
