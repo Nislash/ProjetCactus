@@ -1,0 +1,71 @@
+NOTICE — composants tiers utilisés par ProjetCactus
+===================================================
+
+ProjetCactus est sous licence propriétaire (cf LICENSE). Ce fichier recense les
+composants tiers sur lesquels il s'appuie, distribués sous leurs licences
+propres. Ces licences ne sont PAS modifiées par la licence du projet.
+
+Un projet propriétaire doit savoir exactement ce qu'il embarque : une dépendance
+copyleft fort (GPL/AGPL) liée statiquement contaminerait la distribution. Aucune
+n'est présente à ce jour.
+
+
+MOTEUR ET RUNTIME
+-----------------
+
+Godot Engine 4.6                                                    MIT
+  https://github.com/godotengine/godot
+  Distribué avec les builds exportés. MIT → compatible propriétaire, sous
+  réserve de conserver la mention de copyright dans les crédits du jeu.
+  ⚠️ À FAIRE avant la distribution (E7) : écran de crédits mentionnant Godot
+  et sa licence, ainsi que les licences des composants tiers embarqués
+  (Godot expose `Engine.get_license_text()` / `get_copyright_info()`).
+
+godot-rust / gdext (crate `godot` 0.5)                              MPL-2.0
+  https://github.com/godot-rust/gdext
+  MPL-2.0 = copyleft *par fichier*, pas viral sur l'ensemble : notre propre
+  code Rust (rust/src/) reste propriétaire. Obligation : si un fichier source
+  de gdext lui-même était modifié, ce fichier modifié devrait être publié.
+  → Règle : ne pas forker gdext. Utiliser le crate tel quel.
+
+Dépendances transitives Rust (cargo)                                variées
+  Majoritairement MIT / Apache-2.0. Inventaire à régénérer avant chaque
+  distribution :
+      cd rust && cargo tree --format "{p} {l}"
+  ⚠️ Bloquant si une GPL/AGPL apparaît dans l'arbre.
+
+
+OUTILLAGE DE DÉVELOPPEMENT (non distribué avec le jeu)
+------------------------------------------------------
+
+godot-mcp / plugin `godot/addons/godot_mcp/`                        à confirmer
+  https://github.com/tomyud1/godot-mcp
+  Plugin d'éditeur pour piloter Godot depuis un assistant IA. Le dossier
+  embarqué dans le repo ne contient PAS de fichier LICENSE.
+  ⚠️ À FAIRE : récupérer la licence amont et la consigner ici, ou retirer le
+  plugin de l'export. Outil de dev uniquement — il ne doit jamais partir dans
+  un build exporté (vérifier les filtres d'export en E7).
+
+skills/ (rust-engineer, game-developer, debugging-wizard)           MIT
+  https://github.com/Jeffallan/claude-skills
+  Instructions d'agent, outillage de dev, non distribué avec le jeu.
+
+Meshy MCP server (@meshy-ai/meshy-mcp-server)                       npm, éditeur
+  Outil de dev uniquement.
+
+
+RESSOURCES GÉNÉRÉES PAR IA
+--------------------------
+
+Assets Meshy (modèles 3D, textures)              propriété pleine (plan payant)
+  Générés sous un compte Meshy payant : les Titulaires en sont propriétaires,
+  usage commercial sans attribution. Conditions à ne pas casser : ne pas
+  publier les générations sur la Meshy Community, ne pas utiliser de matériel
+  sous copyright en entrée.
+  ⚠️ Un asset produit sous plan GRATUIT serait en CC BY 4.0 — attribution
+  obligatoire, donc INCOMPATIBLE avec « tous droits réservés ». Interdit.
+  Traçabilité asset par asset : godot/assets/level01/assets_manifest.yaml
+  Détail : docs/tech/meshy_setup.md §2
+
+
+Dernière revue : 2026-08-07
