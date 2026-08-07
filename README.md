@@ -2,6 +2,11 @@
 
 FPS roguelike / puzzle coop local 1-4 joueurs en split-screen, manettes USB uniquement. Godot 4.6 + Rust (gdext).
 
+> **Logiciel propriétaire — tous droits réservés.** © 2026 oshovibe & StanislasSC.
+> Ce dépôt n'est ni libre ni open source. Aucune licence n'est accordée du fait de sa visibilité :
+> ni copie, ni distribution, ni modification, ni usage commercial sans autorisation écrite des deux
+> titulaires. Voir [`LICENSE`](./LICENSE) et [`NOTICE`](./NOTICE) (composants tiers).
+
 ## Pitch
 
 - 4 classes × 5 écoles de magie = 20 combinaisons arme×parchemin uniques (signature du jeu)
@@ -37,6 +42,8 @@ Puis F5 dans Godot.
 - [`docs/design/`](./docs/design/) — classes, écoles de magie, combos, niveaux, puzzle méta
 - [`docs/tech/`](./docs/tech/) — input system, split-screen, Rust gdext, LFS
 - [`docs/workflow/`](./docs/workflow/) — git workflow, répartition des machines
+- [`LICENSE`](./LICENSE) — licence propriétaire, titularité, régime des contributions
+- [`NOTICE`](./NOTICE) — composants tiers et leurs licences (Godot MIT, gdext MPL-2.0, assets Meshy)
 
 ## Roadmap POC (~8-10 semaines)
 

@@ -1,0 +1,81 @@
+LICENCE PROPRIÉTAIRE — TOUS DROITS RÉSERVÉS
+ProjetCactus
+
+Copyright (c) 2026 oshovibe & StanislasSC
+Tous droits réservés. / All rights reserved.
+
+-------------------------------------------------------------------------------
+1. TITULARITÉ
+-------------------------------------------------------------------------------
+
+Le présent logiciel, dénommé « ProjetCactus » — comprenant sans s'y limiter son
+code source, son code objet, ses ressources graphiques, sonores et textuelles,
+ses données de jeu, ses scènes, ses documents de conception et sa documentation
+(ci-après « le Logiciel ») — est la propriété exclusive et indivise de :
+
+  - oshovibe        (comptes GitHub : oshovibe, OshOEz)
+  - StanislasSC     (comptes GitHub : StanislasSC, Nislash)
+
+ci-après « les Titulaires ».
+
+-------------------------------------------------------------------------------
+2. AUCUNE LICENCE ACCORDÉE
+-------------------------------------------------------------------------------
+
+Le Logiciel n'est PAS un logiciel libre et n'est PAS open source. Aucune licence,
+expresse ou tacite, n'est accordée à quiconque, y compris du seul fait que le
+dépôt ou une partie du Logiciel serait accessible publiquement.
+
+Sont notamment interdits, en tout ou partie, sans l'autorisation écrite et
+préalable de TOUS les Titulaires :
+
+  a) la copie, la reproduction et le stockage ;
+  b) la distribution, la publication, la mise à disposition et la revente ;
+  c) la modification, l'adaptation, la traduction et la création d'œuvres
+     dérivées ;
+  d) la rétro-ingénierie, la décompilation et le désassemblage, sauf dans la
+     stricte mesure permise par une disposition légale impérative ;
+  e) l'exploitation commerciale, directe ou indirecte ;
+  f) l'utilisation du Logiciel, ou de tout élément qui en est extrait, pour
+     entraîner un modèle d'apprentissage automatique.
+
+L'accessibilité publique du dépôt ne vaut ni renonciation à ces droits, ni
+licence implicite, ni mise dans le domaine public.
+
+-------------------------------------------------------------------------------
+3. CONTRIBUTIONS
+-------------------------------------------------------------------------------
+
+Toute contribution soumise au Logiciel (code, données, ressources, documentation),
+par quelque moyen que ce soit, emporte cession non exclusive, irrévocable et à
+titre gratuit aux Titulaires des droits patrimoniaux nécessaires à son
+exploitation dans le cadre du Logiciel, pour toute la durée légale de protection
+et pour le monde entier. Le contributeur garantit détenir les droits sur ce qu'il
+soumet.
+
+-------------------------------------------------------------------------------
+4. COMPOSANTS TIERS
+-------------------------------------------------------------------------------
+
+Le Logiciel s'appuie sur des composants tiers distribués sous leurs licences
+propres, qui ne sont pas couverts par la présente licence et demeurent régis par
+leurs conditions respectives. Voir le fichier NOTICE.
+
+-------------------------------------------------------------------------------
+5. ABSENCE DE GARANTIE
+-------------------------------------------------------------------------------
+
+LE LOGICIEL EST FOURNI « EN L'ÉTAT », SANS GARANTIE D'AUCUNE SORTE, EXPRESSE OU
+IMPLICITE, Y COMPRIS SANS S'Y LIMITER LES GARANTIES DE QUALITÉ MARCHANDE,
+D'ADÉQUATION À UN USAGE PARTICULIER ET D'ABSENCE DE CONTREFAÇON. EN AUCUN CAS
+LES TITULAIRES NE POURRONT ÊTRE TENUS RESPONSABLES D'UNE QUELCONQUE RÉCLAMATION,
+D'UN DOMMAGE OU D'UNE AUTRE RESPONSABILITÉ, QUE CE SOIT DANS LE CADRE D'UNE
+ACTION CONTRACTUELLE, DÉLICTUELLE OU AUTRE, DÉCOULANT DU LOGICIEL, DE SON
+UTILISATION OU DE TOUTE AUTRE OPÉRATION LE CONCERNANT.
+
+-------------------------------------------------------------------------------
+6. CONTACT
+-------------------------------------------------------------------------------
+
+Toute demande d'autorisation doit être adressée conjointement aux Titulaires via
+le dépôt du projet.
