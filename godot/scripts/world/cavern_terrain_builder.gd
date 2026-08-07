@@ -21,8 +21,20 @@
 class_name CavernTerrainBuilder
 extends Node3D
 
-## Données de terrain à matérialiser.
+## Chemin par défaut de la ressource de terrain, produite par
+## `tools/build_cavern_terrain.gd`.
+const DEFAULT_DATA_PATH := "res://data/levels/level01_cavern_terrain.tres"
+
+## Données de terrain à matérialiser. Laissé vide, [member data_path] est chargé.
 @export var data: CavernTerrainData
+
+## Chemin de secours, chargé si [member data] n'est pas assigné.
+##
+## La ressource de terrain est un ARTEFACT régénéré par un script d'outillage à
+## chaque itération sur la topographie. La référencer par chemin plutôt que de
+## l'embarquer dans la scène évite de recoller scène et artefact à chaque
+## régénération — et la review créative #15 va en demander plusieurs.
+@export_file("*.tres") var data_path: String = DEFAULT_DATA_PATH
 
 ## Matériau du sol (provisoire au blockout ; le PBR arrive en E3).
 @export var floor_material: Material
@@ -36,14 +48,24 @@ extends Node3D
 
 
 func _ready() -> void:
-	if build_on_ready and data != null:
+	if build_on_ready:
 		build()
+
+
+## Charge [member data_path] si aucune donnée n'a été assignée directement.
+func _resolve_data() -> void:
+	if data != null or data_path.is_empty():
+		return
+	data = load(data_path) as CavernTerrainData
+	if data == null:
+		push_error("CavernTerrainBuilder : impossible de charger « %s »." % data_path)
 
 
 ## Reconstruit intégralement le terrain. Idempotent : purge d'abord ce qui a été
 ## généré précédemment, pour qu'une réitération sur les données ne laisse aucun
 ## résidu.
 func build() -> void:
+	_resolve_data()
 	assert(data != null, "CavernTerrainBuilder : aucune CavernTerrainData assignée.")
 	assert(data.floor_field != null, "CavernTerrainBuilder : floor_field manquant.")
 	assert(data.vault_field != null, "CavernTerrainBuilder : vault_field manquant.")
@@ -55,10 +77,30 @@ func build() -> void:
 	var floor_heights: PackedFloat32Array = sample_field(data, data.floor_field)
 	var vault_heights: PackedFloat32Array = compose_vault(data, floor_heights)
 
-	_build_surface("Floor", floor_heights, dims, floor_material, false, true)
+	# Seul le sol alimente le navmesh. La voûte est un plafond horizontal, donc
+	# « marchable » du point de vue du baker, qui ne raisonne qu'en pentes : sans
+	# ce filtrage, la navigation se cuit AUSSI à 12 m au-dessus du sol et les
+	# points de départ se retrouvent projetés au plafond.
+	_build_surface("Floor", floor_heights, dims, floor_material, false, true,
+		WORLD_COLLISION_LAYER | NAVMESH_SOURCE_LAYER)
 	# La voûte est retournée (faces vers le bas) et trouée visuellement.
-	_build_surface("Vault", vault_heights, dims, rock_material, true, false)
+	_build_surface("Vault", vault_heights, dims, rock_material, true, false, WORLD_COLLISION_LAYER)
 	_build_walls(floor_heights, vault_heights, dims)
+
+
+## Couche physique du monde : tout le décor solide y est, joueurs et projectiles
+## s'y appuient.
+const WORLD_COLLISION_LAYER: int = 1
+
+## Bit supplémentaire porté UNIQUEMENT par le sol praticable, pour que la cuisson
+## du navmesh sache quoi parser.
+##
+## Pourquoi un bit plutôt qu'un groupe de nœuds : Godot avertit explicitement que
+## parser des maillages VISUELS pour cuire un navmesh exige un readback GPU —
+## coûteux en runtime, et purement et simplement inopérant en headless (donc
+## intestable en CI). Parser les collisions est la voie recommandée, et le
+## masque de collision est le seul filtre qu'elle accepte.
+const NAVMESH_SOURCE_LAYER: int = 128
 
 
 # ---------------------------------------------------------------------------
@@ -244,7 +286,8 @@ func _build_surface(
 	dims: Vector2i,
 	material: Material,
 	flip_faces: bool,
-	solid_mesh: bool
+	solid_mesh: bool,
+	collision_layer: int
 ) -> void:
 	var root: Node3D = Node3D.new()
 	root.name = surface_name
@@ -263,6 +306,7 @@ func _build_surface(
 
 	var body: StaticBody3D = StaticBody3D.new()
 	body.name = "Body"
+	body.collision_layer = collision_layer
 	root.add_child(body)
 	body.owner = owner
 
@@ -393,6 +437,7 @@ func _build_walls(
 
 	var body: StaticBody3D = StaticBody3D.new()
 	body.name = "Body"
+	body.collision_layer = WORLD_COLLISION_LAYER
 	root.add_child(body)
 	body.owner = owner
 
