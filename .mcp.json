@@ -1,9 +1,18 @@
 {
-  "_comment": "Serveur MCP godot-mcp-server (tomyud1/godot-mcp, npm). Au demarrage de Claude Code, npx telechargera et lancera le serveur. Le plugin Godot correspondant est dans godot/addons/godot_mcp/, a activer dans Project Settings > Plugins.",
+  "_comment": "Serveurs MCP du projet. AUCUN SECRET ICI : ce fichier est versionne. Les cles passent par des variables d'environnement (syntaxe ${VAR}), chaque machine exporte les siennes. Setup : docs/tech/godot_mcp_setup.md et docs/tech/meshy_setup.md.",
   "mcpServers": {
     "godot": {
+      "_comment": "godot-mcp-server (tomyud1/godot-mcp, npm). npx telecharge et lance le serveur au demarrage de Claude Code. Le plugin Godot correspondant est dans godot/addons/godot_mcp/, a activer dans Project Settings > Plugins.",
       "command": "npx",
       "args": ["-y", "godot-mcp-server"]
+    },
+    "meshy": {
+      "_comment": "Serveur MCP officiel Meshy (generation et retexturing 3D). Necessite MESHY_API_KEY exportee dans l'environnement du shell qui lance Claude Code. Cf docs/tech/meshy_setup.md.",
+      "command": "npx",
+      "args": ["-y", "@meshy-ai/meshy-mcp-server"],
+      "env": {
+        "MESHY_API_KEY": "${MESHY_API_KEY}"
+      }
     }
   }
 }
