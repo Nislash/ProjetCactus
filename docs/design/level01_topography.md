@@ -212,6 +212,27 @@ Contraintes d'exécution (Opus, tâches #10–#12) :
 | Z5 | 18 m | intime, sanctuaire |
 | Z6 | 25 m → resserrement scripté pendant le combat (cf encounters) | la tension se voit |
 
+## 9bis. Écarts d'exécution — à arbitrer en review créative (#15)
+
+> Ajouté par ● Opus le 2026-08-08 en construisant le blockout. Trois chiffres de cette spec sont
+> **géométriquement incompatibles** avec la contrainte de praticabilité, et ont dû être ajustés. Ils
+> sont listés ici pour que Fable tranche en connaissance de cause, plutôt que d'être pliés en silence.
+
+| # | Spec | Exécuté | Pourquoi |
+|---|---|---|---|
+| 1 | **C1** ∅6 m, prof. 1 m | ∅12 m, prof. 0,8 m | Un bol de rayon 3 m creusé de 1 m sort à ~37° une fois le profil lissé. Le rôle est intact (abri, couvert contre les béliers, écrin de K3) ; seule l'échelle change. |
+| 2 | **Bol d'arène** ∅20 m, parois **25°** | ∅28 m, parois ~35-44° | 6 m de dénivelé sur un rayon de 10 m donnent ~31° de moyenne et ~45° de crête : irréalisable à 25°. Le bol a été élargi ; les parois restent sous le `floor_max_angle` du personnage (45°), donc franchissables, et les rampes RN/RS à 14° restent les chemins évidents. |
+| 3 | **Emprise** X ∈ [−45, **+48**] | X ∈ [−45, **+56**] | Conséquence de (2) : le bol élargi ne tient pas dans l'ancienne borne. Les 8 m gagnés sont un appendice fermé (l'arène), pas de l'espace de traversée — le cœur jouable reste dans les ~80 m annoncés. |
+
+Décalages mineurs induits : la **crête du seuil** passe de X = +30 à **+27** (elle était avalée par le
+bol élargi ; elle en surplombe maintenant la margelle, ce qui sert la compression), et le **Golem** de
+X = +38 à **+42** (centre du nouveau bol).
+
+**Mesures du terrain généré** (`level01_cavern_terrain.tres`, 102 × 55 échantillons) : hauteur libre
+**10,0 → 15,0 m** exactement, pente maximale **43,9°**, **0,46 %** du terrain au-dessus du plafond de
+confort de 36° (les parois du bol), dénivelé maximal entre deux points voisins **0,96 m**. Altitudes
+des 6 points clés conformes à ±0,35 m. Prouvé par `godot/tests/test_cavern_sealing.gd`.
+
 ## 10. Conformité aux contraintes dures (DoD E2)
 
 | Contrainte | Où c'est garanti |
