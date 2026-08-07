@@ -18,7 +18,12 @@ class_name CavernNavigation
 extends NavigationRegion3D
 
 ## Rayon d'agent. Capsule joueur 0,4 m + marge pour ne pas raser les parois.
-@export var agent_radius: float = 0.55
+##
+## MULTIPLE EXACT de [member cell_size] : le baker arrondit ce rayon au voxel
+## SUPÉRIEUR. En 0,55 avec des voxels de 0,25, l'agent cuit valait en réalité
+## 0,75 m — les passages étroits de la spec (2,5 m) auraient été jugés sur une
+## largeur d'agent que personne n'avait choisie.
+@export var agent_radius: float = 0.5
 
 ## Hauteur d'agent, alignée sur la capsule du joueur.
 @export var agent_height: float = 1.8
@@ -27,9 +32,9 @@ extends NavigationRegion3D
 ## du CharacterBody3D du joueur (45° par défaut dans Godot) — voir l'entête.
 @export var agent_max_slope_degrees: float = 45.0
 
-## Hauteur de marche franchissable, alignée sur le dénivelé maximal toléré
-## entre deux échantillons du terrain.
-@export var agent_max_climb: float = 0.5
+## Hauteur de marche franchissable. MULTIPLE EXACT de [member cell_height], que
+## le baker arrondit au voxel INFÉRIEUR.
+@export var agent_max_climb: float = 0.4
 
 ## Finesse de la grille de voxelisation. 0,25 m tient le compromis entre
 ## précision sur le relief et temps de cuisson sur une emprise de ~100 × 55 m.

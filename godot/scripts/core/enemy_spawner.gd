@@ -4,9 +4,17 @@ extends Node
 ## un seul wave fixe, pas de respawn. M2+ : vagues, waves manager.
 ##
 ## Convention level : nodes Marker3D enfants d'un Node3D "EnemySpawnPoints".
-## Le nom du marker préfixé "Boss" est traité comme boss spawn (M3),
-## sinon mêlée par défaut. Les markers contenant "B" (Combat1) et "C"
-## (Combat2) reçoivent une vague mixte mêlée + ranged.
+##
+## L'archétype se déclare de deux façons, la première primant :
+##
+## 1. PAR GROUPE (recommandé) — le marker appartient à `enemy_melee`,
+##    `enemy_ranged` ou `enemy_boss`. Explicite, et le marker peut alors porter
+##    un nom qui dit ce qu'il fait plutôt que ce qu'il spawne.
+##
+## 2. PAR NOM (hérité) — "Boss*" est ignoré, un nom contenant "C" donne du
+##    ranged, tout le reste de la mêlée. Conservé pour `level_01_poc`, qui
+##    l'utilise. Fragile par nature : n'importe quel "C" dans le nom bascule
+##    l'archétype. Ne pas l'employer pour de nouveaux niveaux.
 
 @export var enemy_melee_scene: PackedScene = preload("res://scenes/enemies/enemy_melee.tscn")
 @export var enemy_ranged_scene: PackedScene = preload("res://scenes/enemies/enemy_ranged.tscn")
@@ -39,7 +47,7 @@ func spawn_all() -> void:
 	for marker in spawn_root.get_children():
 		if not (marker is Marker3D):
 			continue
-		var enemy_scene: PackedScene = _scene_for_marker(marker.name)
+		var enemy_scene: PackedScene = _scene_for_marker(marker as Marker3D)
 		if enemy_scene == null:
 			continue
 		var enemy: EnemyBase = enemy_scene.instantiate() as EnemyBase
@@ -49,14 +57,25 @@ func spawn_all() -> void:
 	print("[EnemySpawner] Spawné %d ennemis." % spawned)
 
 
-func _scene_for_marker(marker_name: String) -> PackedScene:
-	# Conventions :
-	# - "Boss*" : boss (M3, on n'a pas encore → on skip)
-	# - "*B0", "*B1", ... : Room Combat1 — mêlée
-	# - "*C0", "*C1", ... : Room Combat2 — ranged
-	# - sinon : mêlée par défaut
+## Groupes d'archétype, prioritaires sur la convention de nommage héritée.
+const GROUP_MELEE := &"enemy_melee"
+const GROUP_RANGED := &"enemy_ranged"
+const GROUP_BOSS := &"enemy_boss"
+
+
+func _scene_for_marker(marker: Marker3D) -> PackedScene:
+	# 1. Groupe explicite.
+	if marker.is_in_group(GROUP_BOSS):
+		return null
+	if marker.is_in_group(GROUP_RANGED):
+		return enemy_ranged_scene
+	if marker.is_in_group(GROUP_MELEE):
+		return enemy_melee_scene
+
+	# 2. Repli sur la convention de nommage (cf entête).
+	var marker_name: String = marker.name
 	if marker_name.begins_with("Boss"):
 		return null
-	if marker_name.find("C") != -1 and marker_name.find("Boss") == -1:
+	if marker_name.find("C") != -1:
 		return enemy_ranged_scene
 	return enemy_melee_scene

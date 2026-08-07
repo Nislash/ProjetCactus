@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bl8eqw121kq6k" path="res://scripts/world/cavern_terrain_builder.gd" id="1_yaq6u"]
 [ext_resource type="Script" uid="uid://l4t1uowcqn03" path="res://scripts/world/cavern_navigation.gd" id="2_kfaml"]
+[ext_resource type="Script" uid="uid://bk8sulr4bcqss" path="res://scripts/world/cavern_environment.gd" id="3_isknd"]
 
 [node name="Level01Cavern" type="Node3D" unique_id=1001146890]
 
@@ -27,29 +28,29 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -41, 6, 4.5)
 [node name="Landmarks" type="Node3D" parent="World" unique_id=976983149]
 
 [node name="Monolith" type="Marker3D" parent="World/Landmarks" unique_id=480717517]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.5, -12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3.05, -12)
 
 [node name="Lantern" type="Marker3D" parent="World/Landmarks" unique_id=1685156675]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3, -21)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.96, -21)
 
 [node name="PuzzleCrystals" type="Node3D" parent="World" unique_id=425451747]
 
 [node name="K1_Nid" type="Marker3D" parent="World/PuzzleCrystals" unique_id=896581713]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 4, 20)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.94, 20)
 
 [node name="K2_Lanterne" type="Marker3D" parent="World/PuzzleCrystals" unique_id=482514203]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 3, -22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2.97, -22)
 
 [node name="K3_Cuvette" type="Marker3D" parent="World/PuzzleCrystals" unique_id=1342321557]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 1.6, 6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 3.56, 6)
 
 [node name="Chests" type="Node3D" parent="World" unique_id=3842520]
 
 [node name="CH1_Puzzle" type="Marker3D" parent="World/Chests" unique_id=661198780]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.5, -10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.26, -10)
 
 [node name="CH2_Relique" type="Marker3D" parent="World/Chests" unique_id=1431566130]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3, -24)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2.95, -24)
 
 [node name="BossArena" type="Node3D" parent="World" unique_id=1314422861]
 
@@ -61,3 +62,55 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, -3.3, 0)
 
 [node name="Navigation" type="NavigationRegion3D" parent="World" unique_id=955642027]
 script = ExtResource("2_kfaml")
+
+[node name="EnemySpawnPoints" type="Node3D" parent="World" unique_id=1419157492]
+
+[node name="EnemyForest0" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=1023021030 groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 5.44, -6)
+
+[node name="EnemyForest1" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=912074737 groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 4.45, 4)
+
+[node name="EnemyForest2" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=1118177008 groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 3.95, -9)
+
+[node name="EnemyNestRanged0" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=1209077260 groups=["enemy_ranged"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 3.94, 16)
+
+[node name="EnemyNestRanged1" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=399471170 groups=["enemy_ranged"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 3.94, 20)
+
+[node name="EnemyNest0" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=537532287 groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 3.81, 13)
+
+[node name="EnemyNest1" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=2009522126 groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 3.87, 15)
+
+[node name="EnemyLanternElite0" type="Marker3D" parent="World/EnemySpawnPoints" unique_id=1643714468 groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3.01, -20)
+
+[node name="StartChestSpawn" type="Marker3D" parent="World" unique_id=2077270579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -38, 6.03, 0)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="World" unique_id=1566946887]
+
+[node name="ChestForest0" type="Marker3D" parent="World/RelicChestSpawnPoints" unique_id=333319119 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 5.91, 8)
+
+[node name="ChestLakeRim0" type="Marker3D" parent="World/RelicChestSpawnPoints" unique_id=1555977477 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.78, -6)
+
+[node name="ChestLakeRim1" type="Marker3D" parent="World/RelicChestSpawnPoints" unique_id=1171652078 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2.33, 8)
+
+[node name="ChestNest0" type="Marker3D" parent="World/RelicChestSpawnPoints" unique_id=1004296069 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 3.85, 23)
+
+[node name="ChestLantern0" type="Marker3D" parent="World/RelicChestSpawnPoints" unique_id=1875551350 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2.95, -24)
+
+[node name="ChestCrest0" type="Marker3D" parent="World/RelicChestSpawnPoints" unique_id=710101791 groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 2.85, -7)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="World" unique_id=329084426]
+script = ExtResource("3_isknd")

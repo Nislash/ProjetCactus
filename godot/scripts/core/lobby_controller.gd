@@ -35,9 +35,13 @@ const MAX_PLAYERS: int = 4
 ## Ajoutez une entree quand un nouveau niveau est pret. Le numero affiche
 ## sert juste de tag (le path est la source de verite).
 const LEVELS: Array = [
-	# Niveaux générés par la pipeline (tools/dungeon_pipeline/) — placés en premier
-	# car ce sont les versions actives. Format .tres consommé par DungeonBuilder.
-	{"id": 1, "name": "N1 [GEN] Caverne crystalline", "path": "res://data/levels/level_1.tres"},
+	# Niveau 1 « Caverne Cristalline » — grande caverne continue FAITE MAIN, en
+	# sélection par défaut. C'est la vitrine du POC : il sort de la pipeline
+	# (cf docs/design/levels.md, décision A), qui reste la source des N2-N8.
+	{"id": 1, "name": "N1 — Caverne Cristalline", "path": "res://scenes/levels/level_01_cavern/level_01_cavern.tscn"},
+	# Niveaux générés par la pipeline (tools/dungeon_pipeline/). Format .tres
+	# consommé par DungeonBuilder.
+	{"id": 11, "name": "N1 [GEN] Caverne crystalline", "path": "res://data/levels/level_1.tres"},
 	{"id": 2, "name": "N2 [GEN] Marais toxique", "path": "res://data/levels/level_2.tres"},
 	{"id": 3, "name": "N3 [GEN] Temple gravité réduite", "path": "res://data/levels/level_3.tres"},
 	{"id": 4, "name": "N4 [GEN] Forge en fusion", "path": "res://data/levels/level_4.tres"},
