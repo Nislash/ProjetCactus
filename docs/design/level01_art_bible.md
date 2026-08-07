@@ -21,7 +21,23 @@ Une **grande caverne cristalline fermée et vallonée**, plongée dans la pénom
 | Zones ouvertes | **trous dans la voûte/parois** → on voit le ciel, ≥ 1 landmark visible de loin |
 | POI | 4–6 points d'intérêt (loot, combat, puzzle, respiration) |
 
-## 3. Palette (source de vérité — reprise de l'artifact du plan)
+## 3. Palette (source de vérité)
+
+> **Inflexion actée le 2026-08-08 sur référence visuelle fournie** : on va vers une **caverne
+> glaciaire**, nettement plus **froide et désaturée** que le cyan cristal initial. Traits retenus de la
+> référence (décrits ici en vocabulaire générique — on ne réutilise ni l'image ni son origine, cf la
+> condition de licence Meshy sur le matériel sous copyright) :
+>
+> - sol de **glace pâle bleutée**, presque blanc, qui renvoie la lumière et éclaire par le bas ;
+> - roche **bleu-gris très désaturée**, lue en silhouette sombre plutôt qu'en matière détaillée ;
+> - **forêts de stalactites/stalagmites** comme motif de remplissage vertical dominant ;
+> - **brume atmosphérique dense** avec forte atténuation en profondeur — les plans lointains se
+>   délavent presque en monochrome ;
+> - **un seul accent chaud** (une lanterne) dans tout le cadre, qui ne fonctionne que parce que tout le
+>   reste est froid.
+>
+> Conséquence : baisser la saturation générale, assumer le presque-monochrome, et **réserver le chaud
+> encore plus strictement** qu'auparavant.
 
 Neutres à **biais bleu** (jamais un gris pur), accent cristal cyan émissif, contre-accent chaud réservé au danger/boss.
 
