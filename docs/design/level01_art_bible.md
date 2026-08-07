@@ -47,19 +47,95 @@ Neutres à **biais bleu** (jamais un gris pur), accent cristal cyan émissif, co
 | **Sol détaillé** | éboulis, poussière cristalline, flaques sous les puits de jour |
 | **Puits de jour** | pas un matériau : `FogVolume` + `DirectionalLight`/`SpotLight` shafts par trou de voûte |
 
-## 5. Budget technique (cible 4-split 60 fps — **à confirmer sur la machine cible**)
+## 5. Budget technique — **mesuré** (2026-08-07)
 
-Valeurs de départ à valider en E2/E3 (mesures avant/après) :
+> Les valeurs de cette section ne sont plus des estimations. Elles sortent de
+> `godot/tools/bench/bench_split_screen.tscn`, qui doit être **relancé à l'identique** après E3
+> (texturing) et E7 (packaging) pour comparer des chiffres comparables. Protocole et limites :
+> [`docs/tech/perf_budget.md`](../tech/perf_budget.md).
 
-| Métrique | Cible de départ | Note |
+**Machine de test** : Apple M4, Godot 4.6 Forward+/Metal, fenêtre 1920×942, 4 SubViewports de 960×471.
+
+### 5.1. Coût du blockout actuel — la référence
+
+| Viewports | draw calls | dc / viewport | primitives | CPU render | fps |
+|---|---|---|---|---|---|
+| 1 | 76 | 76 | 1 046 | 0,33 ms | 60 |
+| 2 | 207 | 104 | 2 740 | 0,49 ms | 60 |
+| 4 | 293 | 73 | 3 992 | 0,61 ms | 60 |
+
+Le blockout pèse **35 MeshInstance3D et 420 triangles**. Autrement dit : **il ne coûte rien, et la
+totalité du budget reste disponible** pour la caverne texturée. Ce n'est pas une bonne nouvelle en soi,
+c'est juste le point de départ — la question utile n'était pas « combien coûte la scène actuelle » mais
+« où est le plafond de la machine ». D'où les rampes ci-dessous.
+
+### 5.2. Plafond mesuré — rampe géométrique à 4 viewports
+
+Charge synthétique : N `MeshInstance3D` distincts (576 tris chacun), graine fixe, dans le champ des
+4 caméras.
+
+| Mailles | draw calls | dc / vp | primitives / frame | CPU render | fps | |
+|---|---|---|---|---|---|---|
+| 1 000 | 481 | 120 | 10,8 M | 2,58 ms | 60,0 | OK |
+| **2 000** | **545** | **136** | **21,6 M** | **3,22 ms** | **60,0** | **dernier palier tenu** |
+| 4 000 | 611 | 153 | 43,1 M | 4,01 ms | 50,7 | ❌ décrochage |
+
+**Le genou est entre 2 000 et 4 000 objets distincts**, soit entre ~21 M et ~43 M de primitives par
+frame cumulées sur les 4 viewports.
+
+### 5.3. Budget de travail retenu
+
+Cibles **par viewport**, avec une marge de sécurité de ~40 % sous le genou mesuré (une caverne réelle a
+des shaders, du fog et du gameplay que la charge synthétique n'a pas) :
+
+| Métrique | Cible retenue | Origine |
 |---|---|---|
-| Draw calls / viewport | ≤ ~1200 | ×4 viewports simultanés |
-| Triangles visibles / viewport | ≤ ~1,5 M | MultiMesh pour les cristaux répétés |
-| Sources de lumière temps réel | ombres portées sur ~2-3 majeures (puits de jour) ; le reste en émissif/baked | perf-critique |
-| Textures | atlas / trim sheets, 2K max par matériau | `.glb` embed (LFS) |
-| Fallback | **renderer Mobile** prévu si le Forward+ 4-split ne tient pas | cf CLAUDE.md |
+| Objets distincts visibles / viewport | **≤ 350** (≈1 400 au total) | genou à 500/vp, marge 30 % |
+| Draw calls / viewport | **≤ 140** | mesuré à 136 au dernier palier tenu |
+| Primitives / frame (4 vp cumulés) | **≤ 20 M** | mesuré à 21,6 M au dernier palier tenu |
+| CPU render time (4 vp) | **≤ 4 ms** | 3,22 ms au dernier palier tenu |
+| VRAM totale | **≤ 700 Mo** | 174 Mo à vide, ~300 Mo mesurés sous charge |
+| Textures | atlas / trim sheets, 2K max par matériau | inchangé — `.glb` embed (LFS) |
 
-> ⚠️ Ces chiffres sont des points de départ raisonnables, pas des mesures. À caler dès qu'on a la machine de test (E0 final).
+> ⚠️ **L'ancienne cible « ≤ 1200 draw calls / viewport » était fausse d'un facteur ~9.** Le décrochage
+> arrive à ~153 draw calls par viewport, pas 1200. Elle aurait laissé croire à une marge inexistante.
+> À l'inverse, « ≤ 1,5 M triangles / viewport » était **trop conservateur** : on tient 5 M/vp.
+
+### 5.4. Lumières à ombres portées — coût VRAM linéaire, coût frame non mesurable
+
+Rampe de 1 à 32 `OmniLight3D` avec `shadow_enabled`, à 4 viewports :
+
+| Lumières ombrées | VRAM | CPU render | fps |
+|---|---|---|---|
+| 1 | 213 Mo | 1,38 ms | 60,0 |
+| 8 | 231 Mo | 1,42 ms | 60,0 |
+| 32 | 299 Mo | 1,58 ms | 59,9 |
+
+**Coût VRAM : ~2,7 Mo par lumière ombrée**, parfaitement linéaire — c'est l'allocation de sa shadow map.
+Le coût en temps de frame, lui, **n'est pas mesurable sur cette machine** (cf §5.5) : les compteurs de
+draw calls et de primitives ne bougent pas d'un iota entre 1 et 32 lumières. Ne pas conclure « les
+ombres sont gratuites » : conclure « on sait ce qu'elles coûtent en VRAM, pas en temps ».
+La consigne de l'art bible (**ombres portées réservées à 2-3 sources majeures**, le reste en émissif)
+reste donc en vigueur, et sera revalidée sur la vraie caverne en E3.
+
+### 5.5. Deux limites de mesure à connaître (elles changent la façon de lire ces chiffres)
+
+1. **Les fps ne mesurent pas la marge sur cette machine.** Sous macOS/Metal la présentation reste
+   cadencée sur l'écran 60 Hz *même avec `VSYNC_DISABLED` accepté par Godot*. Tout ce qui tient le
+   budget affiche exactement 60,0 — impossible de distinguer « il reste 80 % de marge » de « il reste
+   2 % ». Seul le **décrochage** est une information fiable ; d'où la méthode par rampe.
+2. **Le chronométrage GPU est indisponible.** `RenderingServer.viewport_get_measured_render_time_gpu()`
+   renvoie systématiquement 0 sur le backend Metal. On lit donc le **CPU render time**, qui ne capture
+   que la soumission côté processeur.
+
+Conséquence pratique : **sur une machine Windows/Vulkan, ces deux limites tombent** et les mêmes runs
+donneront des chiffres plus fins. Le budget ci-dessus est volontairement prudent pour cette raison.
+
+### 5.6. Fallback renderer
+
+Le **renderer Mobile** reste prévu si le Forward+ ne tient pas une fois la caverne texturée (cf
+`CLAUDE.md`). Le bench accepte `--rendering-method mobile` : la comparaison se fera avec des chiffres,
+pas au jugé, au moment de la mesure post-texturing (E3).
 
 ## 6. Liste d'assets à produire (priorisée)
 
