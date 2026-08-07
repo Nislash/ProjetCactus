@@ -52,6 +52,27 @@ Le plugin est figé en `godot/addons/godot_mcp/` à la version 0.5.0. Pour bumpe
 
 ## Limitations connues
 
+- **⚠️ Les propriétés typées `Resource` ne sont PAS assignables** — et l'échec est **silencieux**.
+  `modify_node_property` / `set_node_properties` rapportent un succès, mais écrivent la valeur comme
+  une **chaîne** dans le `.tscn` (ou rien du tout) : au chargement, la propriété reste `null`.
+  Constaté deux fois sur le niveau 1 (2026-08-08) : `CavernTerrainBuilder.data` (le terrain n'était
+  pas construit du tout) et `WorldEnvironment.environment` (la caverne restait noire). Aucun message
+  d'erreur dans les deux cas.
+
+  **Contournement en vigueur : charger la ressource par chemin depuis le script.**
+  ```gdscript
+  @export_file("*.tres") var data_path: String = "res://data/…/foo.tres"
+
+  func _ready() -> void:
+      if data == null and not data_path.is_empty():
+          data = load(data_path) as MyResource
+  ```
+  Voir `scripts/world/cavern_terrain_builder.gd` et `scripts/world/cavern_environment.gd`.
+  Effet de bord bienvenu : la ressource redevient un artefact réassignable sans toucher à la scène.
+
+  Toujours **vérifier le `.tscn` après coup** (`grep` sur la propriété) plutôt que de se fier au
+  message de retour du tool. Cette limitation reviendra sur les matériaux (E3) et les meshes (E4).
+
 - "No undo" — les modifications sauvent directement. Mitigation : feature branches + commits fréquents.
 - Si Godot n'est pas lancé, les tools `scene.*` runtime ne fonctionnent pas (besoin de la connexion WebSocket vivante).
 

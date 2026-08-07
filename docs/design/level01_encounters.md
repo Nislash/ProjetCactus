@@ -131,6 +131,27 @@ fenêtre jouable, pas un suicide). Tous down = game over standard.
 **Ce que le boss ne fait jamais** : d'attaque non télégraphiée, d'attaque qui suit sa cible pendant le
 telegraph (le placement doit payer), de dégâts par la caméra (pas d'AoE plein écran en split 4).
 
+## 5bis. État d'exécution des spawns (● Opus, 2026-08-08)
+
+Les points de spawn sont posés dans `level_01_cavern.tscn` sous `World/EnemySpawnPoints`, à
+l'altitude du sol **réellement généré** (et non aux altitudes nominales de la topographie).
+L'archétype est déclaré par **groupe de nœud** (`enemy_melee` / `enemy_ranged`), plus explicite et
+plus robuste que la convention de nommage héritée du POC — laquelle basculait en ranged dès qu'un
+« C » apparaissait dans le nom.
+
+| Rencontre | Design | Posé | Écart |
+|---|---|---|---|
+| **E1 La Forêt** | 3 rôdeurs | `EnemyForest0-2` (mêlée) | conforme |
+| **E-K1 Le Nid** | 2 cracheurs + 2 rôdeurs | `EnemyNestRanged0-1` + `EnemyNest0-1` | conforme, mais les 2 rôdeurs sont posés d'emblée au lieu d'arriver en renfort à l'activation de K1 (déclencheur = #29) |
+| **E-K2 La Lanterne** | 1 élite (rôdeur cuirassé) | `EnemyLanternElite0` (mêlée) | **le statut d'élite n'existe pas encore** — c'est un rôdeur standard tant que la variante (×3 HP, −30 % vitesse) n'est pas créée |
+| **E-K3 La Cuvette** | 2 béliers | **absent** | ⚠️ **l'archétype charger n'existe pas** : seules `enemy_melee` et `enemy_ranged` sont implémentées. Cf issue #46 (« Ennemi #3 »). À poser dès qu'il existe |
+| **Béliers sur la glace** | 1-2 par cristal activé | **absent** | même cause |
+| **Boss** | Golem | `World/BossArena/BossSpawn` | marqueur posé, instanciation = #29 |
+
+Ce qui dépend encore du câblage (#29) et non du placement : les **déclencheurs** (franchir X = −30,
+entrer dans un lobe, activer un cristal), le **sanctuaire du lac** (zéro spawn avant le premier
+cristal), l'**échelle par nombre de joueurs**, et le **verrouillage d'arène**.
+
 ## 6. Ce qui reste au playtest (#30) — les curseurs, pas la structure
 
 Effectifs exacts, HP de l'élite, durée des telegraphs P1 (0,8 s de départ), portée du resserrement de
