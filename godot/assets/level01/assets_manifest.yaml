@@ -1,0 +1,81 @@
+# =============================================================================
+# assets_manifest.yaml — Niveau 1 « Caverne Cristalline »
+# =============================================================================
+# SOURCE DE VÉRITÉ des assets générés par IA embarqués dans le niveau 1.
+#
+# Règle : tout asset généré présent dans godot/assets/level01/ DOIT avoir une
+# entrée ici. Pas d'entrée = pas de merge. Le manifest sert trois choses :
+#
+#   1. REPRODUCTIBILITÉ — le prompt exact et le task_id permettent de
+#      régénérer un asset sans deviner ce qui avait été demandé.
+#   2. TRAÇABILITÉ DE LICENCE — le jeu est propriétaire (cf LICENSE) : on doit
+#      pouvoir prouver, asset par asset, sous quel régime il a été produit.
+#      Cf docs/tech/meshy_setup.md §2.
+#   3. BUDGET — crédits dépensés et triangles, les deux ressources qui se
+#      consomment en silence (crédits Meshy, budget 4-split 60 fps).
+#
+# Docs liées :
+#   docs/tech/meshy_setup.md              — setup, licence, règles de production
+#   docs/design/level01_art_bible.md      — palette, matériaux, vocabulaire de prompt
+#   docs/design/level01_openworld_plan.md — roadmap E0→E7
+# =============================================================================
+
+schema_version: 1
+
+# --- Contexte de production (à tenir à jour) ---------------------------------
+generator:
+  provider: meshy
+  account_plan: paid            # « paid » = propriété pleine des assets.
+                                # Un passage en « free » ferait basculer les
+                                # NOUVEAUX assets en CC BY 4.0 (attribution
+                                # obligatoire), incompatible avec la licence
+                                # propriétaire du jeu. Cf meshy_setup.md §2.
+  mcp_server: "@meshy-ai/meshy-mcp-server"
+
+# --- Champs d'une entrée -----------------------------------------------------
+# name           : identifiant kebab-case, = nom du fichier sans extension
+# path           : chemin res:// du fichier importé dans Godot
+# type           : geo | retexture | texture_only
+#                  geo        → géométrie GÉNÉRÉE (réservé aux hero assets)
+#                  retexture  → notre géométrie, texturée par Meshy (défaut)
+#                  texture_only → texture seule, appliquée à un mesh existant
+# base_mesh      : (type: retexture) chemin de la géométrie source
+# prompt         : le prompt EXACT, copié tel quel — pas une paraphrase
+# negative_prompt: le cas échéant
+# meshy_task_id  : identifiant de tâche Meshy, remonte à la génération
+# format         : glb (défaut pour Godot)
+# tri_count      : nombre de triangles mesuré APRÈS import (budget 4-split)
+# texture_size   : ex. 2048
+# credits_spent  : coût réel de la tâche
+# license        : meshy-paid-full-ownership | meshy-free-cc-by-4.0
+#                  (« free » interdit tant que le jeu est propriétaire)
+# created        : YYYY-MM-DD
+# used_in        : scènes ou sous-scènes qui consomment l'asset
+# notes          : tout ce qu'un futur lecteur regretterait de ne pas savoir
+#
+# Exemple d'entrée complète (à décommenter et adapter lors du probe E1) :
+#
+# - name: crystal_wall_a
+#   path: "res://assets/level01/meshes/crystal_wall_a.glb"
+#   type: retexture
+#   base_mesh: "res://assets/level01/meshes/src/crystal_wall_a_base.glb"
+#   prompt: "..."
+#   meshy_task_id: "..."
+#   format: glb
+#   tri_count: 0
+#   texture_size: 2048
+#   credits_spent: 10
+#   license: meshy-paid-full-ownership
+#   created: 2026-08-07
+#   used_in: ["res://scenes/props/crystal_wall.tscn"]
+#   notes: "Probe E1 — premier asset de la boucle bout-en-bout."
+# -----------------------------------------------------------------------------
+
+assets: []
+
+# --- Suivi budget ------------------------------------------------------------
+# Renseigné au fil de l'eau. Le solde de départ vient de meshy_check_balance.
+budget:
+  credits_at_start: 1100
+  credits_at_start_date: 2026-08-07
+  credits_spent_total: 0
