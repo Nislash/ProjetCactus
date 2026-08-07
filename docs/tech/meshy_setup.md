@@ -143,6 +143,55 @@ contrainte de topologie tue le budget, et un style de prompt qui dérive rend la
 7. **LFS** : `.glb`, `.png`, `.obj`, `.fbx` sont déjà couverts par `.gitattributes`. Vérifier avec
    `git lfs status` avant de commiter qu'un binaire n'est pas passé en clair.
 
+## 4bis. Le probe E1 — ce qu'il a appris (2026-08-07)
+
+Boucle prouvée de bout en bout sur **un seul** asset (`crystal_wall_a`), pour **25 crédits**. Trois
+enseignements qui changent la façon de produire, et qui sont la raison d'être de la règle « prouver sur
+un asset avant d'industrialiser ».
+
+### ⚠️ 1. `target_polycount` est SILENCIEUSEMENT IGNORÉ par `meshy_text_to_3d`
+
+On a demandé 2 000 triangles. On a reçu **838 872 triangles** et un `.glb` de **15 Mo**. Aucune erreur,
+aucun avertissement. La cause : `meshy-6` a `should_remesh: false` par défaut, et sans remesh le
+paramètre de polycount ne s'applique pas.
+
+Mis en face du budget mesuré (cf `perf_budget.md` : décrochage vers 43 M de primitives cumulées sur
+4 viewports), **un seul** de ces cristaux coûte 3,35 M de primitives en 4-split. Une vingtaine
+suffisait à faire tomber le jeu sous 60 fps. Un asset généré tel quel est **inutilisable**.
+
+→ **Règle : tout asset généré passe obligatoirement par `meshy_remesh` avant import.** Jamais
+d'exception, pas même pour un hero asset. Le remesh a ramené le cristal à **2 046 triangles** et
+**114 Ko** — un facteur 410 sur la géométrie, 130 sur le fichier — sans changer sa silhouette
+(bounding box identique à 2 mm près). Coût : 5 crédits.
+
+### 2. `meshy_text_to_3d` ne produit qu'un *preview*, non texturé
+
+Le modèle sort avec une normal map mais **sans albedo**. Le texturing demande un
+`meshy_text_to_3d_refine` séparé (**+10 crédits**). À budgéter : un asset texturé coûte donc
+**20 (génération) + 10 (refine) + 5 (remesh) = 35 crédits**, pas 20.
+
+### 3. Vérifier le remesh dans Godot exige un réimport explicite
+
+Godot conserve son cache d'import quand un fichier est remplacé au même chemin : après téléchargement
+du modèle remeshé, l'inspection renvoyait toujours 838 872 triangles. Il faut lancer
+`godot --headless --path godot --import` (ou déclencher un rescan) **avant** de mesurer, sinon on
+valide l'ancien asset en croyant vérifier le nouveau.
+
+### Coût réel constaté
+
+| Étape | Outil | Crédits | Durée |
+|---|---|---|---|
+| Génération | `meshy_text_to_3d` (meshy-6) | 20 | 105 s |
+| Optimisation | `meshy_remesh` (2 000 tris) | 5 | 14 s |
+| *(non fait)* texturing | `meshy_text_to_3d_refine` | *10* | — |
+
+Solde après probe : **1 075 crédits**.
+
+### Point ouvert
+
+La normal map livrée fait **4096²** (4,4 Mo), au-dessus de la règle « 2K max par matériau » de l'art
+bible. À réduire avant la production E3/E4.
+
 ## 5. Boucle de l'agent texture
 
 ```

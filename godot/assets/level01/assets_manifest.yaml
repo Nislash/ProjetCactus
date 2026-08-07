@@ -71,11 +71,38 @@ generator:
 #   notes: "Probe E1 — premier asset de la boucle bout-en-bout."
 # -----------------------------------------------------------------------------
 
-assets: []
+assets:
+  - name: crystal_wall_a
+    path: "res://assets/level01/meshes/crystal_wall_a.glb"
+    type: geo
+    prompt: >-
+      A cluster of sharp faceted crystal shards growing out of a chunk of dark
+      blue-grey cave rock. Wall-mounted formation, angular prismatic facets,
+      translucent cyan crystal, rough matte stone base, stylized realism, game
+      asset
+    meshy_task_id: "019fde51-5700-79f3-8a5b-84e2bf5ee9de"   # text-to-3d, meshy-6, 20 crédits
+    remesh_task_id: "019fde54-1e8b-7bae-929c-6a1917a70f21"  # remesh 2000 tris, 5 crédits
+    format: glb
+    tri_count: 2046          # 838 872 avant remesh — cf notes
+    bounds_m: [1.90, 1.40, 1.29]
+    textures:
+      - "res://assets/level01/meshes/crystal_wall_a_normal.png"  # 4,4 Mo, à réduire en 2K
+    texture_size: 4096       # au-dessus de la règle 2K de l'art bible, à corriger
+    credits_spent: 25
+    license: meshy-paid-full-ownership
+    created: 2026-08-07
+    used_in: []              # pas encore instancié — sous-scène à créer en E4
+    notes: >-
+      Probe E1 : premier asset de la boucle bout-en-bout. NON TEXTURÉ (albedo) —
+      text_to_3d ne produit qu'un preview ; le texturing demande un
+      text_to_3d_refine (+10 crédits), non lancé. Seule une normal map est
+      livrée. Sert de preuve de pipeline et de base retexturable, pas d'asset
+      final.
 
 # --- Suivi budget ------------------------------------------------------------
 # Renseigné au fil de l'eau. Le solde de départ vient de meshy_check_balance.
 budget:
   credits_at_start: 1100
   credits_at_start_date: 2026-08-07
-  credits_spent_total: 0
+  credits_spent_total: 25
+  # 20 (text_to_3d meshy-6) + 5 (remesh). Solde attendu : 1075.
