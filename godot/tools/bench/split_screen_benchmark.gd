@@ -321,12 +321,18 @@ func _count_triangles(mesh: Mesh) -> int:
 		var arrays: Array = mesh.surface_get_arrays(surface)
 		if arrays.is_empty():
 			continue
-		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
-		if indices.size() > 0:
-			triangles += indices.size() / 3
+		# Une surface NON INDEXÉE renvoie `null` à l'emplacement des indices —
+		# et c'est le cas de toute la caverne, dont les chunks sont générés en
+		# triangles bruts. L'affecter à un `PackedInt32Array` typé lève une
+		# erreur par maille : le compte tombait à zéro et le rapport annonçait
+		# « 0 triangles » sur une scène qui en a un demi-million.
+		var index_data: Variant = arrays[Mesh.ARRAY_INDEX]
+		if index_data is PackedInt32Array and (index_data as PackedInt32Array).size() > 0:
+			triangles += (index_data as PackedInt32Array).size() / 3
 			continue
-		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
-		triangles += vertices.size() / 3
+		var vertex_data: Variant = arrays[Mesh.ARRAY_VERTEX]
+		if vertex_data is PackedVector3Array:
+			triangles += (vertex_data as PackedVector3Array).size() / 3
 	return triangles
 
 
@@ -524,12 +530,42 @@ func _print_report() -> void:
 	print("")
 	print("| Config | vp | charge | **GPU ms** | GPU max | CPU ms | fps moy | draw calls | dc / vp | primitives | VRAM (Mo) | verdict |")
 	print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+	var gpu_measured: bool = _gpu_timing_available()
 	for r in _results:
 		print("| %s | %d | %d | %.2f | %.2f | %.2f | %.1f | %.0f | %.0f | %.0f | %.0f | %s |" % [
 			r.label, r.viewports, r.load_nodes,
 			r.gpu_ms_avg, r.gpu_ms_max, r.cpu_ms_avg, r.fps_avg,  # fps affiché en %.1f
 			r.draw_calls, r.draw_calls / float(r.viewports),
 			r.primitives, r.video_mem_mb,
-			"OK" if r.fps_avg >= TARGET_FPS - FPS_TOLERANCE else "HORS BUDGET",
+			_verdict(r, gpu_measured),
 		])
+	if not gpu_measured:
+		print("")
+		print("⚠️  **Le temps GPU n'est pas mesurable sur ce backend** (colonnes GPU à 0,00).")
+		print("Les fps ne peuvent pas le remplacer : la présentation reste cadencée sur l'écran")
+		print("même vsync désactivé, donc ils saturent à %.0f et un « OK » calculé dessus ne" % TARGET_FPS)
+		print("prouve rien. Le verdict retombe sur le pire temps de frame observé, qui inclut")
+		print("l'attente de présentation et surestime donc le coût réel — il alerte, il ne")
+		print("rassure pas. Pour un chiffre GPU ferme : relancer les rampes `geometry` et")
+		print("`lights`, dont le décrochage est un fait observable indépendant de l'horloge.")
 	print("BENCH_REPORT_END")
+
+
+## Le temps GPU par viewport n'est pas remonté par tous les backends (le
+## backend Metal de Godot 4.6 renvoie 0). Zéro partout = non mesuré, pas
+## « gratuit ».
+func _gpu_timing_available() -> bool:
+	for r in _results:
+		if r.gpu_ms_max > 0.0001:
+			return true
+	return false
+
+
+func _verdict(r: Variant, gpu_measured: bool) -> String:
+	if gpu_measured:
+		return "OK" if r.gpu_ms_avg <= FRAME_BUDGET_MS else "HORS BUDGET"
+	# Sans mesure GPU, on ne peut que constater un dépassement franc du budget
+	# de frame. On ne prononce jamais « OK » sur une mesure absente.
+	if r.frame_ms_max > FRAME_BUDGET_MS * 2.0:
+		return "HORS BUDGET"
+	return "GPU non mesuré"
