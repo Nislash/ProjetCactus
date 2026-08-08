@@ -25,12 +25,26 @@ const GLYPH_DEPTH := 0.05
 
 ## Fraction de l'épaisseur laissée sous la surface. Au-delà de 1, la lettre
 ## disparaît entièrement ; à 0, elle ressort pleine et cesse d'être discrète.
-const GLYPH_SINK := 0.55
+const GLYPH_SINK := 0.42
+
+## Nombre de pans du fût. La colonnade est un PRISME, pas un cylindre : c'est
+## ce qui permet de coller la gravure sur une face plane au lieu de la faire
+## flotter devant une arête.
+const SHAFT_FACES := 9
+
+## Hauteur de la console qui porte l'éclat, en mètres. À portée de main.
+const ALTAR_HEIGHT := 1.35
+
+## Hauteur du cristal à l'échelle où on l'affiche (la flèche sculptée mesure
+## 1,9 m, réduite à 0,58).
+const ALTAR_CRYSTAL_HEIGHT := 1.1
 
 ## La lettre gravée. Une seule majuscule.
 @export var letter: String = "B"
 
-## Hauteur de la gravure sur le fût, en mètres.
+## Hauteur de la gravure sur le fût, en mètres. Tirée au sort par
+## [BossPuzzle] : à hauteur constante, les quatre lettres formaient une
+## ceinture régulière autour du lac et se cherchaient toutes au même niveau.
 @export var glyph_height: float = 3.2
 
 ## Cotes du fût, renseignées par [BossPuzzle] depuis la colonne réelle. Sans
@@ -40,13 +54,17 @@ const GLYPH_SINK := 0.55
 @export var shaft_top_radius: float = 1.7
 @export var shaft_height: float = 16.0
 
-## Angle de la gravure autour du fût, en degrés.
+## Sur quel pan du fût la gravure est taillée (0 à 8).
 ##
 ## Tiré au sort **une fois**, à partir d'une graine fixe : chaque colonne porte
-## sa lettre à un endroit différent, donc il faut vraiment en faire le tour —
+## sa lettre sur un pan différent, donc il faut vraiment en faire le tour —
 ## mais l'énigme reste la même d'une run à l'autre, ce qui permet de la
 ## raconter à quelqu'un.
-@export var glyph_angle_degrees: float = 0.0
+##
+## Un pan et non un angle libre : sur un prisme, entre le milieu d'une face et
+## une arête il y a 14 cm d'écart de rayon, soit trois fois l'épaisseur de la
+## gravure. À angle libre, elle était tantôt enfouie, tantôt décollée.
+@export var glyph_face: int = 0
 
 var _filled: bool = false
 ## Vrai si l'éclat posé ici a bien été placé au bon rang de la séquence.
@@ -78,17 +96,59 @@ func _build() -> void:
 
 	_build_glyph()
 
-	# Le berceau : une coupelle à hauteur de main, vide au départ. Sa présence
-	# dit « quelque chose se pose ici » avant qu'on ait le moindre éclat.
+	var facing: Vector3 = _face_normal()
+	var reach: float = _face_distance(ALTAR_HEIGHT)
+
+	# LA CONSOLE. Une tablette de pierre qui SAILLE du fût, à hauteur de main.
+	# Sans support, l'éclat aurait l'air collé au mur ; avec elle, il est posé.
+	var ledge := MeshInstance3D.new()
+	ledge.name = "Console"
+	var slab := BoxMesh.new()
+	slab.size = Vector3(1.25, 0.22, 0.95)
+	ledge.mesh = slab
+	var stone := StandardMaterial3D.new()
+	stone.albedo_color = Color(0.055, 0.080, 0.115)
+	stone.roughness = 0.92
+	ledge.material_override = stone
+	ledge.position = facing * (reach + 0.42) + Vector3(0.0, ALTAR_HEIGHT, 0.0)
+	ledge.rotation.y = _face_angle()
+	add_child(ledge)
+
+	# L'AUTEL. Un cristal RETOURNÉ, pointe en bas — l'empreinte en creux de
+	# l'éclat qui doit venir s'y loger.
+	#
+	# Il est TOUJOURS visible, même vide. C'est tout l'intérêt : sans lui, rien
+	# n'indiquait où poser, et le joueur qui portait ses éclats devait deviner
+	# que ces colonnes-là les acceptaient. Une forme en creux dit « il manque
+	# quelque chose ici » sans un mot.
+	var altar := MeshInstance3D.new()
+	altar.name = "Autel"
+	altar.mesh = CrystalGrammar.boss_shard_mesh()
+	# Retourné : la pointe descend dans la console.
+	altar.scale = Vector3(0.58, -0.58, 0.58)
+	var hollow := StandardMaterial3D.new()
+	hollow.albedo_color = Color(0.030, 0.048, 0.072)
+	hollow.roughness = 0.95
+	hollow.metallic = 0.0
+	altar.material_override = hollow
+	# Suspendu de toute sa hauteur au-dessus de la console : renversé, le mesh
+	# descend depuis son origine, et posé trop bas sa pointe traversait la
+	# tablette.
+	altar.position = facing * (reach + 0.42) \
+		+ Vector3(0.0, ALTAR_HEIGHT + ALTAR_CRYSTAL_HEIGHT + 0.11, 0.0)
+	add_child(altar)
+
+	# L'éclat posé, qui vient combler l'empreinte.
 	_socket_mesh = MeshInstance3D.new()
 	_socket_mesh.name = "Berceau"
 	_socket_mesh.mesh = CrystalGrammar.boss_shard_mesh()
 	_socket_material = CrystalGrammar.make_material(CrystalGrammar.COLOR_BOSS_LOCK, 0.0)
 	_socket_mesh.material_override = _socket_material
 	# Même échelle que l'éclat au sol : ce qu'on pose doit être RECONNU comme
-	# ce qu'on portait.
-	_socket_mesh.scale = Vector3.ONE * 0.55
-	_socket_mesh.position = Vector3(0.0, 1.35, 0.0)
+	# ce qu'on portait. Posé pointe en haut, il comble l'empreinte inversée.
+	_socket_mesh.scale = Vector3.ONE * 0.58
+	# Posé SUR la tablette, pointe en haut : il vient combler l'empreinte.
+	_socket_mesh.position = facing * (reach + 0.42) + Vector3(0.0, ALTAR_HEIGHT + 0.11, 0.0)
 	add_child(_socket_mesh)
 
 	_glow = CrystalGrammar.make_glow(CrystalGrammar.COLOR_BOSS_LOCK, 0.0, 8.0)
@@ -115,10 +175,6 @@ func _build() -> void:
 ##
 ## Elle est invisible du mauvais côté du fût. Ce qu'on cherche, on le cherche.
 func _build_glyph() -> void:
-	var angle: float = deg_to_rad(glyph_angle_degrees)
-	var radius: float = _shaft_radius_at(glyph_height)
-	var outward := Vector3(sin(angle), 0.0, cos(angle))
-
 	var mesh := TextMesh.new()
 	mesh.text = letter
 	# La police du jeu : lettrage tracé à la main, irrégulier. Une grotesque
@@ -162,11 +218,29 @@ func _build_glyph() -> void:
 	# épaisseur : sa face avant reste sous la surface, seules les arêtes
 	# ressortent. Sorti complètement, on obtiendrait une lettre pleine et
 	# lumineuse — lisible de partout, donc plus une énigme.
-	glyph.position = outward * (radius - GLYPH_DEPTH * GLYPH_SINK) \
+	glyph.position = _face_normal() * (_face_distance(glyph_height) - GLYPH_DEPTH * GLYPH_SINK) \
 		+ Vector3(0.0, glyph_height, 0.0)
-	glyph.rotation.y = angle
+	glyph.rotation.y = _face_angle()
 	add_child(glyph)
 	_glyph = glyph
+
+
+## L'angle du milieu du pan choisi. Décalé d'un demi-pas pour viser le centre
+## de la face et non son arête.
+func _face_angle() -> float:
+	return TAU * (float(glyph_face % SHAFT_FACES) + 0.5) / float(SHAFT_FACES)
+
+
+func _face_normal() -> Vector3:
+	var a: float = _face_angle()
+	return Vector3(sin(a), 0.0, cos(a))
+
+
+## Distance de l'axe au MILIEU d'une face, à cette hauteur. C'est elle qui
+## compte pour poser quelque chose à plat, et non le rayon circonscrit — qui
+## ne vaut que sur les arêtes.
+func _face_distance(height: float) -> float:
+	return _shaft_radius_at(height) * cos(PI / float(SHAFT_FACES))
 
 
 ## Rayon du fût à cette hauteur — la colonne est conique.

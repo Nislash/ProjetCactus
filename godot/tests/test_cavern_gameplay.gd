@@ -50,6 +50,8 @@ func _run() -> void:
 	failed += _test_four_shards_are_reachable()
 	failed += _test_the_dial_is_on_the_island_pillar()
 	failed += _test_boss_is_in_the_arena()
+	failed += _test_something_can_wake_the_boss()
+	failed += _test_every_pylon_has_an_altar()
 	failed += _test_order_matters()
 	failed += await _test_solving_opens_both_ways()
 
@@ -149,6 +151,59 @@ func _test_boss_is_in_the_arena() -> int:
 	return 0
 
 
+## LE test qui manquait. Le nœud `BossArena` de la scène n'est qu'un
+## porte-marqueurs sans script : rien n'appelait `engage()`, et le Golem
+## dormait indéfiniment. Ça ne produit aucune erreur — juste un boss inerte
+## qu'on prend pour une décision de design.
+func _test_something_can_wake_the_boss() -> int:
+	var zone: Area3D = _world.find_child("ReveilDuGolem", true, false) as Area3D
+	if zone == null:
+		print("[FAIL] boss : aucune zone d'éveil — il dormira pour toujours")
+		return 1
+	if zone.body_entered.get_connections().is_empty():
+		print("[FAIL] boss : la zone d'éveil n'écoute personne")
+		return 1
+	var boss: Node3D = _world.get_node_or_null("BossGolem") as Node3D
+	if boss != null and zone.global_position.distance_to(boss.global_position) > 5.0:
+		print("[FAIL] boss : la zone d'éveil est à %.0f m de lui"
+			% zone.global_position.distance_to(boss.global_position))
+		return 1
+	print("[OK] something_can_wake_the_boss")
+	return 0
+
+
+## L'autel : une empreinte en creux, TOUJOURS visible. Sans elle, rien
+## n'indique où poser un éclat — le joueur porte quatre cristaux et cherche
+## une serrure qui n'a pas de trou.
+func _test_every_pylon_has_an_altar() -> int:
+	var pylons: Array = _puzzle.call("get_pylons")
+	for p in pylons:
+		var altar: MeshInstance3D = (p as Node).get_node_or_null("Autel") as MeshInstance3D
+		if altar == null:
+			print("[FAIL] autel : absent sur « %s »" % (p as Node).name)
+			return 1
+		if not altar.visible:
+			print("[FAIL] autel : invisible sur « %s » — on ne sait pas où poser"
+				% (p as Node).name)
+			return 1
+		# Retourné : c'est l'empreinte de l'éclat, pas un second éclat.
+		if altar.scale.y >= 0.0:
+			print("[FAIL] autel : pas inversé sur « %s »" % (p as Node).name)
+			return 1
+
+	# Les gravures ne doivent pas s'aligner : ni même hauteur, ni même côté.
+	var heights: Array[float] = []
+	for p in pylons:
+		heights.append(float((p as Node).get("glyph_height")))
+	var spread: float = heights.max() - heights.min()
+	if spread < 1.0:
+		print("[FAIL] gravures : toutes à la même hauteur (écart %.2f m)" % spread)
+		return 1
+
+	print("[OK] every_pylon_has_an_altar (hauteurs étalées sur %.1f m)" % spread)
+	return 0
+
+
 ## L'ordre EST le puzzle. Poser sur la mauvaise lettre doit rester sans effet,
 ## et se reprendre doit rester possible.
 func _test_order_matters() -> int:
@@ -216,6 +271,14 @@ func _test_solving_opens_both_ways() -> int:
 
 	for i in 120:
 		await process_frame
+
+	# Le trait de lumière : sans lui, résoudre l'énigme ne se voyait qu'à deux
+	# cents mètres de là, donc pas du tout.
+	var beam: Node = _world.get_node_or_null("RayonDuVerrou")
+	if beam == null:
+		print("[FAIL] rayon : le Pilier ne tire rien — la résolution est muette")
+		carrier.queue_free()
+		return 1
 
 	if not (fragment as Node3D).visible:
 		print("[FAIL] chaîne : le Fragment ne s'est pas révélé")

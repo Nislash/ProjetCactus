@@ -37,7 +37,7 @@ func _ready() -> void:
 	add_child(key)
 
 	var cam := Camera3D.new()
-	cam.position = Vector3(0.0, 3.2, 7.0)
+	cam.position = Vector3(0.0, 2.6, 8.0)
 	cam.rotation_degrees = Vector3(-4.0, 0.0, 0.0)
 	cam.fov = 55.0
 	cam.current = true
@@ -64,8 +64,8 @@ func _ready() -> void:
 
 	var pylon := LetterPylon.new()
 	pylon.letter = letter
-	# Face à la caméra au départ : la rotation du présentoir fera le tour.
-	pylon.glyph_angle_degrees = 0.0
+	# Pan 0 : son milieu regarde vers +Z, donc vers la caméra.
+	pylon.glyph_face = 0
 	pylon.shaft_bottom_radius = mesh.bottom_radius
 	pylon.shaft_top_radius = mesh.top_radius
 	pylon.shaft_height = mesh.height

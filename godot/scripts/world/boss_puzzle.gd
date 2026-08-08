@@ -34,6 +34,11 @@ const SHARD_COUNT := 4
 ## Graine de l'orientation des gravures. Fixe : voir `_engrave_pylons`.
 const GLYPH_SEED := 20260808
 
+## Fourchette de hauteur des gravures, en mètres. Assez bas pour se lire
+## depuis le sol, assez haut pour qu'on doive lever les yeux.
+const GLYPH_HEIGHT_MIN := 2.2
+const GLYPH_HEIGHT_MAX := 5.6
+
 ## Où poser les éclats à ramasser, en (X, Z). Répartis sur le parcours : deux
 ## sur le chemin obligatoire, deux à l'écart — l'exploration doit payer, mais
 ## la run ne doit pas bloquer sur un éclat introuvable.
@@ -123,12 +128,29 @@ func _engrave_pylons() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = GLYPH_SEED
 
+	# Les hauteurs sont STRATIFIÉES, pas tirées librement : quatre tirages
+	# indépendants se groupent volontiers (le premier essai les a toutes
+	# posées dans 88 cm, ce qui refaisait la ceinture régulière qu'on voulait
+	# éviter). On découpe la plage en autant de bandes que de lettres, on tire
+	# dans chacune, puis on mélange l'attribution.
+	var bands: Array[float] = []
+	var span: float = (GLYPH_HEIGHT_MAX - GLYPH_HEIGHT_MIN) / float(WORD.length())
+	for b in WORD.length():
+		bands.append(GLYPH_HEIGHT_MIN + span * (float(b) + rng.randf()))
+	for b in range(bands.size() - 1, 0, -1):
+		var j: int = rng.randi_range(0, b)
+		var swap: float = bands[b]
+		bands[b] = bands[j]
+		bands[j] = swap
+
 	for i in mini(WORD.length(), columns.size()):
 		var column: Node3D = columns[SCRAMBLE[i] % columns.size()]
 		var pylon := LetterPylon.new()
 		pylon.name = "Pylone_%s_%d" % [WORD[i], i]
 		pylon.letter = WORD[i]
-		pylon.glyph_angle_degrees = rng.randf_range(0.0, 360.0)
+		# Un PAN du prisme, pas un angle libre : cf `LetterPylon.glyph_face`.
+		pylon.glyph_face = rng.randi_range(0, LetterPylon.SHAFT_FACES - 1)
+		pylon.glyph_height = bands[i]
 		_measure_shaft_for(column, pylon)
 		column.add_child(pylon)
 		pylon.position = Vector3.ZERO
