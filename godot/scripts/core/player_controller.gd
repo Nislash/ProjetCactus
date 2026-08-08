@@ -18,6 +18,12 @@ extends CharacterBody3D
 
 @export_group("Caméra / Look")
 @export var look_sensitivity: float = 3.0
+## Recul de la caméra en troisième personne, en mètres.
+@export var third_person_distance: float = 3.6
+## Décalage latéral — la vue par-dessus l'épaule. Nul, le personnage
+## masquerait exactement ce qu'on vise.
+@export var third_person_shoulder: float = 0.55
+
 @export var pitch_min_deg: float = -85.0
 @export var pitch_max_deg: float = 85.0
 
@@ -61,6 +67,8 @@ signal interaction_progress_changed(prompt: String, progress: float)
 signal weapon_equipped(weapon_kind: StringName)
 ## Nombre d'éclats du verrou portés (puzzle B-O-S-S du niveau 1).
 signal boss_shards_changed(count: int)
+## Émis quand ce joueur bascule entre vue subjective et troisième personne.
+signal view_mode_changed(third_person: bool)
 ## Émis quand le joueur appuie D-pad up pour cycler l'état de SA minimap.
 ## Le HUD écoute et bascule MINI → FULL → HIDDEN → MINI.
 signal minimap_toggle_requested()
@@ -93,6 +101,10 @@ var _interact_progress: float = 0.0
 ## Ce n'est pas de la persistance : les éclats meurent avec la run, comme
 ## tout le reste (cf CLAUDE.md, roguelike rules).
 var _boss_shards: int = 0
+## Vue à la troisième personne. Le bras de caméra est créé à la demande : la
+## plupart des parties n'en auront jamais besoin.
+var _third_person: bool = false
+var _camera_arm: SpringArm3D = null
 ## Vrai entre un déclenchement et le relâchement du bouton. Empêche la jauge
 ## de repartir en boucle sur une cible qui reste proposable.
 var _interact_consumed: bool = false
@@ -303,6 +315,10 @@ func _physics_process(delta: float) -> void:
 	# Toggle minimap (cycle MINI/FULL/HIDDEN). Disponible meme quand DOWNED.
 	if InputRouter.is_action_just_pressed(player_id, &"toggle_map"):
 		minimap_toggle_requested.emit()
+	# Bascule de vue. Disponible même à terre : voir son personnage rampant
+	# est justement le moment où l'on comprend son état.
+	if InputRouter.is_action_just_pressed(player_id, &"toggle_view"):
+		set_third_person(not _third_person)
 	# Toggle écran inventaire reliques (Y). Disponible meme quand DOWNED.
 	if InputRouter.is_action_just_pressed(player_id, &"toggle_inventory"):
 		inventory_toggle_requested.emit()
@@ -637,3 +653,95 @@ func take_boss_shard() -> bool:
 	_boss_shards -= 1
 	boss_shards_changed.emit(_boss_shards)
 	return true
+
+
+# ---------------------------------------------------------------------------
+# Vue subjective / troisième personne
+# ---------------------------------------------------------------------------
+
+## Bascule la vue de CE joueur — chacun la sienne, chacun son viewport.
+##
+## Le principe : la caméra réelle vit dans le SubViewport du joueur et suit un
+## `RemoteTransform3D` resté dans le personnage. Changer de vue revient donc à
+## déplacer ce relais — sous le pivot pour la vue subjective, au bout d'un bras
+## pour la troisième personne. Le reste du jeu ne voit aucune différence : on
+## tire toujours depuis le pivot, la visée n'est pas touchée.
+func set_third_person(value: bool) -> void:
+	if value == _third_person:
+		return
+	_third_person = value
+	if _camera_arm == null:
+		_build_camera_arm()
+
+	if _camera_remote.get_parent() != null:
+		_camera_remote.get_parent().remove_child(_camera_remote)
+	if _third_person:
+		_camera_arm.add_child(_camera_remote)
+		# Au BOUT du bras : le SpringArm place ses enfants à sa longueur
+		# courante, raccourcie s'il rencontre un mur.
+		_camera_remote.position = Vector3(third_person_shoulder, 0.0, 0.0)
+	else:
+		_camera_pivot.add_child(_camera_remote)
+		_camera_remote.position = Vector3.ZERO
+	_camera_remote.remote_path = _camera.get_path()
+
+	# Le viewmodel n'a de sens qu'en vue subjective : vu de dos, il flotterait
+	# devant le visage du personnage.
+	_set_viewmodel_visible(not _third_person)
+
+	if InputRouter.is_player_registered(player_id):
+		ViewPreference.set_third_person(InputRouter.get_device_id(player_id), _third_person)
+	view_mode_changed.emit(_third_person)
+
+
+## Le bras de caméra. Un `SpringArm3D` et non un simple décalage : sans lui,
+## la caméra traverserait la roche dès qu'on se colle à une paroi — ce qui
+## arrive en permanence dans une caverne.
+func _build_camera_arm() -> void:
+	_camera_arm = SpringArm3D.new()
+	_camera_arm.name = "CameraArm"
+	_camera_arm.spring_length = third_person_distance
+	# La sphère évite que la caméra passe par une fissure d'un centimètre.
+	var probe := SphereShape3D.new()
+	probe.radius = 0.35
+	_camera_arm.shape = probe
+	# Elle ne doit buter que sur le décor, jamais sur les joueurs ni les
+	# ennemis : sinon un allié qui passe derrière ferait sauter la vue.
+	_camera_arm.collision_mask = 1
+	_camera_pivot.add_child(_camera_arm)
+
+
+func _set_viewmodel_visible(visible_now: bool) -> void:
+	for node_name in [^"CameraPivot/Weapon", ^"CameraPivot/Melee"]:
+		var node: Node3D = get_node_or_null(node_name) as Node3D
+		if node != null:
+			# On ne touche QUE l'affichage : le nœud reste actif, c'est lui qui
+			# tire. Le désactiver rendrait le joueur inoffensif de dos.
+			#
+			# Récursif : la lame de l'épée vit deux niveaux plus bas
+			# (`Melee/Blade/Mesh`), et un parcours des enfants directs la
+			# laissait flotter devant le visage du personnage.
+			_set_meshes_visible(node, visible_now)
+
+
+func _set_meshes_visible(node: Node, visible_now: bool) -> void:
+	var mesh: VisualInstance3D = node as VisualInstance3D
+	if mesh != null:
+		mesh.visible = visible_now
+	for child in node.get_children():
+		_set_meshes_visible(child, visible_now)
+
+
+func is_third_person() -> bool:
+	return _third_person
+
+
+## Applique la préférence enregistrée pour la manette de ce joueur. Appelée
+## par le SplitScreenManager une fois la caméra rattachée à son viewport.
+func apply_saved_view_preference() -> void:
+	if not InputRouter.is_player_registered(player_id):
+		return
+	var wants: bool = ViewPreference.wants_third_person(
+		InputRouter.get_device_id(player_id))
+	if wants:
+		set_third_person(true)
