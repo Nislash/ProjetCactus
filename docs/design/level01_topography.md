@@ -1,246 +1,321 @@
-# Niveau 1 « Caverne Cristalline » — Spécification topographique
+# Niveau 1 « Caverne Cristalline » — Spécification topographique ×7
 
-> **Produit par ◆ Fable (session créative E2, 2026-08-08)** à partir du brief §6bis de
-> [`level01_art_bible.md`](level01_art_bible.md), sous la DA glaciaire actée (art bible §3).
-> **Ce document est la source de vérité spatiale du niveau.** Opus l'exécute au MCP Godot sans
-> réinterpréter : en cas d'ambiguïté entre la carte ASCII (indicative) et les **tables de coordonnées
-> (autoritaires)**, les tables gagnent. Toute correction issue du playtest passe par un patch de ce
-> fichier, pas par une divergence silencieuse dans la scène.
+> **Produit par ◆ Fable (session créative E2bis, tâche #39, 2026-08-08).**
+> Remplace intégralement la spec « Combe Gelée » : le niveau passe à **×7+ en
+> surface** sur la forme organique des **croquis de l'utilisateur** (plan +
+> plafond), sous les contraintes mesurées de
+> [`level01_buildable_constraints.md`](level01_buildable_constraints.md).
+>
+> **Ce document est la source de vérité spatiale.** Les tables de coordonnées
+> sont autoritaires ; Opus transcrit sans réinterpréter. Toute correction passe
+> par un patch d'ici, jamais par une divergence silencieuse dans la scène.
 
 ---
 
-## 1. Parti-pris — « La Combe Gelée »
+## 1. Parti-pris — « La Faille du Pilier »
 
-**Le geste : une combe glaciaire qui descend, respire, puis mord.** On entre par une corniche haute à
-l'ouest, on descend à travers une forêt de stalactites qui hache la vue, et le volume s'ouvre d'un coup
-sur un **lac gelé** — le cœur du niveau, une nappe de glace pâle frappée par un puits de jour, le seul
-endroit où la caverne se laisse voir en entier. Trois lobes rayonnent autour du lac (le nid, la
-lanterne, la forêt qu'on retraverse) ; tout à l'est, une crête-seuil compresse le passage avant de
-révéler l'arène du Golem, en contrebas dans son bol de glace.
+**L'histoire géologique en une phrase : le plafond s'est effondré au centre, le
+lac s'est formé sous la brèche, et deux piliers de roche — vestiges de la voûte
+— tiennent encore debout dans l'eau gelée.**
 
-Pourquoi ce geste :
+Tout le niveau découle de cet événement :
 
-- **La pente raconte la progression.** +6 m au spawn, 0 m au lac, −3 m dans l'arène : on s'enfonce
-  vers le boss, littéralement. Le regard du joueur suit la gravité.
-- **Le lac est le hub d'orientation.** La mécanique signature est la *visibilité limitée* : elle
-  n'existe que par contraste. Zones hachées (forêt, nid) ↔ clairière totale (lac). Depuis la glace, on
-  lit les quatre directions ; dès qu'on en sort, le brouillard reprend ses droits.
-- **Le milieu est non-linéaire, les extrémités sont linéaires.** Entrée et boss sont des couloirs
-  dramatiques ; entre les deux, les 3 cristaux du puzzle sont répartis dans 3 lobes que l'équipe visite
-  dans l'ordre qu'elle veut. C'est la structure qui fait travailler la coop (se séparer ou pas) sans
-  jamais perdre personne : tout ramène au lac.
-- **La lumière est le langage.** Froid émissif cyan = chemin et objectifs. **Un unique point chaud**
-  dans tout le niveau (la lanterne, Z5) = curiosité, récompense cachée. Le chaud ne réapparaît ensuite
-  que dans les telegraphs du boss — la grammaire de la référence visuelle, systématisée.
+- **Le Trou du Plafond** (2e croquis) n'est pas une fenêtre : c'est **la
+  cicatrice de l'effondrement**. Sa colonne de lumière est le repère de niveau
+  T1, visible de presque partout. On ne « suit pas une flèche », on marche vers
+  la lumière.
+- **Les deux Poteaux de roche** (1er croquis) sont les colonnes survivantes.
+  Ils encadrent la lumière, portent des veines de cristal, et donnent au lac
+  son échelle verticale — 15 m de fût, du lit gelé à la voûte.
+- **La caverne est une faille en S** : on entre à l'ouest par la galerie haute,
+  on descend vers la brèche lumineuse, on contourne le lac, et on remonte au
+  nord-est vers la salle du boss — le seul lobe que la lumière du jour ne
+  touche jamais.
+- **La lumière raconte la sûreté.** Zones touchées par le jour = respiration,
+  hub, puzzle. Zones que le jour ne touche pas = loot caché, boss. Le joueur
+  l'apprend sans un mot.
+
+### Réponse au vrai problème : la marche inutile
+
+À cette échelle (~330 m de parcours nominal), le danger n'est plus le manque
+d'espace, c'est le vide. Trois réponses structurelles :
+
+1. **Un battement tous les 30-40 m** (table §8) : combat, découverte, bifurcation,
+   vue — jamais deux tronçons muets d'affilée.
+2. **Le retour n'existe pas** : le **Passage Effondré** — ouvert par le
+   *Mécanisme secret* du croquis — relie la salle du boss au lac en 40 m et
+   transforme le S en **boucle**. On ne re-marche jamais ce qu'on a déjà vu.
+3. **Les détours paient** : Loot et Jardin sont hors du chemin critique, courts
+   (60-80 m aller-retour), et signalés par leur propre lumière.
+
+---
 
 ## 2. Système de coordonnées et emprise
 
-- Unités : **mètres**. Repère Godot : **+X = est, −X = ouest, −Z = nord, +Z = sud**, Y = altitude.
-- **Origine (0, 0)** : centre du lac gelé. **Y = 0** : surface de la glace du lac.
-- Emprise jouable : **X ∈ [−45, +48], Z ∈ [−28, +26]** → ~93 m × 54 m (le brief demandait un ordre de
-  grandeur 60–90 m ; je propose 93 m parce que l'arène est un appendice fermé, pas de l'espace de
-  traversée — le cœur jouable tient dans 80 m).
-- Le volume est clos par parois rocheuses sur tout le périmètre et par la voûte partout. **Aucune
-  arête de l'emprise n'est franchissable.**
+- Unités : **mètres**. Repère Godot : +X = est, −X = ouest, −Z = nord, +Z = sud.
+- **Origine (0, 0)** ≈ centre de la brèche. **Y = 0** ≈ rives du lac − 2 m.
+- Fenêtre d'échantillonnage : **X ∈ [−155, +155], Z ∈ [−105, +105]** (inchangée).
+- Surface jouable visée : **≥ 36 000 m²** (brief ×7 ; le premier jet en donne 41 884).
 
-## 3. Les six zones
+---
 
-| Zone | Nom | Emprise X | Emprise Z | Sol (alt) | Voûte (alt) | Rôle |
-|---|---|---|---|---|---|---|
-| **Z1** | Corniche du Réveil | −45 → −32 | −8 → +8 | **+6 → +5** (pente 2°) | +18 | spawn, vista d'ouverture |
-| **Z2** | Forêt de Stalactites | −32 → −12 | −15 → +12 | **+5 → +2** (2 rampes ≤ 9°, ondulations ±0,6) | +16 → +14 | combat 1, visibilité hachée, K3 |
-| **Z3** | Le Lac Gelé | ellipse c.(0,0), 16×12 | — | **0** (plat, bosselé ±0,3 aux rives) | +14 | hub, landmark, respiration |
-| **Z4** | Le Nid | +8 → +28 | +8 → +26 | **+2 → +4** (3 terrasses) | +14 | combat 2, K1 |
-| **Z5** | La Lanterne | +6 → +22 | −28 → −14 | **+3** (plat ±0,3) | +13 | loot caché, accent chaud, K2 |
-| **Z6** | Seuil & Arène | +28 → +48 | −10 → +10 | crête **+3**, bol **−3** | +13 / +12 | révélation + boss |
+## 3. La silhouette — chambres et goulets (TABLE AUTORITAIRE)
 
-Hauteur libre voûte−sol : minimum **10,0 m** (Z5 et crête du seuil), maximum **15,0 m** (arène). Toutes
-les zones respectent la fourchette dure 10–15 m. La voûte s'interpole continûment entre les valeurs du
-tableau (pas de marches).
+Le reproche au premier jet : « trop bulles ». La correction tient en trois
+procédés, à appliquer tels quels :
 
-### Z1 — Corniche du Réveil
+- **Chaque salle = 2-3 poches décalées et tournées**, jamais une seule ellipse.
+- **Adoucissement de bord VARIÉ** (4 à 18 m) : bords serrés = falaises franches,
+  bords larges = évasements. L'alternance casse la rondeur.
+- **Bruit de modulation de hauteur libre plus agressif** : amplitude **1,2**,
+  échelle **14 m** (au lieu de 0,8/22) — les parois deviennent crénelées.
 
-Balcon rocheux adossé à la paroi ouest. Les 4 spawns y sont décalés en ligne. Le sol penche doucement
-vers l'est : dès la première seconde, le corps est orienté dans le bon sens. C'est d'ici que se lit la
-**vista V1** (cf §5) — le halo du monolithe à travers la brume, au bout de l'allée. L'antichambre
-d'onboarding (E5, scène séparée) débouche ici par une porte de glace dans la paroi ouest.
+### Salles (poches elliptiques)
 
-### Z2 — Forêt de Stalactites
+| ID | Nom | Centre | Rayons | Rot° | H. libre | Bord | Rôle |
+|---|---|---|---|---|---|---|---|
+| B1 | Salle du Boss (cœur) | (96, −54) | 46×34 | −14 | 15 | 14 | l'arène |
+| B2 | Salle du Boss (lobe NO) | (66, −70) | 24×18 | +22 | 14 | 10 | le « marteau » du croquis |
+| B3 | Encoche Est | (122, −30) | 14×10 | −30 | 12 | 6 | alcôve d'arène, dos au mur |
+| G1 | Galerie Ouest | (−102, −38) | 34×24 | +18 | 13 | 12 | zone de spawn, haute |
+| G2 | Galerie Centrale | (−54, −44) | 30×20 | −10 | 12 | 8 | premier combat |
+| G3 | Galerie Est | (−12, −36) | 30×22 | +8 | 13 | 16 | débouché vers la lumière |
+| N1 | Baie Nord | (−44, −64) | 11×8 | +25 | 11 | 5 | nid du cristal K3, à l'écart |
+| L1 | Salle du Lac (cœur) | (−4, 36) | 46×40 | −8 | 15 | 18 | le hub sous la brèche |
+| L2 | Lobe Nord-Est | (28, 16) | 22×16 | +30 | 14 | 8 | vers le seuil et le passage secret |
+| L3 | Queue Sud | (−14, 74) | 14×10 | −20 | 11 | 6 | l'appendice bas du croquis |
+| P1 | Poche du Loot | (−128, 8) | 20×15 | +20 | 10 | 5 | la cachette, bords durs |
+| J1 | Jardin de Givre | (−86, 34) | 30×22 | −28 | 12 | 14 | respiration, forêt de stalagmites |
+| J2 | Jardin (lobe est) | (−60, 52) | 16×12 | +15 | 11 | 8 | fond du jardin, cristal K2 |
 
-Le motif vertical de la référence : ~25 groupes de stalagmites/stalactites (`stalactite_cluster`,
-instancié MultiMesh) qui hachent les sightlines à 8–15 m. Deux rampes douces descendent +5 → +2 avec
-un plateau intermédiaire — jamais plus de 9° sur le chemin principal. Une **allée** de 8 m de large
-(A1, cf table des features) reste vierge de colonnes : c'est le canal de la vista V1. La cuvette C1
-(∅6 m, prof. 1 m, rebord +0,5 m) abrite le cristal de puzzle **K3**, éteint au premier passage — on le
-voit, on ne peut rien en faire, on s'en souvient.
+### Goulets (capsules)
 
-### Z3 — Le Lac Gelé
-
-L'image du niveau. Glace pâle, plate, qui **renvoie la lumière du puits P1 vers la voûte** — le seul
-endroit où l'on voit le plafond de la caverne entier. Rives en anneau montant +1,5 → +2 sur 3–5 m de
-large (le lac est une cuvette **bordée**, conforme anti-chute). Sur la rive nord, **le Monolithe** (M) :
-la pièce héro `crystal_monolith_landmark`, 9 m, faiblement émissive — visible en halo depuis presque
-partout. À son pied, le **coffre de puzzle** (CH1), visible dès l'arrivée au lac, inerte tant que les
-3 cristaux ne sont pas allumés : la récompense se montre avant de se donner.
-
-**Règle de sanctuaire** : aucun combat ne se déclenche sur la glace tant que le premier cristal de
-puzzle n'est pas activé (cf `level01_encounters.md`). Le hub reste lisible le temps d'apprendre à s'en
-servir.
-
-### Z4 — Le Nid
-
-Lobe sud-est en trois terrasses (+2 / +3 / +4, rampes de 3 m à ≤ 12°, jamais de ressaut supérieur à
-0,3 m). Le cristal **K1** trône sur la terrasse haute, gardé (ranged sur les terrasses, cf encounters).
-Depuis le rocher-table central (+16, +15), les trois terrasses se lisent d'un regard — le joueur peut
-planifier avant d'engager.
-
-### Z5 — La Lanterne
-
-Chambre nord derrière un rideau de stalactites percé de **deux** passages (pas de cul-de-sac). Sous le
-petit puits de jour P2 : une **lanterne abandonnée (L)** — l'unique lumière chaude du niveau, posée là
-comme une anomalie. Depuis le lac, son reflet chaud clignote entre les colonnes : c'est l'appât
-d'exploration. Dans la chambre : le cristal **K2**, un élite en garde, et le **coffre de relique**
-(CH2) hors chemin critique. Qui a suivi la curiosité repart payé.
-
-### Z6 — Le Seuil & l'Arène
-
-La crête +3 se gagne depuis la rive est (+2) par une pente à 6°. Au sommet, **compression** : la voûte
-descend à +13 (10 m au-dessus de la crête — le minimum autorisé, exploité comme effet), le passage se
-resserre à 8 m entre deux piliers (G). Puis la **révélation V3** : le bol de l'arène s'ouvre en
-contrebas, −3, ∅20 m, et ce qu'on prenait pour une formation de glace au centre est le Golem agenouillé.
-Deux rampes (RN, RS) descendent dans le bol ; ses parois intérieures sont à 25° — remontables partout,
-mais l'évidence du chemin reste les rampes. La porte de glace G (le PuzzleGate) barre le passage tant
-que le puzzle n'est pas résolu, et **repousse** derrière l'équipe quand le combat s'engage.
-
-## 4. Carte (indicative — les tables font foi)
-
-```
-       X: -45      -35      -25      -15      -5   0   +5      +15      +25      +35      +48
-          ┌─────────────────────────────────────────────────────────────────────────────────┐
-  Z -28   │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░ Z5 ░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
-  Z -20   │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ K2   ☀P2 🔥L  ░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
-  Z -14   │▓▓▓▓▓▓▓▓▓▓▓▓▓ f f f f f ▓▓▓▓▓▓▓▓▓▓▓░(rive)░░ ‖ ░░░░ ‖ ░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
-  Z  -8   │▓▓▓ S S S ▓▓ f f f f f f f ░░≈≈≈≈≈ M ≈≈≈≈≈░░░░░░░░░░░▓▓▓▓▓▓▓▓▓╔══════════╗▓▓▓▓│
-  Z   0   │▓▓▓ S S S ══A1══ f f  ░░≈≈≈≈≈≈ ☀P1 ≈≈≈≈≈≈░░(rive)░░░═╡G╞═══  ║  ARÈNE  B ║▓▓▓▓│
-  Z  +8   │▓▓▓ S S S ▓▓ f f (C1·K3) f ░░≈≈≈≈≈≈≈≈≈░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓╚══════════╝▓▓▓▓│
-  Z +14   │▓▓▓▓▓▓▓▓▓▓▓▓▓▓ f f f ▓▓▓▓▓▓▓░░(rive)░░░ n n (table) n n ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
-  Z +22   │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ n n K1 n n n ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
-  Z +26   │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│
-          └─────────────────────────────────────────────────────────────────────────────────┘
-   ▓ roche (hors jeu)   S spawns   f forêt de stalactites   ≈ glace du lac   ░ rives/sol
-   ☀ puits de jour   M monolithe   🔥 lanterne (seul point chaud)   ‖ passages du rideau
-   A1 allée de vista   C1 cuvette   K1-K3 cristaux puzzle   G porte de glace   B Golem
-```
-
-## 5. Sightlines & landmarks — comment la caverne se lit
-
-**Grammaire lumineuse (la clé de tout)** : le brouillard est réglé pour que la **géométrie mate**
-s'éteigne à 15–25 m selon la zone, mais que les **sources émissives** restent lisibles en halo diffus
-jusqu'à ~50 m. On ne voit pas les murs de loin — on voit les balises. C'est la mécanique de visibilité
-limitée transformée en système de navigation : les cristaux SONT la boussole, exactement comme au beat
-6 de l'onboarding.
-
-| # | Depuis | Vers | Distance | Ce que ça dit au joueur |
-|---|---|---|---|---|
-| **V1** | Z1 corniche (+6, yeux +7,6) | halo du Monolithe + colonne du puits P1, par l'allée A1 | ~44 m | « C'est par là. » L'objectif du niveau, montré à la première seconde, jamais expliqué |
-| **V2** | centre du lac (0,0) | 360° : M et CH1 au nord, reflet chaud de L entre les colonnes nord, halos de K1 au SE / K3 à l'ouest, masse sombre de la crête à l'est | 15–25 m | Le hub. Chaque POI a une signature lumineuse distincte visible d'ici — l'équipe se répartit les cibles sans un mot |
-| **V3** | crête du seuil (+3) | le bol de l'arène en contrebas, le Golem-qu'on-prend-pour-un-rocher au centre | ~15 m plongeants | La révélation. Cadrée par la compression (voûte +13, passage 8 m) puis l'ouverture — cf `level01_encounters.md` §4 |
-
-Landmarks, par portée : **le puits P1** (colonne de lumière, visible de partout où la voûte du lac est
-dans le champ), **le Monolithe** (halo froid, ~50 m), **la Lanterne** (halo chaud, ~25 m, unique). Trois
-signatures, trois températures, aucune confusion possible.
-
-## 6. Puits de ciel
-
-| ID | Position (X,Z) | ∅ ouverture | Voûte locale | Éclaire | Rôle |
+| ID | Nom | De → À | ½-larg. | H. libre | Rôle |
 |---|---|---|---|---|---|
-| **P1** | (+2, −2) | 8 m | +14 | le centre du lac : flaque de lumière ∅~10 m sur la glace | landmark principal, respiration, « on voit le ciel » |
-| **P2** | (+14, −20) | 3 m | +13 | la lanterne et son îlot | consacre le sanctuaire de la récompense cachée |
+| C1 | Le Détroit | (−32, −42) → (−24, −38) | 5 | 10 | pince la galerie en deux actes |
+| C2 | Boyau du Loot | (−104, −22) → (−120, 2) | 4,5 | 10 | étroit, en file — une cachette se mérite |
+| C3 | Passe du Jardin | (−74, −8) → (−80, 16) | 6 | 11 | bifurcation sud |
+| C4 | La Descente | (−20, −14) → (−10, 6) | 7 | 12 | LE débouché sur le lac (vista V2) |
+| C5 | Seuil du Boss | (30, −40) → (52, −48) | 8 | **10** | compression avant la révélation |
+| C6 | **Passage Effondré** | (50, −32) → (30, 2) | 4 | 10 | **la boucle** — fermé au départ, cf §6 |
 
-Deux puits seulement — la rareté fait le prix. Chaque ouverture est **fermée par une collision
-invisible** au niveau de la voûte (on voit le ciel, on ne sort jamais — contrainte dure). Shafts
-volumétriques et flaques au sol : exécution en E3.
+> C1/C2/C6 sont volontairement sous les 6 m du chemin principal : ce sont des
+> passages secondaires, la fiche l'autorise (≥ 3 m).
 
-## 7. Circulation — et ce que le navmesh doit garantir
+---
 
-Boucle nominale : **Z1 → Z2 (combat, K3 repéré) → Z3 (hub) → K1/K2/K3 dans l'ordre choisi → G s'ouvre
-→ V3 → arène**. Trois allers-retours courts qui rayonnent du lac ; aucun point du cœur jouable n'est à
-plus de ~30 s de la glace.
+## 4. Le relief — altitudes (TABLE AUTORITAIRE)
 
-Contraintes d'exécution (Opus, tâches #10–#12) :
+L'histoire verticale : **haut à l'ouest (+9), bas au centre (−3,75 sous la
+glace), l'arène en contrebas au nord-est (−3)**. On descend vers la lumière,
+puis on plonge vers le noir.
 
-- **Pentes** : chemin principal ≤ 9°, rampes secondaires ≤ 14°, parois du bol d'arène 25° (praticables).
-  Aucun ressaut > 0,3 m sur une surface praticable. `max_slope` du navmesh aligné sur le
-  `floor_max_angle` du joueur.
-- **Largeurs minimales** : chemin principal 6 m, rampes 3 m, passages du rideau Z5 2,5 m chacun —
-  jamais de goulot où 4 joueurs + FF = bouchon mortel, sauf le seuil G (8 m), qui est un choix.
-- **Pas d'îlot** : chaque zone a ≥ 2 connexions praticables (Z5 a ses deux passages ; C1 a un rebord
-  franchissable sur tout son périmètre ; le bol d'arène a ses 2 rampes + parois 25°).
-- **Toutes les cuvettes sont bordées** : C1 (prof. 1 m), le lac (rives +1,5), le bol (−3, rebord +3).
-  Aucun vide, nulle part. Le volume est un bol de bols.
+### Plateaux
 
-## 8. Table des features (autoritaire pour le placement)
+| Nom | Centre | ½-étendue | Alt. | Fondu* | Note |
+|---|---|---|---|---|---|
+| Perchoir Ouest | (−112, −38) | 26×20 | +9 | Δ4 @16° | spawn — on domine la galerie |
+| Galerie mi-pente | (−54, −42) | 26×18 | +6 | Δ3 @16° | |
+| Galerie basse | (−12, −36) | 26×18 | +4 | Δ2 @16° | |
+| Perchoir du Loot | (−128, 8) | 16×12 | +9,5 | Δ3 @16° | perché : y monter se mérite |
+| Jardin | (−82, 36) | 26×20 | +3 | Δ3 @16° | |
+| Crête du Seuil | (42, −46) | 9×7 | +6,5 | Δ2 @16° | on MONTE avant de voir l'arène |
+| Berge du Passage | (40, −14) | 8×12 | +4 | Δ2 @16° | sol du Passage Effondré |
 
-| ID | Objet | Position (X, Y, Z) | Dim/notes |
-|---|---|---|---|
-| SP0–SP3 | spawns joueurs | (−41, +6, −4,5) / (−41, +6, −1,5) / (−41, +6, +1,5) / (−41, +6, +4,5) | face à l'est |
-| A1 | allée de vista | axe (−32, 0) → (+5, −12), largeur 8 m | zone interdite aux colonnes |
-| C1 | cuvette | centre (−20, +6), ∅6 m, fond +1,0 (sol local +2), rebord +0,5 | contient K3 |
-| K3 | cristal puzzle 3 | (−20, sol, +6) au fond de C1 | éteint au 1er passage |
-| M | Monolithe (héro) | (+5, +1,5, −12), pedestal rive | h. 9 m, émissif faible |
-| CH1 | coffre puzzle | (+3, +1,5, −10), pied du monolithe | inerte avant puzzle |
-| P1 | puits principal | voûte, centre (+2, −2), ∅8 m | collision invisible |
-| K1 | cristal puzzle 1 | (+22, +4, +20), terrasse T2 du Nid | gardé (ranged) |
-| — | rocher-table | (+16, +3, +15), terrasse T1 | poste d'observation Z4 |
-| ‖×2 | passages rideau Z5 | (+8, −14) et (+18, −14), larg. 2,5 m | jamais un seul accès |
-| P2 | puits secondaire | voûte, centre (+14, −20), ∅3 m | collision invisible |
-| L | lanterne | (+14, +3, −21) | **unique lumière chaude du niveau** |
-| K2 | cristal puzzle 2 | (+10, +3, −22) | gardé (élite, évitable) |
-| CH2 | coffre relique | (+20, +3, −24) | hors chemin critique |
-| G | porte de glace / PuzzleGate | crête, notch entre piliers (+30, −4) et (+30, +4) | s'ouvre au puzzle, se referme au combat |
-| RN / RS | rampes d'arène | (+33, −7)→(+36, −3) et (+33, +7)→(+36, +3), larg. 3,5 m, 14° | seuls chemins « évidents » |
-| B | Golem (boss) | (+38, −3, 0), centre du bol | agenouillé, gainé de glace au repos |
+*\* Fondu : utiliser `min_falloff_for(Δ, 16°)` — jamais un nombre à la main.*
 
-## 9. Brouillard par zone (réglages de départ, à affiner en E3)
+### Cuvettes
 
-| Zone | Portée géométrie mate | Ambiance |
+| Nom | Centre | Rayons | Prof. | Margelle | Fond plat | Note |
+|---|---|---|---|---|---|---|
+| Lit du Lac | (−4, 38) | 30×26 | 3,2 | 0,7 | **0,55** | nappe à −0,55 |
+| Bol de l'Arène | (100, −52) | 38×30 | 5,0 | 0,6 | **0,42** | comme le premier jet |
+
+Rampes de l'arène : **inchangées** (nord (66,−66)→(84,−58) et sud (66,−38)→(84,−46),
+largeur 9, altitudes 3 → −2,5 *avant creusement*).
+
+### Modulation de hauteur libre
+
+| Nom | Centre | ½-étendue | Δ | Effet |
+|---|---|---|---|---|
+| Compression du Seuil | (42, −46) | 11×10 | **−6** | voûte à ~10 m : on baisse la tête avant l'arène |
+| Ouverture de l'Arène | (100, −52) | 34×26 | +5 | le plafond s'enfuit d'un coup |
+| Nef de la Brèche | (−4, 36) | 36×44 | +4 | le lac respire à 15 m |
+| Étranglement du Détroit | (−28, −40) | 8×6 | −4 | pincement de C1 |
+
+Bruit de modulation : **amplitude 1,2, échelle 14, graine 4412** (parois crénelées).
+
+---
+
+## 5. Le lac, la Langue et les Piliers
+
+**Lac** : emprise (−4, 38), rayons 30×26, surface **−0,55**, prof. min 0,2.
+
+### ⚠️ La presqu'île et l'îlot sont des PROPS, pas du terrain
+
+Le croquis montre une langue de pierre qui s'avance dans le lac, et un îlot.
+**C'est infaisable en terrain** : les cuvettes s'*ajoutent* aux plateaux, donc
+toute « langue » posée dans l'emprise du lit coulerait sous l'eau (piège n° 3 de
+l'ADR — je le contourne au lieu de le subir).
+
+Décision : **la Langue est une chaussée de blocs effondrés** — l'éboulis de la
+voûte, ce qui sert l'histoire mieux qu'une presqu'île de terrain :
+
+| Élément | Position (X, Z) | Spec |
 |---|---|---|
-| Z1 | 25 m | on découvre V1 : assez de vue pour comprendre, pas assez pour tout voir |
-| Z2 | 10–14 m | le cœur de la visibilité limitée — les colonnes surgissent |
-| Z3 | 35 m | la respiration : seul endroit où la caverne s'expose |
-| Z4 | 15 m | tactique : on lit la terrasse suivante, pas tout le nid |
-| Z5 | 18 m | intime, sanctuaire |
-| Z6 | 25 m → resserrement scripté pendant le combat (cf encounters) | la tension se voit |
+| Chaussée (4 plateformes) | (−9, 55) → (−8, 49) → (−6, 43) → (−4, 37) | `rock_rubble` agrandi ×3-4, sommets plats **à +0,4** (≈1 m au-dessus de la glace), espacés d'un pas de joueur (≤ 1,6 m), **collision praticable** |
+| **Pilier Sud** | (−6, 40) | fût de roche **15 m**, du lit (−3,75) à la voûte — il la TOUCHE. Veines de cristal émissives sur le tiers supérieur |
+| **Îlot** | (4, 28) | socle d'éboulis ∅5 m, plat à +0,3 |
+| **Pilier Nord** | (4, 28) | idem Pilier Sud, sur l'îlot |
+| Cristal **K1** | (4, 29) | au pied du Pilier Nord — il faut traverser la glace ou la chaussée |
+| Coffre puzzle **CH1** | (−10, 58) | à TERRE, rive sud, au départ de la chaussée — visible dès V2, inerte avant les 3 cristaux |
 
-## 9bis. Écarts d'exécution — à arbitrer en review créative (#15)
+Hero asset à produire (E4) : **le Pilier** — un seul modèle, 2 instances
+tournées différemment. Brief Meshy : colonne de roche stratifiée bleu-gris,
+fût brisé-refait, veines de cristal cyan sur le haut, ~4 m de diamètre.
+`keep_altitude` sur K1 et tout marqueur posé sur la chaussée (le snapper les
+coulerait au lit du lac).
 
-> Ajouté par ● Opus le 2026-08-08 en construisant le blockout. Trois chiffres de cette spec sont
-> **géométriquement incompatibles** avec la contrainte de praticabilité, et ont dû être ajustés. Ils
-> sont listés ici pour que Fable tranche en connaissance de cause, plutôt que d'être pliés en silence.
+### Les ouvertures de voûte
 
-| # | Spec | Exécuté | Pourquoi |
+| ID | Centre | Rayons | Rot° | Rôle |
+|---|---|---|---|---|
+| O1 | (−8, 32) | 16×12 | −20 | la Brèche, lobe principal |
+| O2 | (6, 40) | 12×14 | +35 | la Brèche, lobe est — l'union O1+O2+O3 fait le contour libre du croquis |
+| O3 | (−18, 44) | 9×7 | 0 | la Brèche, échancrure ouest |
+| O4 | (−128, 6) | 6×5 | 0 | au-dessus du Loot — l'appât |
+| O5 | (−58, −36) | 4×12 | +30 | fente au-dessus de la galerie — une lame de lumière en travers du chemin, à mi-parcours |
+| O6 | (104, −44) | 2,5×9 | −40 | fissure d'arène : **une seule lame froide tombe sur le Golem endormi**. Le seul jour que le boss reçoit |
+
+---
+
+## 6. Le Mécanisme secret (croquis : « Mécanisme secret jeu »)
+
+C'est le **fragment du puzzle méta** du niveau 1 (cf `puzzle_meta.md` — chaque
+niveau en porte un). Trois étages de secret :
+
+1. **La Serrure de Givre** — paroi nord du Seuil (C5), à (46, −38) : trois
+   glyphes gravés, **éteints**. Ils ne s'illuminent que quand les trois cristaux
+   K1-K3 sont activés. Le joueur qui passe avant ne voit que des rainures.
+2. **Le Passage Effondré (C6)** — le goulet existe dans le terrain mais son
+   entrée côté lac (32, 2) est **obstruée par la Porte Effondrée** (prop :
+   dalles de roche, même famille que la chaussée). Interagir avec la Serrure
+   illuminée fait s'effondrer la porte (même grammaire que G : la roche cède).
+3. **L'Alcôve du Fragment** — à mi-passage (40, −14), une niche : le
+   **fragment méta** y flotte, gravé des mêmes glyphes. Le passage sert ensuite
+   de **raccourci boss ↔ lac** : le secret ne se visite pas, il s'utilise.
+
+Lisibilité : la Serrure est à 4 m du chemin obligatoire du Seuil — on la frôle
+forcément deux fois (aller simple + regard V3). Personne ne la manque, personne
+ne la comprend avant d'avoir fini le puzzle. C'est le rythme voulu.
+
+---
+
+## 7. Sightlines & grammaire lumineuse ×7
+
+Recalibrage complet — l'ancienne grammaire était réglée pour 90 m d'emprise.
+
+### Trois étages de repères
+
+| Étage | Portée | Repères |
+|---|---|---|
+| **T1** | tout le niveau (~120 m+) | **la colonne de lumière de la Brèche** (brouillard volumétrique). Pas une géométrie : de la lumière dans l'air — elle traverse la brume là où le mat s'éteint |
+| **T2** | ~60-110 m | les **deux Piliers** (veines émissives hautes, à 12-15 m du sol donc visibles par-dessus le relief) ; la **lame O5** de la galerie |
+| **T3** | ~25-40 m | sanctuaires de cristal, K1-K3, la Lanterne (unique point chaud, Jardin) |
+
+### Brouillard par zone (extinction du mat / les émissifs portent au-delà)
+
+| Zone | Mat | Intention |
+|---|---|---|
+| Galerie (G1-G3) | 28 m | on avance de halo en halo, la lame O5 rythme |
+| Boyau + Loot | 14 m | oppressant — la cachette se gagne à l'aveugle |
+| Jardin (J1-J2) | 18 m | intime, la Lanterne guide |
+| **Salle du Lac** | **65 m** | LA clairière : sous la Brèche, on voit tout — c'est ici qu'on s'oriente |
+| Seuil (C5) | 16 → **12 scripté** | inspiration avant le plongeon |
+| Bol de l'Arène | 32 | le combat reste lisible à 4 joueurs |
+
+### Les trois vues qui font le niveau
+
+| # | Où | Ce qu'on voit | Ce que ça dit |
 |---|---|---|---|
-| 1 | **C1** ∅6 m, prof. 1 m | ∅12 m, prof. 0,8 m | Un bol de rayon 3 m creusé de 1 m sort à ~37° une fois le profil lissé. Le rôle est intact (abri, couvert contre les béliers, écrin de K3) ; seule l'échelle change. |
-| 2 | **Bol d'arène** ∅20 m, parois **25°** | ∅28 m, parois ~35-44° | 6 m de dénivelé sur un rayon de 10 m donnent ~31° de moyenne et ~45° de crête : irréalisable à 25°. Le bol a été élargi ; les parois restent sous le `floor_max_angle` du personnage (45°), donc franchissables, et les rampes RN/RS à 14° restent les chemins évidents. |
-| 3 | **Emprise** X ∈ [−45, **+48**] | X ∈ [−45, **+56**] | Conséquence de (2) : le bol élargi ne tient pas dans l'ancienne borne. Les 8 m gagnés sont un appendice fermé (l'arène), pas de l'espace de traversée — le cœur jouable reste dans les ~80 m annoncés. |
+| **V1** | spawn (−124, −44), regard est | la galerie descend, la lame O5 en travers à 65 m, et **au fond, une lueur** qui déborde du coude de G3 | « la lumière est par là » — teasing, pas révélation |
+| **V2** | sortie de la Descente (−10, 6) | **la carte postale** : la Brèche, sa colonne de lumière, les deux Piliers dans la glace, la chaussée, CH1 | le hub. On voit K1 (îlot), l'entrée du Jardin, la montée du Seuil — on choisit sa route d'un regard |
+| **V3** | Crête du Seuil (42, −46) | le bol en contrebas, le Golem sous l'unique lame froide d'O6 | la révélation. Le seul endroit du niveau où la lumière désigne un danger |
 
-Décalages mineurs induits : la **crête du seuil** passe de X = +30 à **+27** (elle était avalée par le
-bol élargi ; elle en surplombe maintenant la margelle, ce qui sert la compression), et le **Golem** de
-X = +38 à **+42** (centre du nouveau bol).
+---
 
-**Mesures du terrain généré** (`level01_cavern_terrain.tres`, 102 × 55 échantillons) : hauteur libre
-**10,0 → 15,0 m** exactement, pente maximale **43,9°**, **0,46 %** du terrain au-dessus du plafond de
-confort de 36° (les parois du bol), dénivelé maximal entre deux points voisins **0,96 m**. Altitudes
-des 6 points clés conformes à ±0,35 m. Prouvé par `godot/tests/test_cavern_sealing.gd`.
+## 8. Le rythme — un battement tous les 30-40 m
 
-## 10. Conformité aux contraintes dures (DoD E2)
+Distances cumulées sur le chemin nominal spawn → boss (~330 m) :
 
-| Contrainte | Où c'est garanti |
-|---|---|
-| Voûte 10–15 m au-dessus du sol praticable | tableau §3 : min 10,0 (Z5, seuil), max 15,0 (arène) |
-| Volume fermé, aucune sortie | parois sur tout le périmètre + collisions invisibles sur P1/P2 |
-| Aucune chute possible | §7 : « bol de bols » — toutes les dépressions bordées, prof. max 3 m (arène), remontable partout |
-| Sol vallonné praticable partout | pentes ≤ 14° sur chemins, 25° max (bol), aucun ressaut > 0,3 m |
-| ≥ 1 zone à ciel ouvert landmark | P1 (∅8 m) au-dessus du lac, visible en colonne de lumière depuis V1 |
-| 4–6 POI intentionnels | 6 : corniche, forêt/C1, lac/monolithe, nid, lanterne, seuil/arène |
-| Traversable spawn → boss sans cul-de-sac | boucle §7, chaque zone ≥ 2 connexions |
+| m | Lieu | Battement |
+|---|---|---|
+| 0 | Perchoir Ouest | réveil, cristal d'armes (25 m devant, impossible à rater) |
+| 35 | G1 → G2 | **combat 1** : 3 rôdeurs entre les stalagmites |
+| 70 | Le Détroit (C1) | pincement, voûte à 10 m — puis la Baie Nord s'ouvre à gauche : **K3** |
+| 100 | G3 | bifurcation : Passe du Jardin visible à droite (lumière chaude au loin) |
+| 130 | La Descente (C4) | **V2** — la carte postale. Pause voulue |
+| 160 | rive sud du lac | CH1 + départ de la chaussée. **Combat 2** : béliers sur la glace (dérapage) |
+| 190 | Îlot | **K1** au pied du Pilier Nord — traversée à risque |
+| 230 | Lobe NE (L2) | montée vers le Seuil ; la Porte Effondrée intrigue à gauche |
+| 260 | Seuil (C5) | la Serrure de Givre frôlée ; compression |
+| 275 | Crête | **V3** — révélation |
+| 300+ | Bol | boss |
+
+Détours : Loot (C2+P1, ~70 m A/R depuis G1, gardé par l'élite ? non — l'élite
+reste au Jardin près de K2) ; Jardin (C3+J1-J2, ~80 m A/R, **K2 + Lanterne +
+élite**). Chaque détour contient une pièce du puzzle OU du loot — jamais du vide.
+
+Rencontres : les intentions de `level01_encounters.md` restent valides, les
+positions sont à re-poser par zone (tâche #29) : rôdeurs G2/G3, cracheurs sur
+les hauteurs de G3 et du Seuil, élite au Jardin, béliers sur la glace du lac
+(leur piste de lancement rêvée), boss au bol.
+
+---
+
+## 9. Marqueurs de gameplay (X, Z — le snapper déduit Y sauf mention)
+
+| Marqueur | (X, Z) | Note |
+|---|---|---|
+| Spawn0-3 | (−124,−48) (−120,−42) (−124,−36) (−128,−42) | face à l'est |
+| Cristal d'armes (StartChest) | (−114, −40) | |
+| K1 | (4, 29) | **`keep_altitude`, Y = +0,35** (sur l'îlot-prop) |
+| K2 | (−60, 50) | Jardin, lobe est |
+| K3 | (−44, −62) | Baie Nord |
+| CH1 (puzzle) | (−10, 58) | rive sud, à terre |
+| CH2 (relique) | (−132, 10) | Loot |
+| Lanterne | (−84, 32) | unique point chaud |
+| Monolithe (prop existant) | (−16, 4) | sentinelle de la Descente — il marque V2 |
+| Pilier Sud / Nord | (−6, 40) / (4, 28) | hero props, `keep_altitude` |
+| Serrure de Givre | (46, −38) | paroi nord du Seuil |
+| Porte Effondrée | (32, 2) | bouche du Passage, côté lac |
+| Fragment méta | (40, −14) | alcôve du Passage |
+| PuzzleGate | (42, −46) | crête du Seuil |
+| Boss | (100, −52) | centre du bol |
+| Coffres candidats (×7) | (−96,−48) (−58,−28) (−34,20) (18,52) (−94,42) (26,−28) (118,−34) | RunShell en tire 4 |
+
+---
+
+## 10. Écarts assumés vs le premier jet d'Opus
+
+1. **Galerie scindée en deux actes** par le Détroit (C1) — le premier jet avait
+   une nef continue de 170 m, illisible et monotone.
+2. **La Baie Nord (N1) est nouvelle** : K3 y vit, à l'écart mais frôlé au
+   passage du Détroit.
+3. **Le Passage Effondré (C6) est nouveau** : c'est lui qui transforme le S en
+   boucle et donne un corps au « Mécanisme secret » du croquis.
+4. **Presqu'île + îlot = props d'éboulis**, pas du terrain (infaisable — cf §5).
+5. **L'Anse Sud-Ouest devient le Jardin de Givre** : même emprise, mais un rôle
+   (K2, Lanterne, élite) au lieu d'un simple appendice.
+6. Le bruit de modulation passe à **1,2 / 14 m** pour créneler les parois.
+
+## 11. Conformité (à vérifier après transcription)
+
+- [ ] Surface jouable ≥ 36 000 m² (brief ×7)
+- [ ] Hauteur libre jouable dans [10, 15] m — compression du Seuil à 10, jamais moins
+- [ ] Pente : ≤ 2 % du sol jouable au-dessus de 36°, aucun point ≥ 45°
+- [ ] Traversabilité : chaque POI atteignable depuis chaque spawn ; boucle
+      spawn → Loot → Jardin → lac → îlot → Seuil → bol sans discontinuité
+- [ ] Le Passage Effondré est traversable une fois la Porte retirée
+- [ ] Aucun marqueur enterré (snapper) ; K1 et piliers en `keep_altitude`
+- [ ] Les 3 lobes de la Brèche (O1-O3) forment UN SEUL trou au rendu
