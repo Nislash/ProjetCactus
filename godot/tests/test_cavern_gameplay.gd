@@ -116,7 +116,21 @@ func _test_boss_is_in_the_arena() -> int:
 		print("[FAIL] boss : à l'altitude %.1f — il devrait être au fond du bol (négatif)"
 			% boss.global_position.y)
 		return 1
-	print("[OK] boss_is_in_the_arena (altitude %.1f m)" % boss.global_position.y)
+
+	# La laisse. Les parois du bol sont marchables : sans rayon transmis à
+	# l'IA, un joueur sort le boss de son arène en remontant la pente, et
+	# rien dans le jeu ne le signale.
+	var ai: Node = boss.get_node_or_null("BossAI")
+	if ai == null:
+		print("[FAIL] boss : pas de nœud BossAI — la lib Rust est-elle compilée ?")
+		return 1
+	var radius: float = float(ai.get("arena_radius"))
+	if radius <= 0.0:
+		print("[FAIL] boss : laisse d'arène non transmise (arena_radius = %.1f)" % radius)
+		return 1
+
+	print("[OK] boss_is_in_the_arena (altitude %.1f m, laisse %.0f m)"
+		% [boss.global_position.y, radius])
 	return 0
 
 

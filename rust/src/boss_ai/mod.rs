@@ -68,10 +68,21 @@ pub struct BossAI {
     base: Base<Node3D>,
 
     // === Config exposée à l'inspector ===
-    /// Distance d'agro : au-delà, le boss reste idle (ne devrait pas
-    /// arriver en arène lockée mais garde la sécurité).
+    /// Distance d'agro **horizontale** : au-delà, le boss reste idle (ne
+    /// devrait pas arriver en arène lockée mais garde la sécurité).
     #[export]
     aggro_range: f32,
+
+    /// Écart d'altitude au-delà duquel un joueur cesse d'être une cible.
+    /// L'arène est une cuvette de 5 m : la valeur par défaut couvre le bol
+    /// et sa margelle, mais pas un joueur perché hors de portée.
+    #[export]
+    max_vertical_reach: f32,
+
+    /// Rayon de la laisse d'arène (m, horizontal). 0 = pas de laisse.
+    /// Renseigné par la scène ou par `BossArena` via `set_arena`.
+    #[export]
+    arena_radius: f32,
 
     /// Distance pour préférer une attaque CaC (sinon distance).
     #[export]
@@ -114,6 +125,10 @@ pub struct BossAI {
     #[export]
     turn_speed: f32,
 
+    /// Centre de la laisse. Par défaut la position du boss au `ready`, ce
+    /// qui fait du point de spawn le centre de son territoire.
+    arena_center: Vector3,
+
     /// Direction figée au début d'une charge (la charge ne peut pas être
     /// re-aimed pendant son exécution).
     charge_direction: Vector3,
@@ -128,6 +143,9 @@ impl INode3D for BossAI {
         Self {
             base,
             aggro_range: 40.0,
+            max_vertical_reach: 8.0,
+            arena_radius: 0.0,
+            arena_center: Vector3::ZERO,
             melee_range: 5.0,
             stop_chase_distance: 4.0,
             attack_decision_cooldown: 1.5,
@@ -158,6 +176,12 @@ impl INode3D for BossAI {
             godot_warn!("[BossAI] Parent introuvable ou non-Node3D");
         }
         self.boss_parent = parent;
+
+        // Le point de spawn fait office de centre d'arène tant que personne
+        // n'en fixe un autre.
+        if let Some(p) = &self.boss_parent {
+            self.arena_center = p.get_global_position();
+        }
     }
 
     fn physics_process(&mut self, delta: f64) {
@@ -195,6 +219,14 @@ impl INode3D for BossAI {
 
 #[godot_api]
 impl BossAI {
+    /// Fixe la laisse depuis GDScript (BossArena connaît son centre et son
+    /// rayon, l'IA non).
+    #[func]
+    fn set_arena(&mut self, center: Vector3, radius: f32) {
+        self.arena_center = center;
+        self.arena_radius = radius.max(0.0);
+    }
+
     /// Méthode exposable à GDScript : reset des cooldowns (utile après
     /// transition de phase pour ré-amorcer l'IA proprement).
     #[func]
@@ -237,6 +269,7 @@ impl BossAI {
             self.base().get_tree(),
             boss_pos,
             self.aggro_range,
+            self.max_vertical_reach,
             &mut self.target_path,
             &mut self.target_lock_time,
             self.target_focus_duration,
@@ -246,7 +279,9 @@ impl BossAI {
             return;
         };
         let target_pos = target.get_global_position();
-        let dist = boss_pos.distance_to(target_pos);
+        // Portée horizontale : c'est la seule que le boss puisse franchir,
+        // et donc la seule qui doive décider d'une attaque au corps à corps.
+        let dist = targeting::horizontal_distance_sq(boss_pos, target_pos).sqrt();
 
         // Tourne progressivement le boss vers sa cible (sauf pendant charge
         // execute : la direction est figée au moment du windup).
@@ -282,6 +317,12 @@ impl BossAI {
             target_pos,
             self.get_move_speed(phase),
             want_dist,
+        );
+        let velocity = movement::leash_to_arena(
+            velocity,
+            boss_pos,
+            self.arena_center,
+            self.arena_radius,
         );
         self.apply_velocity(velocity);
     }
@@ -367,7 +408,14 @@ impl BossAI {
                 // forcé selon la direction figée au windup. Les autres
                 // attaques ne bougent pas pendant l'execute.
                 if att == Attack::Charge {
-                    let velocity = self.charge_direction * self.charge_speed;
+                    // La charge aussi est tenue en laisse : sans ça, elle
+                    // reste le moyen le plus simple de sortir le boss du bol.
+                    let velocity = movement::leash_to_arena(
+                        self.charge_direction * self.charge_speed,
+                        boss_pos,
+                        self.arena_center,
+                        self.arena_radius,
+                    );
                     self.apply_velocity(velocity);
                 }
                 if self.state_time >= cfg.execute {
