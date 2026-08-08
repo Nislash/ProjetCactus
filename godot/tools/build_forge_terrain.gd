@@ -100,6 +100,24 @@ func _build_chambers() -> Array[CavernChamber]:
 	chambers.append(_corridor("G2 Descente Est", Vector2(56.0, -10.0), Vector2(34.0, -6.0), 6.5, 10.0, 6.0))
 	chambers.append(_corridor("G3 Descente Ouest", Vector2(-52.0, -36.0), Vector2(-32.0, -22.0), 6.5, 10.0, 6.0))
 
+	# LE DÉVERSOIR. Le lit de la coulée, prolongé À TRAVERS les deux parois.
+	#
+	# Sans lui, la rivière butait contre la falaise est : le sol y remontait à
+	# 5,4 m juste avant la lèvre de chute, et la coulée s'arrêtait donc net au
+	# milieu du cirque. Une rivière qui ne va nulle part n'est qu'une mare
+	# allongée.
+	#
+	# C'est une chambre, pas un plateau : en ciel ouvert, ce sont les chambres
+	# qui décident où le sol NE monte PAS. Le déversoir taille donc une entaille
+	# basse dans le rempart, et les deux masses qui l'encadrent deviennent les
+	# montagnes entre lesquelles la lave arrive et repart.
+	# Il s'arrête à -64 À L'OUEST, et pas plus loin : au-delà, le rempart doit
+	# se refermer. C'est ce rempart qui fait la PAROI de la cascade — sans lui
+	# le rideau de lave pendrait dans le vide, et le déversoir devenait au
+	# passage un couloir ouvert vers l'extérieur de la carte.
+	chambers.append(_corridor("Le Déversoir", Vector2(-64.0, -14.0), Vector2(76.0, -14.0),
+		11.0, 30.0, 7.0))
+
 	# L'ARÈNE DU BOSS — une salle à part, DERRIÈRE le château.
 	#
 	# Le Golem se tenait auparavant au bord du bassin, à vingt-deux mètres du
@@ -167,7 +185,23 @@ func _build_floor() -> CavernHeightfieldSpec:
 	# LA SOURCE, à l'ouest : un épaulement haut d'où la coulée descend. Et à
 	# l'est, la lèvre par-dessus laquelle elle tombe. C'est ce qui donne à la
 	# rivière un amont et un aval, donc un sens.
-	plateaus.append(_plateau("Épaulement Source", Vector2(-72.0, -14.0), Vector2(15.0, 12.0), 6.0, 28.0, true, 5.0))
+	# LE CHENAL AMONT, côté cascade. Sans lui, la coulée ne commençait qu'à
+	# quarante mètres du mur : la cascade serait tombée sur de la roche sèche,
+	# puis un ruisseau invisible aurait couru jusqu'à la lave. On immerge donc
+	# le lit jusqu'au pied du rempart, pour que la chute arrive DANS la coulée.
+	plateaus.append(_plateau("Chenal Amont", Vector2(-50.0, -14.0), Vector2(17.0, 7.0), 0.9, 17.0, true, 4.6))
+
+	# LE CHENAL AVAL. Une entaille basse À TRAVERS le Seuil Est.
+	#
+	# Le seuil est le sol de la galerie est : il monte à 8,6 m et sa retombée
+	# reformait un dos d'âne à 5,4 m en travers du lit, juste avant la lèvre de
+	# chute. La coulée s'arrêtait donc à trente mètres du bord, et la « chute à
+	# droite » n'avait rien pour tomber.
+	#
+	# On ne déplace pas le seuil — c'est un sol praticable, il a sa raison
+	# d'être. On le TRAVERSE : le chenal est un plateau bas, donc la coulée
+	# passe dessous et le joueur, lui, longe la berge.
+	plateaus.append(_plateau("Chenal de la Coulée", Vector2(42.0, -14.0), Vector2(17.0, 7.0), 0.9, 17.0, true, 4.6))
 	plateaus.append(_plateau("Lèvre de la Chute", Vector2(76.0, -14.0), Vector2(12.0, 11.0), -4.0, 24.0, true, 3.0))
 	spec.plateaus = plateaus
 
@@ -211,7 +245,10 @@ func _build_lava() -> CavernLake:
 	lava.surface_altitude = 1.9
 	lava.minimum_depth = 0.2
 	lava.center = Vector2(0.0, -14.0)
-	lava.radii = Vector2(62.0, 8.0)
+	# 70 et non 62 : la nappe doit atteindre les deux bouts du déversoir. Là où
+	# la roche est plus haute qu'elle — sous les cascades — elle s'arrête d'elle
+	# même, le test d'immersion s'en charge.
+	lava.radii = Vector2(70.0, 8.0)
 	lava.material_path = "res://data/levels/forge_lava_material.tres"
 	return lava
 

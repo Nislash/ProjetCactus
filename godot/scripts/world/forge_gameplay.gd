@@ -80,6 +80,8 @@ func _ready() -> void:
 
 	_build_castle()
 	_build_bridge()
+	_build_lava_hazard()
+	_build_lava_falls()
 	_build_moon_puzzle()
 
 	if spawn_boss:
@@ -141,6 +143,55 @@ func get_boss() -> Node3D:
 # Le château et son verrou
 # ---------------------------------------------------------------------------
 
+## LA LAVE TUE. Une coulée décorative apprend au joueur qu'il peut la traverser,
+## et tout le pont ne sert plus à rien.
+func _build_lava_hazard() -> void:
+	var terrain: CavernTerrainData = load(
+		"res://data/levels/level02_forge_terrain.tres") as CavernTerrainData
+	if terrain == null:
+		push_warning("ForgeGameplay : terrain introuvable — la lave sera inoffensive.")
+		return
+	var hazard := LavaHazard.new()
+	hazard.name = "LaveMortelle"
+	_world.add_child(hazard)
+	hazard.setup(terrain)
+
+
+## LES DEUX CHUTES. Elles donnent à la coulée un amont et un aval, donc un sens
+## de lecture — et le même que celui du courant dans le shader.
+func _build_lava_falls() -> void:
+	var terrain: CavernTerrainData = load(
+		"res://data/levels/level02_forge_terrain.tres") as CavernTerrainData
+	if terrain == null or terrain.lake == null:
+		push_warning("ForgeGameplay : pas de nappe — pas de cascades.")
+		return
+	var lava: CavernLake = terrain.lake
+
+	# AMONT, à l'ouest : la cascade qui arrive de la montagne. Elle porte le
+	# contrefort, parce que c'est elle qui a besoin d'une paroi d'où tomber.
+	var source := LavaFall.new()
+	source.name = "CascadeAmont"
+	source.at = Vector2(lava.center.x - lava.radii.x, lava.center.y)
+	source.top_altitude = 21.0
+	source.bottom_altitude = lava.surface_altitude
+	source.width = 15.0
+	source.facing = Vector2(1.0, 0.0)
+	source.buttress = true
+	_world.add_child(source)
+
+	# AVAL, à l'est : la nappe s'arrête au bord de son ellipse alors que la
+	# roche, elle, continue de descendre. Ce décrochement EST la lèvre — rien à
+	# bâtir, seulement un rideau à y accrocher.
+	var sink := LavaFall.new()
+	sink.name = "CascadeAval"
+	sink.at = Vector2(lava.center.x + lava.radii.x, lava.center.y)
+	sink.top_altitude = lava.surface_altitude
+	sink.bottom_altitude = -4.0
+	sink.width = 15.0
+	sink.facing = Vector2(1.0, 0.0)
+	_world.add_child(sink)
+
+
 func _build_castle() -> void:
 	_castle = ForgeCastle.new()
 	_castle.name = "Chateau"
@@ -155,7 +206,10 @@ func _build_bridge() -> void:
 	_bridge = ForgeBridge.new()
 	_bridge.name = "PontSuspendu"
 	_bridge.from_point = Vector2(0.0, 6.0)
-	_bridge.to_point = Vector2(0.0, -38.0)
+	# Il accoste le BORD de la terrasse, pas un point choisi à l'œil : sinon
+	# ses derniers segments s'enfoncent dans la dalle et le joueur bute.
+	_bridge.to_point = Vector2(0.0, _castle.get_threshold_edge_z())
+	_bridge.to_altitude = _castle.get_threshold_altitude()
 	_world.add_child(_bridge)
 
 

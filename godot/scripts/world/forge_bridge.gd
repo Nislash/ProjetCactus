@@ -30,14 +30,31 @@ extends Node3D
 @export var to_point: Vector2 = Vector2(0.0, -40.0)
 
 @export var deck_width: float = 6.0
-## Altitude du tablier. Au-dessus de la coulée, et de plain-pied avec les deux
-## rives : un pont qu'il faut escalader n'est plus un pont.
-@export var deck_altitude: float = 5.2
+
+## Altitude d'arrivée, côté château. 0 = « prends le sol ».
+##
+## Elle est FOURNIE par le gameplay, qui seul connaît la hauteur de la terrasse.
+## Signalé en jeu : le tablier finissait 2,66 m sous le seuil, donc la porte
+## s'ouvrait sur une marche qu'on ne pouvait pas gravir. Un pont dont on ne
+## descend pas est aussi inutile qu'un pont sur lequel on ne monte pas.
+@export var to_altitude: float = 0.0
+
+## Marche tolérée aux deux extrémités, en mètres.
+##
+## Le `floor_max_angle` du joueur ne dit rien des MARCHES : un `CharacterBody3D`
+## ne gravit que ce que son `safe_margin` et sa vitesse lui permettent. 0,25 m
+## est franchi sans y penser ; à 1,75 m — la marche qu'avait ce pont — on reste
+## planté au pied de son propre ouvrage.
+const MAX_STEP_UP: float = 0.25
 
 ## Nombre de segments du tablier. Le pont s'incurve légèrement — un tablier
 ## parfaitement droit se lit comme une planche posée.
 @export var segments: int = 14
-@export var sag: float = 1.4
+
+## La flèche du tablier, en mètres. Modeste : elle plonge au-dessus de la
+## coulée, et chaque centimètre de flèche est un centimètre de garde en moins
+## au-dessus de la lave.
+@export var sag: float = 0.7
 
 ## Le dallage du tablier et la maçonnerie des pylônes d'ancrage. Deux matières
 ## distinctes parce qu'elles ne racontent pas la même chose : on MARCHE sur
@@ -49,18 +66,44 @@ const STONE := Color(0.075, 0.062, 0.068)
 const CHAIN := Color(0.145, 0.118, 0.110)
 
 
+var _terrain: CavernTerrainData
+var _noise: FastNoiseLite
+var _start := Vector3.ZERO
+var _end := Vector3.ZERO
+
+
 func _ready() -> void:
-	var terrain: CavernTerrainData = load(terrain_data_path) as CavernTerrainData
-	if terrain == null:
+	_terrain = load(terrain_data_path) as CavernTerrainData
+	if _terrain == null:
 		push_warning("ForgeBridge : terrain introuvable — pas de pont.")
 		return
+	_noise = CavernTerrainBuilder.make_noise(_terrain.floor_field)
 	await get_tree().process_frame
 	_build()
 
 
+func _ground(at: Vector2) -> float:
+	return CavernTerrainBuilder.sample_point(_terrain.floor_field, at, _noise)
+
+
+## Les deux extrémités, posées sur ce qu'elles rejoignent.
+##
+## Le tablier était à une altitude FIXE de 5,2 m, choisie une fois pour toutes
+## et jamais reconfrontée au terrain. Résultat : 1,75 m de marche au sud, où le
+## sol est à 3,45, et 2,66 m de trop peu au nord, où la terrasse est à 7,86. Un
+## pont ne se pose pas à une altitude, il se pose ENTRE deux points.
+func _resolve_ends() -> void:
+	_start = Vector3(from_point.x, _ground(from_point) + MAX_STEP_UP, from_point.y)
+	var arrival: float = to_altitude
+	if arrival <= 0.0:
+		arrival = _ground(to_point) + MAX_STEP_UP
+	_end = Vector3(to_point.x, arrival, to_point.y)
+
+
 func _build() -> void:
-	var start := Vector3(from_point.x, deck_altitude, from_point.y)
-	var end := Vector3(to_point.x, deck_altitude, to_point.y)
+	_resolve_ends()
+	var start: Vector3 = _start
+	var end: Vector3 = _end
 	var span: Vector3 = end - start
 	var length: float = span.length()
 	var heading: float = atan2(span.x, span.z)
@@ -118,6 +161,14 @@ func _stone(path: String) -> Material:
 ## La flèche du tablier à l'abscisse `t`, en mètres.
 func _sag_at(t: float) -> float:
 	return sag * 4.0 * t * (1.0 - t)
+
+
+## L'altitude du tablier à l'abscisse `t` — pente comprise, flèche comprise.
+## C'est ce que mesure le test de garde au-dessus de la coulée.
+func deck_altitude_at(t: float) -> float:
+	if _start == Vector3.ZERO and _end == Vector3.ZERO:
+		_resolve_ends()
+	return lerpf(_start.y, _end.y, clampf(t, 0.0, 1.0)) - _sag_at(t)
 
 
 ## Les garde-corps : deux câbles bas, pas un mur.
@@ -208,4 +259,13 @@ func _add_collider(collider_name: String, size: Vector3, at: Vector3,
 
 ## Le point d'arrivée du pont, côté château.
 func get_far_end() -> Vector3:
-	return Vector3(to_point.x, deck_altitude, to_point.y)
+	if _end == Vector3.ZERO:
+		_resolve_ends()
+	return _end
+
+
+## Le point de départ, côté cirque.
+func get_near_end() -> Vector3:
+	if _start == Vector3.ZERO:
+		_resolve_ends()
+	return _start

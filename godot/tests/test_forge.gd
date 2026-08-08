@@ -58,6 +58,8 @@ func _run() -> void:
 	failed += _test_the_boss_waits_behind_the_gate()
 	failed += _test_the_castle_can_be_reached()
 	failed += _test_the_stone_is_textured()
+	failed += _test_nothing_spawns_in_the_lava()
+	failed += await _test_the_lava_kills()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -440,10 +442,37 @@ func _test_the_castle_can_be_reached() -> int:
 		print("[FAIL] pont : il ne franchit pas les douves")
 		return 1
 
-	# Et son tablier doit passer AU-DESSUS de la coulée, pas dedans.
-	if bridge.deck_altitude < lava.surface_altitude + 3.0:
-		print("[FAIL] pont : tablier à %.1f m, la lave est à %.1f m"
-			% [bridge.deck_altitude, lava.surface_altitude])
+	# Et son tablier doit passer AU-DESSUS de la coulée SUR TOUTE SA LONGUEUR.
+	#
+	# On testait l'altitude nominale, une constante. Le tablier a maintenant une
+	# pente et une flèche : c'est son point BAS qui décide s'il trempe, et ce
+	# point n'est nulle part écrit dans les données.
+	var lowest: float = 999.0
+	var lowest_at: float = 0.0
+	for i in 41:
+		var t: float = float(i) / 40.0
+		var y: float = bridge.deck_altitude_at(t)
+		if y < lowest:
+			lowest = y
+			lowest_at = t
+	if lowest < lava.surface_altitude + 1.6:
+		print("[FAIL] pont : point bas à %.2f m (t=%.2f), la lave est à %.2f m"
+			% [lowest, lowest_at, lava.surface_altitude])
+		return 1
+
+	# ET ON DOIT POUVOIR Y MONTER.
+	#
+	# Signalé en jeu : 1,75 m de marche au sud. Un `CharacterBody3D` ne gravit
+	# pas ça — le pont était un décor.
+	var near_ground: float = _ground(near)
+	var far_ground: float = bridge.to_altitude
+	var step_near: float = absf(bridge.get_near_end().y - near_ground)
+	if step_near > ForgeBridge.MAX_STEP_UP + 0.01:
+		print("[FAIL] pont : %.2f m de marche à l'entrée sud — infranchissable" % step_near)
+		return 1
+	var step_far: float = absf(bridge.get_far_end().y - far_ground)
+	if step_far > ForgeBridge.MAX_STEP_UP + 0.01:
+		print("[FAIL] pont : %.2f m d'écart avec le seuil du château" % step_far)
 		return 1
 
 	# Il doit arriver près du château, sinon il ne mène nulle part.
@@ -479,7 +508,7 @@ func _test_the_castle_can_be_reached() -> int:
 		print("[FAIL] accès : Spawn0 introuvable")
 		return 1
 
-	var threshold := Vector3(far.x, bridge.deck_altitude, far.y)
+	var threshold: Vector3 = bridge.get_far_end()
 	var start: Vector3 = NavigationServer3D.map_get_closest_point(map, spawn.global_position)
 	var finish: Vector3 = NavigationServer3D.map_get_closest_point(map, threshold)
 	if finish.distance_to(threshold) > 4.0:
@@ -570,4 +599,86 @@ func _test_the_stone_is_textured() -> int:
 		return 1
 
 	print("[OK] the_stone_is_textured (maçonnerie + dallage, triplanaires, PBR complet)")
+	return 0
+
+
+## RIEN NE DOIT APPARAÎTRE DANS LA COULÉE.
+##
+## Signalé en jeu : un coffre à reliques gisait au fond de la lave, côté est. Il
+## n'y était pas tombé — il avait toujours été là, à -1,94 m, et c'est la nappe
+## qui est montée par-dessus quand on l'a remontée à +1,9.
+##
+## C'est le mode de panne des marqueurs posés à la main : ils sont justes le
+## jour où on les pose, et rien ne les revérifie quand le terrain bouge. Ce test
+## les revérifie tous, y compris ceux qu'on ajoutera demain.
+func _test_nothing_spawns_in_the_lava() -> int:
+	var lava: CavernLake = _terrain.lake
+	var drowned: Array[String] = []
+	for marker in _all_markers(_world):
+		var at := Vector2(marker.global_position.x, marker.global_position.z)
+		if not _in_lava(at, lava):
+			continue
+		if _ground(at) < lava.surface_altitude:
+			drowned.append(marker.name)
+	if not drowned.is_empty():
+		print("[FAIL] noyés : %s" % ", ".join(drowned))
+		return 1
+	print("[OK] nothing_spawns_in_the_lava (%d marqueurs vérifiés)"
+		% _all_markers(_world).size())
+	return 0
+
+
+func _all_markers(from: Node) -> Array[Marker3D]:
+	var found: Array[Marker3D] = []
+	for child in from.get_children():
+		var marker: Marker3D = child as Marker3D
+		if marker != null:
+			found.append(marker)
+		found.append_array(_all_markers(child))
+	return found
+
+
+## LA LAVE TUE — ET LAISSE LE CORPS RÉCUPÉRABLE.
+##
+## Les deux moitiés comptent autant l'une que l'autre. Tuer sans éjecter
+## laisserait le corps au fond de la coulée : le jeu relève les alliés à leur
+## contact, donc un joueur tombé dedans serait perdu pour la run. Éjecter sans
+## tuer ferait de la lave un trampoline.
+func _test_the_lava_kills() -> int:
+	var hazard: LavaHazard = _world.get_node_or_null("LaveMortelle") as LavaHazard
+	if hazard == null:
+		print("[FAIL] lave : aucune zone mortelle — on la traverserait à pied")
+		return 1
+
+	var lava: CavernLake = _terrain.lake
+	var victim := CharacterBody3D.new()
+	victim.name = "Cobaye"
+	var health := HealthComponent.new()
+	health.name = "Health"
+	victim.add_child(health)
+	_world.add_child(victim)
+	await process_frame
+
+	# En plein milieu de la coulée.
+	var middle := Vector2(lava.center.x, lava.center.y)
+	victim.global_position = Vector3(middle.x, lava.surface_altitude, middle.y)
+	hazard._touch(victim)
+
+	var died: bool = health.is_dead
+	var landed := Vector2(victim.global_position.x, victim.global_position.z)
+	var out: bool = not _in_lava(landed, lava)
+	var above: bool = victim.global_position.y > lava.surface_altitude
+	victim.queue_free()
+
+	if not died:
+		print("[FAIL] lave : le cobaye en est sorti vivant")
+		return 1
+	if not out:
+		print("[FAIL] lave : le corps reste dans la coulée — irrécupérable")
+		return 1
+	if not above:
+		print("[FAIL] lave : le corps est éjecté SOUS la surface")
+		return 1
+	print("[OK] the_lava_kills (mort, corps posé sur la berge à %.0f m du lit)"
+		% absf(landed.y - lava.center.y))
 	return 0
