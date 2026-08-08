@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="BossData" load_steps=2 format=3 uid="uid://boss_data_golem_m3"]
 
-[ext_resource type="Script" path="res://scripts/core/data/boss_data.gd" id="1_boss_data"]
+[ext_resource type="Script" uid="uid://b7cyqjkksvpk2" path="res://scripts/core/data/boss_data.gd" id="1_boss_data"]
 
 [resource]
 script = ExtResource("1_boss_data")

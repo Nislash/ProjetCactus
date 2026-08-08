@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://spell_pickup_fire_m2"]
 
-[ext_resource type="Script" path="res://scripts/core/spell_pickup.gd" id="1_pickup"]
+[ext_resource type="Script" uid="uid://cd024pui4pw02" path="res://scripts/core/spell_pickup.gd" id="1_pickup"]
 [ext_resource type="PackedScene" uid="uid://dvk7grmxtnlxx" path="res://scenes/combos/fireball.tscn" id="2_fireball"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_pickup"]

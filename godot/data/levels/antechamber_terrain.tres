@@ -1,12 +1,12 @@
 [gd_resource type="Resource" script_class="CavernTerrainData" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/cavern_chamber.gd" id="1_kibk1"]
-[ext_resource type="Script" path="res://scripts/world/cavern_basin.gd" id="2_6of3p"]
-[ext_resource type="Script" path="res://scripts/world/cavern_plateau.gd" id="3_cofl3"]
-[ext_resource type="Script" path="res://scripts/world/cavern_ramp.gd" id="4_gerj2"]
-[ext_resource type="Script" path="res://scripts/world/cavern_heightfield_spec.gd" id="5_xddi3"]
-[ext_resource type="Script" path="res://scripts/world/cavern_terrain_data.gd" id="6_ak51u"]
-[ext_resource type="Script" path="res://scripts/world/cavern_sky_opening.gd" id="7_p1l22"]
+[ext_resource type="Script" uid="uid://cmuv1gils4asg" path="res://scripts/world/cavern_chamber.gd" id="1_kibk1"]
+[ext_resource type="Script" uid="uid://bt6gblo4kqiv2" path="res://scripts/world/cavern_basin.gd" id="2_6of3p"]
+[ext_resource type="Script" uid="uid://cmcinxohriawe" path="res://scripts/world/cavern_plateau.gd" id="3_cofl3"]
+[ext_resource type="Script" uid="uid://6yd0fdwpyryr" path="res://scripts/world/cavern_ramp.gd" id="4_gerj2"]
+[ext_resource type="Script" uid="uid://cssr6xxrme3of" path="res://scripts/world/cavern_heightfield_spec.gd" id="5_xddi3"]
+[ext_resource type="Script" uid="uid://l243j81nva13" path="res://scripts/world/cavern_terrain_data.gd" id="6_ak51u"]
+[ext_resource type="Script" uid="uid://cgm4ntuxoxoij" path="res://scripts/world/cavern_sky_opening.gd" id="7_p1l22"]
 
 [sub_resource type="Resource" id="Resource_80vnj"]
 script = ExtResource("1_kibk1")

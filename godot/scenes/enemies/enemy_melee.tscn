@@ -1,10 +1,10 @@
 [gd_scene load_steps=9 format=3 uid="uid://enemy_melee_m1"]
 
-[ext_resource type="Script" path="res://scripts/core/enemy_melee.gd" id="1_melee"]
-[ext_resource type="Script" path="res://scripts/core/health_component.gd" id="2_health"]
+[ext_resource type="Script" uid="uid://batyvlh5d3pft" path="res://scripts/core/enemy_melee.gd" id="1_melee"]
+[ext_resource type="Script" uid="uid://duufd13mvbexe" path="res://scripts/core/health_component.gd" id="2_health"]
 [ext_resource type="PackedScene" uid="uid://health_bar_3d_m1" path="res://scenes/ui/health_bar_3d.tscn" id="3_hbar"]
-[ext_resource type="Script" path="res://scripts/core/character_visual.gd" id="4_visual"]
-[ext_resource type="Script" path="res://scripts/core/character_animator.gd" id="5_animator"]
+[ext_resource type="Script" uid="uid://dbqydtfqdroo7" path="res://scripts/core/character_visual.gd" id="4_visual"]
+[ext_resource type="Script" uid="uid://juyef4cwfbnn" path="res://scripts/core/character_animator.gd" id="5_animator"]
 [ext_resource type="Resource" uid="uid://char_anim_sentinel" path="res://resources/characters/sentinel.tres" id="6_animset"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_melee"]

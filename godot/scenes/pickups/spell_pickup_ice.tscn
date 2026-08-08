@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://spell_pickup_ice_m2"]
 
-[ext_resource type="Script" path="res://scripts/core/spell_pickup.gd" id="1_pickup"]
+[ext_resource type="Script" uid="uid://cd024pui4pw02" path="res://scripts/core/spell_pickup.gd" id="1_pickup"]
 [ext_resource type="PackedScene" uid="uid://combo_ice_orb_m2" path="res://scenes/combos/ice_orb.tscn" id="2_orb"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_pickup"]

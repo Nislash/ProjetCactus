@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CharacterAnimSet" load_steps=12 format=3 uid="uid://char_anim_sentinel"]
 
-[ext_resource type="Script" path="res://scripts/core/data/character_anim_set.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cec7kdfb0sj5w" path="res://scripts/core/data/character_anim_set.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://dvfi1ek1b7ir7" path="res://assets/characters/sentinel/sentinel_mesh.glb" id="2_model"]
 [ext_resource type="PackedScene" uid="uid://bpilbpcsbt4tx" path="res://assets/characters/sentinel/animations/idle.glb" id="3_idle"]
 [ext_resource type="PackedScene" uid="uid://cono7ctqj0s5u" path="res://assets/characters/sentinel/animations/walk.glb" id="4_walk"]

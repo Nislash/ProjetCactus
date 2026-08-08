@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://3d8t3kus5v4g" path="res://scripts/debug/multi_test_bootstrap.gd" id="1_5yase"]
 [ext_resource type="PackedScene" uid="uid://test_open_arena_m1" path="res://scenes/levels/test_open_arena.tscn" id="2_or7on"]
 [ext_resource type="Script" uid="uid://br1uquawi0uob" path="res://scripts/core/split_screen_manager.gd" id="2_werws"]
-[ext_resource type="Script" path="res://scripts/core/enemy_spawner.gd" id="3_spawner"]
+[ext_resource type="Script" uid="uid://b35ofb1p2op1m" path="res://scripts/core/enemy_spawner.gd" id="3_spawner"]
 
 [node name="Main" type="Node" unique_id=1067967091]
 

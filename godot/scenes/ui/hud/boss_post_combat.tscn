@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://qroguvstuv11"]
 
-[ext_resource type="Script" path="res://scripts/core/boss_post_combat.gd" id="1_n0msa"]
+[ext_resource type="Script" uid="uid://cxny2warv7lax" path="res://scripts/core/boss_post_combat.gd" id="1_n0msa"]
 
 [node name="BossPostCombat" type="Control" unique_id=1267015210]
 layout_mode = 3

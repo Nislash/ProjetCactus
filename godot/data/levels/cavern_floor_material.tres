@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" format=3]
 
-[ext_resource type="Shader" path="res://shaders/cavern_rock.gdshader" id="1_cnal8"]
+[ext_resource type="Shader" uid="uid://bxnh6ye03fek4" path="res://shaders/cavern_rock.gdshader" id="1_cnal8"]
 
 [resource]
 render_priority = 0

@@ -164,3 +164,19 @@ images quasi identiques hors du halo des puits : le post-process **ne délave pa
 délave à ce point de vue précis (arrêt 5 du tour, regard vers la voûte), c'est la brume volumétrique
 traversée sur toute sa longueur — un comportement antérieur à cette passe. À trancher par la review
 artistique (#33), pas par une retouche silencieuse d'un éclairage déjà validé.
+
+
+### 7.1. Ce que le post-process coûte, mesuré
+
+Même protocole, après activation du glow, du SSAO et des ajustements :
+
+| | avant | après | écart |
+|---|---|---|---|
+| Draw calls / viewport (4-split) | 107 | 107 | **inchangé** |
+| Primitives | 478 k | 478 k | inchangé |
+| CPU rendu | 0,74 ms | 0,88 ms | +0,14 ms |
+| **VRAM** | 341 Mo | **392 Mo** | **+51 Mo** |
+
+Le post-process ne coûte **rien** en géométrie — c'est du plein écran. Il coûte de la **mémoire
+vidéo** : les pyramides de glow et le tampon SSAO, alloués une fois par viewport. C'est la
+confirmation du §6.3 : à ce stade du projet, le poste qui bouge est la VRAM, pas les draw calls.

@@ -3,9 +3,9 @@
 [ext_resource type="PackedScene" uid="uid://lever_m2" path="res://scenes/world/lever.tscn" id="2_lever"]
 [ext_resource type="PackedScene" uid="uid://door_m2" path="res://scenes/world/door.tscn" id="3_door"]
 [ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="4_boss"]
-[ext_resource type="Script" path="res://scripts/core/boss_arena.gd" id="5_arena"]
-[ext_resource type="Script" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
-[ext_resource type="Script" path="res://scripts/core/mechanic_low_gravity.gd" id="7_lowgrav"]
+[ext_resource type="Script" uid="uid://dca7t3p4xi5jc" path="res://scripts/core/boss_arena.gd" id="5_arena"]
+[ext_resource type="Script" uid="uid://cqrr68rjasgmk" path="res://scripts/core/puzzle_gate.gd" id="6_puzzle"]
+[ext_resource type="Script" uid="uid://bl6xwcceo4uwc" path="res://scripts/core/mechanic_low_gravity.gd" id="7_lowgrav"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_horizon_color = Color(0.55, 0.65, 0.85, 1)

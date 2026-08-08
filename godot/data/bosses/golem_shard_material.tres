@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" format=3]
 
-[ext_resource type="Shader" path="res://shaders/golem_crystal.gdshader" id="1_golem"]
+[ext_resource type="Shader" uid="uid://cnfch503qepi2" path="res://shaders/golem_crystal.gdshader" id="1_golem"]
 
 [resource]
 render_priority = 0
