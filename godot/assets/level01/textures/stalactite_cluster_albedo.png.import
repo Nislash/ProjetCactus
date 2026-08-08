@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmisxqrjlnpwo"
 path.s3tc="res://.godot/imported/stalactite_cluster_albedo.png-174a337a2fff7c9c8192521a94b25715.s3tc.ctex"
+path.etc2="res://.godot/imported/stalactite_cluster_albedo.png-174a337a2fff7c9c8192521a94b25715.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/level01/textures/stalactite_cluster_albedo.png"
-dest_files=["res://.godot/imported/stalactite_cluster_albedo.png-174a337a2fff7c9c8192521a94b25715.s3tc.ctex"]
+dest_files=["res://.godot/imported/stalactite_cluster_albedo.png-174a337a2fff7c9c8192521a94b25715.s3tc.ctex", "res://.godot/imported/stalactite_cluster_albedo.png-174a337a2fff7c9c8192521a94b25715.etc2.ctex"]
 
 [params]
 

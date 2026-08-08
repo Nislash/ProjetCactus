@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Icône du jeu : un éclat de cristal cyan sur la roche sombre de la
+       caverne. Palette de l'art bible §3 (roche #1e2b3e, cristal #66d9ff).
+       Un SVG plutôt qu'un PNG : pas de binaire LFS pour seize lignes, et
+       l'icône reste nette à toutes les tailles que macOS demande. -->
+  <rect width="128" height="128" rx="22" fill="#141d2b"/>
+  <path d="M64 14 L92 58 L74 114 L54 114 L36 58 Z" fill="#2f7fd4"/>
+  <path d="M64 14 L92 58 L74 114 L64 62 Z" fill="#66d9ff"/>
+  <path d="M64 14 L36 58 L64 62 Z" fill="#8ee6ff"/>
+  <path d="M54 114 L64 62 L74 114 Z" fill="#1e2b3e" opacity="0.55"/>
+</svg>

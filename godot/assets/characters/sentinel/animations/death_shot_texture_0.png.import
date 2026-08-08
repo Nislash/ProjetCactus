@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://jgsfjcg87xeb"
 path.s3tc="res://.godot/imported/death_shot_texture_0.png-5084e615f8262f4c22b153dad8d118ab.s3tc.ctex"
+path.etc2="res://.godot/imported/death_shot_texture_0.png-5084e615f8262f4c22b153dad8d118ab.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/sentinel/animations/death_shot_texture_0.png"
-dest_files=["res://.godot/imported/death_shot_texture_0.png-5084e615f8262f4c22b153dad8d118ab.s3tc.ctex"]
+dest_files=["res://.godot/imported/death_shot_texture_0.png-5084e615f8262f4c22b153dad8d118ab.s3tc.ctex", "res://.godot/imported/death_shot_texture_0.png-5084e615f8262f4c22b153dad8d118ab.etc2.ctex"]
 
 [params]
 

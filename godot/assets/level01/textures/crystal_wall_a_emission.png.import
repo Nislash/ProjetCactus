@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dp7x2o35y7ycx"
 path.s3tc="res://.godot/imported/crystal_wall_a_emission.png-bc3015ad0d6a26199e8f0f4d254ec3ba.s3tc.ctex"
+path.etc2="res://.godot/imported/crystal_wall_a_emission.png-bc3015ad0d6a26199e8f0f4d254ec3ba.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/level01/textures/crystal_wall_a_emission.png"
-dest_files=["res://.godot/imported/crystal_wall_a_emission.png-bc3015ad0d6a26199e8f0f4d254ec3ba.s3tc.ctex"]
+dest_files=["res://.godot/imported/crystal_wall_a_emission.png-bc3015ad0d6a26199e8f0f4d254ec3ba.s3tc.ctex", "res://.godot/imported/crystal_wall_a_emission.png-bc3015ad0d6a26199e8f0f4d254ec3ba.etc2.ctex"]
 
 [params]
 

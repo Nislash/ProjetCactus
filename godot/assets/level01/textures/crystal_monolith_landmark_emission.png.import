@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cq73041d538m0"
 path.s3tc="res://.godot/imported/crystal_monolith_landmark_emission.png-0e8c9f51e2382f46959cfb77390788dd.s3tc.ctex"
+path.etc2="res://.godot/imported/crystal_monolith_landmark_emission.png-0e8c9f51e2382f46959cfb77390788dd.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/level01/textures/crystal_monolith_landmark_emission.png"
-dest_files=["res://.godot/imported/crystal_monolith_landmark_emission.png-0e8c9f51e2382f46959cfb77390788dd.s3tc.ctex"]
+dest_files=["res://.godot/imported/crystal_monolith_landmark_emission.png-0e8c9f51e2382f46959cfb77390788dd.s3tc.ctex", "res://.godot/imported/crystal_monolith_landmark_emission.png-0e8c9f51e2382f46959cfb77390788dd.etc2.ctex"]
 
 [params]
 

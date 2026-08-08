@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://68ua4ll376om"
 path.s3tc="res://.godot/imported/stalactite_cluster_roughness.png-7cc558ef143ebf92265f2d6222efb738.s3tc.ctex"
+path.etc2="res://.godot/imported/stalactite_cluster_roughness.png-7cc558ef143ebf92265f2d6222efb738.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/level01/textures/stalactite_cluster_roughness.png"
-dest_files=["res://.godot/imported/stalactite_cluster_roughness.png-7cc558ef143ebf92265f2d6222efb738.s3tc.ctex"]
+dest_files=["res://.godot/imported/stalactite_cluster_roughness.png-7cc558ef143ebf92265f2d6222efb738.s3tc.ctex", "res://.godot/imported/stalactite_cluster_roughness.png-7cc558ef143ebf92265f2d6222efb738.etc2.ctex"]
 
 [params]
 
