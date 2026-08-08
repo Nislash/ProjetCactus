@@ -32,15 +32,14 @@ const GLYPH_SINK := 0.42
 ## flotter devant une arête.
 const SHAFT_FACES := 9
 
-## Hauteur de la console qui porte l'éclat, en mètres. À portée de main.
-const ALTAR_HEIGHT := 1.35
+## Hauteur de la serrure, en mètres au-dessus du sol. À portée de main.
+const LOCK_HEIGHT := 1.45
 
-## Dimensions de la niche creusée dans le fût, en mètres.
-const NICHE_WIDTH := 1.15
-const NICHE_HEIGHT := 1.55
+## Dimensions du trou, en mètres. Plus haut que large : une serrure.
+const LOCK_WIDTH := 0.62
+const LOCK_HEIGHT_SIZE := 1.05
 
-## Nombre d'éclats de roche autour de l'ouverture.
-const NICHE_RIM_CHUNKS := 9
+
 
 ## La lettre gravée. Une seule majuscule.
 @export var letter: String = "B"
@@ -92,8 +91,17 @@ func _ready() -> void:
 	add_to_group(&"letter_pylons")
 	prompt_text = "Placer l'éclat"
 	hold_duration = 0.6
-	interaction_range = 3.2
+	interaction_range = 4.0
 	selection_priority = 12
+
+	# LE NŒUD SE PLACE SUR SA SERRURE, et tout le reste est construit autour
+	# de lui. C'est indispensable : la sélection d'un interactable compare la
+	# position du NŒUD à celle du joueur, pas celle de sa zone de collision.
+	# Laissé à la base de la colonne, il fallait se coller au pied du fût pour
+	# interagir avec une serrure située trois mètres plus haut.
+	var y: float = ground_offset + LOCK_HEIGHT
+	position = _face_normal() * _face_distance(y) + Vector3(0.0, y, 0.0)
+
 	_build()
 	_refresh()
 
@@ -101,119 +109,55 @@ func _ready() -> void:
 func _build() -> void:
 	var shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
-	sphere.radius = 3.6
+	sphere.radius = 4.0
 	shape.shape = sphere
 	add_child(shape)
 
-	_build_glyph()
-
-	var facing: Vector3 = _face_normal()
-	var reach: float = _face_distance(_altar_y())
-
-	# LA NICHE — un trou creusé à même le fût.
+	# LA SERRURE — un simple trou dans le fût, un peu plus haut que large.
 	#
-	# Une tablette en saillie avait été essayée d'abord : elle se lisait comme
-	# du mobilier posé contre la colonne, alors que tout le reste du niveau est
-	# taillé dans la masse. Un creux appartient à la pierre.
+	# Il y avait ici une console de pierre, un ourlet d'éclats et un cristal
+	# renversé en guise d'empreinte. Trois objets pour dire une seule chose, et
+	# le résultat se lisait comme un tas. Un trou suffit : l'éclat en est la
+	# clé, et une serrure n'a pas besoin d'être décorée pour qu'on comprenne
+	# qu'il y manque quelque chose.
 	#
-	# Godot n'a pas de soustraction booléenne, et on ne peut pas non plus
-	# « regarder dans » une boîte enfoncée : le fût est opaque et l'occlut
-	# toujours (essayé — on ne voyait que de la roche).
-	#
-	# La cavité est donc PEINTE : un fond noir mat posé à ras de la paroi,
-	# entouré d'éclats de roche qui saillent. Le contraste et le relief du
-	# pourtour suffisent à l'œil pour lire un creux — c'est ce que font tous
-	# les jeux qui n'ont pas de découpe booléenne, et ça coûte deux triangles.
-
+	# Godot n'a pas de découpe booléenne et un volume enfoncé serait occlus par
+	# le fût (essayé, vérifié en capture). Le trou est donc un plan noir NON
+	# ÉCLAIRÉ posé à ras de la paroi : il ne répond à aucune lumière, donc il
+	# se lit comme de la profondeur.
 	var cavity := MeshInstance3D.new()
-	cavity.name = "Niche"
+	cavity.name = "Serrure"
 	var hole := QuadMesh.new()
-	hole.size = Vector2(NICHE_WIDTH, NICHE_HEIGHT)
+	hole.size = Vector2(LOCK_WIDTH, LOCK_HEIGHT_SIZE)
 	cavity.mesh = hole
 	var dark := StandardMaterial3D.new()
-	dark.albedo_color = Color(0.008, 0.014, 0.024)
-	# Non éclairé : une surface qui répond à la lumière trahit qu'elle est
-	# plate. Un fond de cavité reste noir quoi qu'il arrive.
+	dark.albedo_color = Color(0.006, 0.011, 0.019)
 	dark.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	cavity.material_override = dark
 	cavity.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	cavity.position = facing * (reach + 0.015) + Vector3(0.0, _altar_y(), 0.0)
+	cavity.position = _face_normal() * 0.02
 	cavity.rotation.y = _face_angle()
 	add_child(cavity)
 
-	# L'OURLET DE ROCHE. Quelques éclats irréguliers autour de l'ouverture :
-	# c'est ce qui fait que le trou a été CREUSÉ et non découpé. Tailles et
-	# inclinaisons varient avec la lettre, pour que deux colonnes ne portent
-	# pas le même encadrement.
-	var rim_rng := RandomNumberGenerator.new()
-	rim_rng.seed = hash(letter) + glyph_face * 977
-	var rim_material := StandardMaterial3D.new()
-	rim_material.albedo_color = Color(0.070, 0.098, 0.140)
-	rim_material.roughness = 0.95
-	for i in NICHE_RIM_CHUNKS:
-		var a: float = TAU * (float(i) + rim_rng.randf_range(-0.18, 0.18)) \
-			/ float(NICHE_RIM_CHUNKS)
-		var chunk := MeshInstance3D.new()
-		chunk.name = "Ourlet_%d" % i
-		var block := BoxMesh.new()
-		var scale: float = rim_rng.randf_range(0.16, 0.34)
-		block.size = Vector3(scale, scale * rim_rng.randf_range(0.7, 1.6), scale * 0.8)
-		chunk.mesh = block
-		chunk.material_override = rim_material
-		# Sur l'ellipse du contour, avec un peu de désordre : un anneau régulier
-		# ferait joint de fenêtre.
-		var local := Vector3(
-			cos(a) * (NICHE_WIDTH * 0.5 + rim_rng.randf_range(0.02, 0.12)),
-			sin(a) * (NICHE_HEIGHT * 0.5 + rim_rng.randf_range(0.02, 0.12)),
-			rim_rng.randf_range(0.02, 0.14))
-		chunk.position = facing * reach + Vector3(0.0, _altar_y(), 0.0) \
-			+ Basis(Vector3.UP, _face_angle()) * local
-		chunk.rotation = Vector3(
-			rim_rng.randf_range(-0.5, 0.5),
-			_face_angle() + rim_rng.randf_range(-0.6, 0.6),
-			rim_rng.randf_range(-0.5, 0.5))
-		add_child(chunk)
-
-	# L'AUTEL. Un cristal RETOURNÉ, pointe en bas, suspendu DANS la niche —
-	# l'empreinte en creux de l'éclat qui doit venir s'y loger.
-	#
-	# Il est TOUJOURS visible, même vide. C'est tout l'intérêt : sans lui, rien
-	# n'indiquait où poser, et le joueur qui portait ses éclats devait deviner
-	# que ces colonnes-là les acceptaient. Une forme en creux dit « il manque
-	# quelque chose ici » sans un mot.
-	var altar := MeshInstance3D.new()
-	altar.name = "Autel"
-	altar.mesh = CrystalGrammar.boss_shard_mesh()
-	altar.scale = Vector3(0.42, -0.42, 0.42)
-	var hollow := StandardMaterial3D.new()
-	hollow.albedo_color = Color(0.045, 0.070, 0.100)
-	hollow.roughness = 0.9
-	hollow.metallic = 0.0
-	altar.material_override = hollow
-	# Suspendu depuis le haut de la niche : renversé, le mesh descend depuis
-	# son origine.
-	# Devant le fond noir : c'est ce détachement qui donne la profondeur.
-	altar.position = facing * (reach + 0.30) \
-		+ Vector3(0.0, _altar_y() + NICHE_HEIGHT * 0.44, 0.0)
-	add_child(altar)
-
-	# L'éclat posé, qui vient combler l'empreinte.
+	# LA CLÉ. Le même éclat que celui qu'on porte, qui apparaît DANS le trou
+	# quand on le pose et disparaît quand on le reprend. Rien d'autre ne
+	# change : c'est la présence ou l'absence du cristal qui dit l'état.
 	_socket_mesh = MeshInstance3D.new()
-	_socket_mesh.name = "Berceau"
+	_socket_mesh.name = "Cle"
 	_socket_mesh.mesh = CrystalGrammar.boss_shard_mesh()
 	_socket_material = CrystalGrammar.make_material(CrystalGrammar.COLOR_BOSS_LOCK, 0.0)
 	_socket_mesh.material_override = _socket_material
 	# Même échelle que l'éclat au sol : ce qu'on pose doit être RECONNU comme
-	# ce qu'on portait. Posé pointe en haut, il comble l'empreinte inversée.
-	_socket_mesh.scale = Vector3.ONE * 0.42
-	# Logé dans la niche, pointe en haut : il vient combler l'empreinte.
-	_socket_mesh.position = facing * (reach + 0.30) \
-		+ Vector3(0.0, _altar_y() - NICHE_HEIGHT * 0.42, 0.0)
+	# ce qu'on portait.
+	_socket_mesh.scale = Vector3.ONE * 0.40
+	_socket_mesh.position = _face_normal() * 0.16 + Vector3(0.0, -LOCK_HEIGHT_SIZE * 0.34, 0.0)
 	add_child(_socket_mesh)
 
 	_glow = CrystalGrammar.make_glow(CrystalGrammar.COLOR_BOSS_LOCK, 0.0, 8.0)
-	_glow.position = Vector3(0.0, 1.6, 0.0)
+	_glow.position = _face_normal() * 0.30
 	add_child(_glow)
+
+	_build_glyph()
 
 
 ## La gravure, POSÉE SUR LA PAROI et non sur l'axe.
@@ -278,17 +222,15 @@ func _build_glyph() -> void:
 	# épaisseur : sa face avant reste sous la surface, seules les arêtes
 	# ressortent. Sorti complètement, on obtiendrait une lettre pleine et
 	# lumineuse — lisible de partout, donc plus une énigme.
+	# Cotée depuis la colonne, puis ramenée dans le repère du pylône — qui
+	# n'est plus à la base du fût mais devant sa serrure.
 	var glyph_y: float = ground_offset + glyph_height
-	glyph.position = _face_normal() * (_face_distance(glyph_y) - GLYPH_DEPTH * GLYPH_SINK) \
+	var in_column := _face_normal() * (_face_distance(glyph_y) - GLYPH_DEPTH * GLYPH_SINK) \
 		+ Vector3(0.0, glyph_y, 0.0)
+	glyph.position = in_column - position
 	glyph.rotation.y = _face_angle()
 	add_child(glyph)
 	_glyph = glyph
-
-
-## Altitude de la niche, comptée DEPUIS LE SOL et non depuis la base du fût.
-func _altar_y() -> float:
-	return ground_offset + ALTAR_HEIGHT
 
 
 ## L'angle du milieu du pan choisi. Décalé d'un demi-pas pour viser le centre
@@ -323,6 +265,7 @@ func _shaft_radius_at(height: float) -> float:
 func _refresh() -> void:
 	if _socket_mesh == null:
 		return
+	# La clé n'existe que posée. C'est le seul signal d'état de la serrure.
 	_socket_mesh.visible = _filled
 	var energy: float = 0.0
 	if _filled:

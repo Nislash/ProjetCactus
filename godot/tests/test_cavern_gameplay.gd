@@ -51,7 +51,7 @@ func _run() -> void:
 	failed += _test_the_dial_is_on_the_island_pillar()
 	failed += _test_boss_is_in_the_arena()
 	failed += _test_something_can_wake_the_boss()
-	failed += _test_every_pylon_has_an_altar()
+	failed += _test_the_keyhole_is_where_the_player_reaches()
 	failed += _test_the_lake_edge_follows_its_shore()
 	failed += _test_order_matters()
 	failed += await _test_solving_opens_both_ways()
@@ -173,56 +173,6 @@ func _test_something_can_wake_the_boss() -> int:
 	return 0
 
 
-## L'autel : une empreinte en creux, TOUJOURS visible. Sans elle, rien
-## n'indique où poser un éclat — le joueur porte quatre cristaux et cherche
-## une serrure qui n'a pas de trou.
-func _test_every_pylon_has_an_altar() -> int:
-	var pylons: Array = _puzzle.call("get_pylons")
-	for p in pylons:
-		var altar: MeshInstance3D = (p as Node).get_node_or_null("Autel") as MeshInstance3D
-		if altar == null:
-			print("[FAIL] autel : absent sur « %s »" % (p as Node).name)
-			return 1
-		if not altar.visible:
-			print("[FAIL] autel : invisible sur « %s » — on ne sait pas où poser"
-				% (p as Node).name)
-			return 1
-		# Retourné : c'est l'empreinte de l'éclat, pas un second éclat.
-		if altar.scale.y >= 0.0:
-			print("[FAIL] autel : pas inversé sur « %s »" % (p as Node).name)
-			return 1
-
-	# Les gravures ne doivent pas s'aligner : ni même hauteur, ni même côté.
-	var heights: Array[float] = []
-	for p in pylons:
-		heights.append(float((p as Node).get("glyph_height")))
-	var spread: float = heights.max() - heights.min()
-	if spread < 1.0:
-		print("[FAIL] gravures : toutes à la même hauteur (écart %.2f m)" % spread)
-		return 1
-
-	# AU-DESSUS DU SOL. Les colonnes plongent jusqu'au lit du lac : une hauteur
-	# comptée depuis leur base enterrait la gravure sous la rive — c'est arrivé
-	# au O, et rien ne le signalait.
-	var terrain: CavernTerrainData = load("res://data/levels/level01_cavern_terrain.tres")
-	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
-	for p in pylons:
-		var node: Node3D = p as Node3D
-		var flat := Vector2(node.global_position.x, node.global_position.z)
-		var ground: float = CavernTerrainBuilder.sample_point(terrain.floor_field, flat, noise)
-		var glyph: Node3D = node.get_node_or_null("Gravure") as Node3D
-		if glyph == null:
-			print("[FAIL] gravure : absente sur « %s »" % node.name)
-			return 1
-		if glyph.global_position.y < ground + 1.0:
-			print("[FAIL] gravure « %s » : à %.1f m alors que le sol est à %.1f m — enterrée"
-				% [String(node.get("letter")), glyph.global_position.y, ground])
-			return 1
-
-	print("[OK] every_pylon_has_an_altar (hauteurs étalées sur %.1f m, toutes hors sol)" % spread)
-	return 0
-
-
 ## Le CONTOUR de la nappe doit épouser la BERGE, pas la grille.
 ##
 ## Le lac est bâti quad par quad, et chaque quad était gardé ou rejeté en
@@ -279,6 +229,76 @@ func _test_the_lake_edge_follows_its_shore() -> int:
 		return 1
 	print("[OK] the_lake_edge_follows_its_shore (%.0f %% des sommets recalés sur la berge)"
 		% (ratio * 100.0))
+	return 0
+
+
+## LA SERRURE doit être là où le joueur croit qu'elle est.
+##
+## La sélection d'un interactable compare la position du NŒUD à celle du
+## joueur — pas celle de sa zone de collision. Laissé à la base de la colonne,
+## le pylône obligeait à se coller au pied du fût pour interagir avec une
+## serrure située trois mètres plus haut, et le joueur cherchait en tournant
+## autour sans rien trouver.
+func _test_the_keyhole_is_where_the_player_reaches() -> int:
+	var pylons: Array = _puzzle.call("get_pylons")
+	var terrain: CavernTerrainData = load("res://data/levels/level01_cavern_terrain.tres")
+	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
+
+	for p in pylons:
+		var node: Node3D = p as Node3D
+		var lock: Node3D = node.get_node_or_null("Serrure") as Node3D
+		if lock == null:
+			print("[FAIL] serrure : absente sur « %s »" % node.name)
+			return 1
+
+		# Le nœud lui-même doit être SUR la serrure : c'est lui qui décide de
+		# la portée d'interaction.
+		var gap: float = node.global_position.distance_to(lock.global_position)
+		if gap > 0.5:
+			print("[FAIL] serrure : le nœud est à %.1f m de son trou — il faudra se coller ailleurs"
+				% gap)
+			return 1
+
+		# Et à hauteur de main au-dessus du sol.
+		var flat := Vector2(node.global_position.x, node.global_position.z)
+		var ground: float = CavernTerrainBuilder.sample_point(terrain.floor_field, flat, noise)
+		var above: float = node.global_position.y - ground
+		if above < 0.6 or above > 2.6:
+			print("[FAIL] serrure « %s » : à %.1f m du sol, hors de portée"
+				% [String(node.get("letter")), above])
+			return 1
+
+		# La clé n'existe que posée.
+		var key: MeshInstance3D = node.get_node_or_null("Cle") as MeshInstance3D
+		if key == null:
+			print("[FAIL] clé : absente sur « %s »" % node.name)
+			return 1
+		if key.visible:
+			print("[FAIL] clé : visible alors que la serrure est vide")
+			return 1
+
+	# Les gravures ne doivent pas s'aligner, et doivent rester au-dessus des
+	# serrures — sinon on confond l'indice et le mécanisme.
+	var heights: Array[float] = []
+	for p in pylons:
+		heights.append(float((p as Node).get("glyph_height")))
+	var spread: float = heights.max() - heights.min()
+	if spread < 1.0:
+		print("[FAIL] gravures : toutes à la même hauteur (écart %.2f m)" % spread)
+		return 1
+
+	for p in pylons:
+		var node: Node3D = p as Node3D
+		var glyph: Node3D = node.get_node_or_null("Gravure") as Node3D
+		if glyph == null:
+			print("[FAIL] gravure : absente sur « %s »" % node.name)
+			return 1
+		if glyph.global_position.y < node.global_position.y + 2.0:
+			print("[FAIL] gravure « %s » : trop près de la serrure"
+				% String(node.get("letter")))
+			return 1
+
+	print("[OK] the_keyhole_is_where_the_player_reaches (gravures étalées sur %.1f m)" % spread)
 	return 0
 
 
