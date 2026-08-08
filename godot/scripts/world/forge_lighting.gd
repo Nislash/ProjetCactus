@@ -29,15 +29,19 @@ extends Node3D
 
 ## Nombre de lampes réparties sur le lac. Une seule au centre laisserait les
 ## bords du bassin dans l'ombre alors que c'est là qu'on se bat.
-@export var lava_light_count: int = 6
+@export var lava_light_count: int = 8
 
 ## Portée des lampes du lac, en mètres.
-@export var lava_light_range: float = 62.0
-@export var lava_light_energy: float = 3.2
+@export var lava_light_range: float = 96.0
+@export var lava_light_energy: float = 6.5
 
-## LA LUNE. Rouge sombre — elle n'éclaire pas, elle découpe.
-@export var moon_color: Color = Color(0.72, 0.20, 0.22)
-@export var moon_energy: float = 0.85
+## La lueur d'ensemble qui remplit le cirque.
+@export var fill_energy: float = 4.5
+@export var fill_range: float = 200.0
+
+## LA LUNE. Rouge — elle découpe, et maintenant elle éclaire aussi un peu.
+@export var moon_color: Color = Color(0.88, 0.38, 0.34)
+@export var moon_energy: float = 1.9
 ## Rasante : 20° au-dessus de l'horizon. Au zénith elle éclairerait le fond du
 ## gouffre et volerait son rôle à la lave.
 @export var moon_direction_degrees: Vector3 = Vector3(-20.0, 35.0, 0.0)
@@ -59,6 +63,7 @@ func _ready() -> void:
 	# Une frame : le terrain se construit d'abord, on s'accroche ensuite.
 	await get_tree().process_frame
 	_light_the_lava()
+	_light_the_glow()
 	_light_the_moon()
 
 
@@ -89,6 +94,35 @@ func _light_the_lava() -> void:
 		# serait perdue sous la surface.
 		light.global_position = Vector3(at.x, lava.surface_altitude + 1.2, at.y)
 		_pulses.append(light)
+
+
+## LA LUEUR DU GOUFFRE. Une seule très grande lampe au-dessus du bassin, de
+## portée démesurée et d'énergie modérée.
+##
+## Elle ne remplace pas la couronne — celle-ci donne le modelé des bords, où
+## l'on se bat. Elle fait autre chose : elle **remplit** le cirque, pour que
+## les falaises d'en face et le château cessent d'être des masses noires. Sans
+## elle, tout ce qui n'était pas au bord du lac disparaissait.
+func _light_the_glow() -> void:
+	var lava: CavernLake = _terrain.lake
+	if lava == null:
+		return
+	var glow := OmniLight3D.new()
+	# Nommée « Lave… » à dessein : elle appartient au groupe de sources que le
+	# test vérifie comme étant SOUS la crête. Une lampe de remplissage qui
+	# échapperait à ce contrôle pourrait dériver vers le haut sans que rien ne
+	# le dise — et c'est exactement ce qui s'est passé au premier jet.
+	glow.name = "Lave_Lueur"
+	glow.light_color = LAVA_CORE
+	glow.light_energy = fill_energy
+	glow.omni_range = fill_range
+	glow.shadow_enabled = false
+	# JUSTE au-dessus de la nappe, comme la couronne. Elle avait d'abord été
+	# posée 26 m plus haut pour mieux porter — mais elle éclairait alors PAR LE
+	# HAUT, ce qui détruit le renversement dont vit le biome. C'est sa portée
+	# qui doit faire le travail, pas son altitude.
+	add_child(glow)
+	glow.global_position = Vector3(lava.center.x, lava.surface_altitude + 3.0, lava.center.y)
 
 
 ## LA LUNE. Une seule directionnelle, très rasante, avec des ombres.

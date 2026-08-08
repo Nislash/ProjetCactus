@@ -46,43 +46,47 @@ func _init() -> void:
 	# Le ciel n'éclaire presque pas : la lumière vient de la lave et de la lune
 	# elle-même, deux sources ponctuelles. Un ciel qui éclairerait comme un
 	# dôme aplatirait tout le relief du cirque.
-	env.background_energy_multiplier = 0.85
+	env.background_energy_multiplier = 1.5
 
 	# Ambiante chaude, très basse. Elle ne modèle rien — elle empêche
 	# seulement les faces détournées de la lave de tomber au noir absolu.
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.30, 0.13, 0.14)
-	env.ambient_light_energy = 0.42
+	env.ambient_light_color = Color(0.42, 0.22, 0.20)
+	env.ambient_light_energy = 0.95
 	# Un peu de ciel dans l'ambiante, maintenant qu'il y en a un — mais peu :
 	# la nuit reste noire, c'est la lune qui découpe.
-	env.ambient_light_sky_contribution = 0.25
+	env.ambient_light_sky_contribution = 0.40
 
-	# BRUME. Sombre et chaude : elle enfouit les lointains dans la suie. Plus
-	# dense qu'au niveau 1 — l'air d'une forge est un obstacle, pas un voile.
+	# BRUME. Chaude, et **deux fois moins dense** qu'au premier réglage.
+	#
+	# Elle avalait tout : dans un cirque de 156 m, une densité de 0,011
+	# éteignait la paroi d'en face et le château avec. Un niveau à ciel ouvert
+	# n'a pas les mêmes besoins qu'une caverne — là-bas la brume cache pour
+	# créer la tension, ici elle doit seulement donner de la profondeur.
 	# Elle affecte MAINTENANT le ciel : sans ça, un horizon net trahirait que
 	# le cirque est une boîte.
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.145, 0.075, 0.055)
-	env.fog_light_energy = 0.35
-	env.fog_density = 0.011
+	env.fog_light_color = Color(0.235, 0.125, 0.095)
+	env.fog_light_energy = 0.75
+	env.fog_density = 0.0055
 	env.fog_sky_affect = 0.35
 	env.fog_aerial_perspective = 0.0
 
 	# Brume VOLUMÉTRIQUE : c'est elle qui matérialise la chaleur montant du
 	# bassin, et qui donne aux cheminées leurs colonnes de fumée.
 	env.volumetric_fog_enabled = true
-	env.volumetric_fog_density = 0.020
+	env.volumetric_fog_density = 0.010
 	env.volumetric_fog_albedo = Color(0.35, 0.24, 0.20)
 	# Une émission propre, faible : l'air lui-même rougeoie près de la lave.
 	env.volumetric_fog_emission = Color(0.14, 0.045, 0.020)
-	env.volumetric_fog_emission_energy = 0.6
+	env.volumetric_fog_emission_energy = 1.1
 	env.volumetric_fog_gi_inject = 0.0
 	env.volumetric_fog_length = 70.0
 
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	# Blanc plus haut qu'au niveau 1 : la lave dépasse largement 1,0 et on ne
 	# veut pas qu'elle s'écrase en aplat blanc.
-	env.tonemap_white = 2.4
+	env.tonemap_white = 3.2
 
 	# GLOW. Encore plus décisif qu'au niveau 1 : ici tout l'éclairage vient
 	# d'une surface émissive, et sans halo elle resterait un autocollant
@@ -116,8 +120,8 @@ func _init() -> void:
 	# est un monde délavé ; la forge est un monde saturé, et c'est la
 	# différence qu'on doit sentir en passant de l'un à l'autre.
 	env.adjustment_enabled = true
-	env.adjustment_brightness = 1.0
-	env.adjustment_contrast = 1.12
+	env.adjustment_brightness = 1.15
+	env.adjustment_contrast = 1.06
 	env.adjustment_saturation = 1.18
 
 	if ResourceSaver.save(env, OUTPUT_PATH) != OK:
