@@ -40,8 +40,8 @@ const PATH_TARGET_DEG := 18.0
 
 func _init() -> void:
 	var terrain := CavernTerrainData.new()
-	terrain.bounds_min = Vector2(-78.0, -132.0)
-	terrain.bounds_max = Vector2(78.0, 78.0)
+	terrain.bounds_min = Vector2(-92.0, -142.0)
+	terrain.bounds_max = Vector2(92.0, 78.0)
 	terrain.cell_size = 1.25
 	terrain.chunk_size = 40.0
 	# Voûte plus basse et plus régulière qu'au niveau 1 : une forge est une
@@ -87,7 +87,7 @@ func _build_chambers() -> Array[CavernChamber]:
 	# Rayon 46 et non 58 : avec son adoucissement, la poche s'étendait jusqu'à
 	# 74 m sur un domaine qui n'en fait que 78. Il ne restait que quatre
 	# mètres pour les falaises, et le cirque n'était donc pas borné.
-	chambers.append(_room("F1 Le Puits", Vector2(0.0, 0.0), Vector2(46.0, 46.0), 0.0, 16.0, 9.0))
+	chambers.append(_room("F1 Le Puits", Vector2(0.0, -6.0), Vector2(56.0, 46.0), 0.0, 16.0, 11.0))
 
 	# LES GALERIES D'ACCÈS. Trois entailles dans la paroi, décalées, qui
 	# donnent au pourtour une silhouette mordue plutôt qu'un cercle parfait.
@@ -110,10 +110,10 @@ func _build_chambers() -> Array[CavernChamber]:
 	# Elle est vaste — 38 m de rayon — parce qu'un boss de placement a besoin
 	# d'espace : le tir ami est actif, et à quatre dans une salle étroite le
 	# combat se joue entre joueurs plutôt que contre le boss.
-	chambers.append(_room("A1 Arène du Golem", Vector2(0.0, -86.0), Vector2(38.0, 34.0), 0.0, 15.0, 12.0))
+	chambers.append(_room("A1 Arène du Golem", Vector2(0.0, -96.0), Vector2(38.0, 34.0), 0.0, 15.0, 12.0))
 	# Le tunnel qui la relie au cirque, sous le château. Étroit et long : le
 	# passage de l'un à l'autre doit se sentir.
-	chambers.append(_corridor("G4 Sous le Château", Vector2(0.0, -40.0), Vector2(0.0, -60.0), 5.0, 9.0, 5.0))
+	chambers.append(_corridor("G4 Sous le Château", Vector2(0.0, -50.0), Vector2(0.0, -70.0), 5.0, 9.0, 5.0))
 
 	return chambers
 
@@ -126,7 +126,7 @@ func _build_floor() -> CavernHeightfieldSpec:
 	# Réduit de 0,9 à 0,5 : le bruit s'AJOUTE aux transitions de plateaux, et
 	# là où deux fondus se recouvrent il suffisait à faire passer la pente
 	# au-dessus du plafond de praticabilité.
-	spec.noise_amplitude = 0.5
+	spec.noise_amplitude = 0.30
 	spec.noise_scale = 11.0
 	spec.noise_seed = 20260809
 
@@ -137,9 +137,16 @@ func _build_floor() -> CavernHeightfieldSpec:
 	# Les fondus sont dimensionnés sur le DÉNIVELÉ par rapport au palier
 	# précédent, jamais sur l'altitude absolue : un `smoothstep` pique à 1,5
 	# fois sa pente moyenne, et 4,5 m étalés sur 9 m donnent déjà 38°.
-	plateaus.append(_plateau("Anneau haut", Vector2(0.0, 0.0), Vector2(50.0, 50.0), 8.0, 13.0, true, 1.0))
-	plateaus.append(_plateau("Anneau médian", Vector2(0.0, 0.0), Vector2(32.0, 32.0), 3.5, 26.0, true, 4.5))
-	plateaus.append(_plateau("Anneau bas", Vector2(0.0, 0.0), Vector2(20.0, 20.0), -1.0, 26.0, true, 4.5))
+	# LES BERGES. Deux paliers ALIGNÉS SUR LES DOUVES, et non plus des anneaux
+	# concentriques.
+	#
+	# Les anneaux dataient du lac rond du premier jet. Une rivière rectiligne
+	# qui traverse des anneaux concentriques croise leurs bords partout, et
+	# chaque croisement additionne deux fondus : on mesurait 40° à 45° un peu
+	# n'importe où. Alignés sur la coulée, les paliers l'accompagnent au lieu
+	# de la couper.
+	plateaus.append(_plateau("Berge haute", Vector2(0.0, -14.0), Vector2(78.0, 44.0), 8.0, 16.0, true, 1.0))
+	plateaus.append(_plateau("Berge basse", Vector2(0.0, -14.0), Vector2(64.0, 26.0), 3.5, 30.0, true, 4.5))
 
 	# Les galeries d'accès sont à l'altitude du POURTOUR, pas au-dessus.
 	#
@@ -154,14 +161,25 @@ func _build_floor() -> CavernHeightfieldSpec:
 
 	# L'arène est PLATE et plus basse que le cirque : on y descend, et une
 	# fois dedans plus rien ne distrait du combat.
-	plateaus.append(_plateau("Sol de l'Arène", Vector2(0.0, -86.0), Vector2(34.0, 30.0), 4.0, 22.0, true, 4.5))
-	plateaus.append(_plateau("Tunnel", Vector2(0.0, -50.0), Vector2(8.0, 14.0), 6.5, 12.0, true, 2.0))
+	plateaus.append(_plateau("Sol de l'Arène", Vector2(0.0, -96.0), Vector2(34.0, 30.0), 4.0, 22.0, true, 4.5))
+	plateaus.append(_plateau("Tunnel", Vector2(0.0, -66.0), Vector2(8.0, 14.0), 5.5, 22.0, true, 1.5))
+
+	# LA SOURCE, à l'ouest : un épaulement haut d'où la coulée descend. Et à
+	# l'est, la lèvre par-dessus laquelle elle tombe. C'est ce qui donne à la
+	# rivière un amont et un aval, donc un sens.
+	plateaus.append(_plateau("Épaulement Source", Vector2(-72.0, -14.0), Vector2(15.0, 12.0), 6.0, 28.0, true, 5.0))
+	plateaus.append(_plateau("Lèvre de la Chute", Vector2(76.0, -14.0), Vector2(12.0, 11.0), -4.0, 24.0, true, 3.0))
 	spec.plateaus = plateaus
 
 	var basins: Array[CavernBasin] = []
-	# LE BASSIN DE LAVE. Fond plat, margelle franche : c'est elle qui empêche
-	# d'y tomber par accident, et qui donne au gouffre son bord net.
-	basins.append(_basin("Bassin de Lave", Vector2(0.0, 0.0), Vector2(19.0, 19.0), 3.0, 0.8, 30.0, 0.42))
+	# LES DOUVES. Plus une mare ronde au centre, mais une COULÉE qui traverse
+	# le cirque d'ouest en est et passe sous le pont du château.
+	#
+	# Une nappe circulaire au milieu d'une cuvette ne raconte rien : elle est
+	# là, elle ne va nulle part. Une rivière a une source et une chute, donc un
+	# sens de lecture — et elle sépare le cirque du château, ce qui donne au
+	# pont sa raison d'être.
+	basins.append(_basin("Lit des Douves", Vector2(0.0, -14.0), Vector2(66.0, 17.0), 2.2, 0.6, 26.0, 0.40))
 	spec.basins = basins
 	return spec
 
@@ -177,11 +195,11 @@ func _build_openings() -> Array[CavernSkyOpening]:
 ## emprise. Seuls le matériau et ce qu'elle fait au joueur changent.
 func _build_lava() -> CavernLake:
 	var lava := CavernLake.new()
-	lava.label = "Lac de lave"
+	lava.label = "Douves de lave"
 	lava.surface_altitude = -2.2
 	lava.minimum_depth = 0.2
-	lava.center = Vector2(0.0, 0.0)
-	lava.radii = Vector2(19.0, 19.0)
+	lava.center = Vector2(0.0, -14.0)
+	lava.radii = Vector2(62.0, 8.0)
 	lava.material_path = "res://data/levels/forge_lava_material.tres"
 	return lava
 

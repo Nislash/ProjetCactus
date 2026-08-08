@@ -69,6 +69,7 @@ const MOON_HOT := Color(1.00, 0.55, 0.50)
 var _disc: MeshInstance3D
 var _optic: StaticBody3D
 var _beam: MeshInstance3D
+var _incoming_beam: MeshInstance3D
 var _beam_material: StandardMaterial3D
 var _lit: bool = false
 var _incoming: Vector3 = Vector3.ZERO
@@ -184,6 +185,29 @@ func _build_beam() -> void:
 	_beam.visible = false
 	add_child(_beam)
 
+	# Le rayon incident, plus fin et plus pâle : c'est de la lumière qui
+	# voyage depuis très loin, pas un faisceau concentré.
+	_incoming_beam = MeshInstance3D.new()
+	_incoming_beam.name = "RayonIncident"
+	var in_mesh := CylinderMesh.new()
+	in_mesh.top_radius = 0.10
+	in_mesh.bottom_radius = 0.10
+	in_mesh.height = 1.0
+	in_mesh.radial_segments = 6
+	_incoming_beam.mesh = in_mesh
+	var in_mat := StandardMaterial3D.new()
+	in_mat.albedo_color = Color(MOON.r, MOON.g, MOON.b, 0.30)
+	in_mat.emission_enabled = true
+	in_mat.emission = MOON
+	in_mat.emission_energy_multiplier = 1.8
+	in_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	in_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	in_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_incoming_beam.material_override = in_mat
+	_incoming_beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_incoming_beam.visible = false
+	add_child(_incoming_beam)
+
 
 func can_interact(_by_player: Node) -> bool:
 	return true
@@ -276,15 +300,57 @@ func draw_segment(direction: Vector3, length: float) -> void:
 		_beam.visible = false
 		return
 	_beam.visible = true
-	_beam.scale = Vector3(1.0, length, 1.0)
+	# La transform est CONSTRUITE, pas obtenue par `look_at`.
+	#
+	# `look_at` oriente l'axe -Z vers la cible, alors qu'un `CylinderMesh`
+	# s'étend selon +Y : il faut donc une rotation de rattrapage, et celle qui
+	# était appliquée allait dans le mauvais sens. Le rayon restait vertical —
+	# c'est-à-dire dans l'orientation par défaut du cylindre, ce qui rendait le
+	# bug invisible à la lecture : il ressemblait à un cas non traité plutôt
+	# qu'à une rotation inversée.
+	#
+	# Une base explicite ne peut pas se tromper de sens, et elle gère le cas où
+	# la direction est parallèle à la verticale — où `look_at` échoue en
+	# silence et laisse la transform inchangée.
+	var forward: Vector3 = direction.normalized()
+	var up_ref: Vector3 = Vector3.UP if absf(forward.dot(Vector3.UP)) < 0.99 else Vector3.RIGHT
+	var side: Vector3 = up_ref.cross(forward).normalized()
+	var normal: Vector3 = forward.cross(side).normalized()
+	# Colonnes : X = côté, Y = l'axe du cylindre le long du rayon, Z = normale.
+	var basis := Basis(side, forward, normal)
+
 	var mid: Vector3 = Vector3(0.0, focus_altitude - global_position.y, 0.0) \
-		+ direction * (length * 0.5)
-	_beam.position = mid
-	_beam.look_at_from_position(global_position + mid,
-		global_position + mid + direction, Vector3.UP)
-	_beam.rotate_object_local(Vector3.RIGHT, PI * 0.5)
+		+ forward * (length * 0.5)
+	_beam.transform = Transform3D(basis.scaled(Vector3(1.0, length, 1.0)), mid)
 
 
 func hide_segment() -> void:
 	if _beam != null:
 		_beam.visible = false
+	if _incoming_beam != null:
+		_incoming_beam.visible = false
+
+
+## Le rayon qui ARRIVE sur ce miroir, tracé vers le haut en direction de la
+## lune.
+##
+## Il manquait, et son absence rendait le puzzle incompréhensible : on voyait
+## un trait sortir d'un miroir sans savoir ce qui l'alimentait. Signalé en
+## jeu — « le rayon ne vient pas de la lune ». Il vient de là, maintenant on
+## le voit.
+func draw_incoming(direction: Vector3, length: float) -> void:
+	if _incoming_beam == null:
+		return
+	if not _lit or direction.length_squared() < 0.0001:
+		_incoming_beam.visible = false
+		return
+	var forward: Vector3 = direction.normalized()
+	var up_ref: Vector3 = Vector3.UP if absf(forward.dot(Vector3.UP)) < 0.99 else Vector3.RIGHT
+	var side: Vector3 = up_ref.cross(forward).normalized()
+	var normal: Vector3 = forward.cross(side).normalized()
+	var basis := Basis(side, forward, normal)
+	# Il ARRIVE : son milieu est en amont du miroir.
+	var mid: Vector3 = Vector3(0.0, focus_altitude - global_position.y, 0.0) \
+		- forward * (length * 0.5)
+	_incoming_beam.visible = true
+	_incoming_beam.transform = Transform3D(basis.scaled(Vector3(1.0, length, 1.0)), mid)
