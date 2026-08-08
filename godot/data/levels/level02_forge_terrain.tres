@@ -1,0 +1,186 @@
+[gd_resource type="Resource" script_class="CavernTerrainData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/cavern_chamber.gd" id="1_klbrc"]
+[ext_resource type="Script" path="res://scripts/world/cavern_basin.gd" id="2_tl2nx"]
+[ext_resource type="Script" path="res://scripts/world/cavern_plateau.gd" id="3_lh7c1"]
+[ext_resource type="Script" path="res://scripts/world/cavern_ramp.gd" id="4_y26fj"]
+[ext_resource type="Script" path="res://scripts/world/cavern_heightfield_spec.gd" id="5_cifn8"]
+[ext_resource type="Script" path="res://scripts/world/cavern_lake.gd" id="6_ghxga"]
+[ext_resource type="Script" path="res://scripts/world/cavern_terrain_data.gd" id="7_rdq8e"]
+[ext_resource type="Script" path="res://scripts/world/cavern_sky_opening.gd" id="8_f3w4k"]
+
+[sub_resource type="Resource" id="Resource_qpqrx"]
+script = ExtResource("1_klbrc")
+label = "F1 Le Puits"
+radii = Vector2(58, 58)
+edge_softness = 16.0
+headroom = 16.0
+
+[sub_resource type="Resource" id="Resource_vvckm"]
+script = ExtResource("1_klbrc")
+label = "F2 Galerie Nord"
+center = Vector2(-6, 62)
+radii = Vector2(22, 20)
+rotation_degrees = 15.0
+edge_softness = 9.0
+headroom = 11.0
+
+[sub_resource type="Resource" id="Resource_0ort5"]
+script = ExtResource("1_klbrc")
+label = "F3 Galerie Est"
+center = Vector2(62, -12)
+radii = Vector2(20, 18)
+rotation_degrees = -20.0
+edge_softness = 9.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_qoqgs"]
+script = ExtResource("1_klbrc")
+label = "F4 Souffleries"
+center = Vector2(-58, -40)
+radii = Vector2(24, 19)
+rotation_degrees = 35.0
+edge_softness = 10.0
+
+[sub_resource type="Resource" id="Resource_lxelb"]
+script = ExtResource("1_klbrc")
+label = "G1 Descente Nord"
+center = Vector2(-4, 56)
+to_center = Vector2(-2, 34)
+is_corridor = true
+radii = Vector2(7, 7)
+edge_softness = 6.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_47xjm"]
+script = ExtResource("1_klbrc")
+label = "G2 Descente Est"
+center = Vector2(56, -10)
+to_center = Vector2(34, -6)
+is_corridor = true
+radii = Vector2(6.5, 6.5)
+edge_softness = 6.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_tcgnm"]
+script = ExtResource("1_klbrc")
+label = "G3 Descente Ouest"
+center = Vector2(-52, -36)
+to_center = Vector2(-32, -22)
+is_corridor = true
+radii = Vector2(6.5, 6.5)
+edge_softness = 6.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_fpc72"]
+script = ExtResource("2_tl2nx")
+label = "Bassin de Lave"
+radii = Vector2(19, 19)
+depth = 3.0
+rim_height = 0.8
+flat_bottom = 0.42
+rim_width = 2.0784609690826534
+
+[sub_resource type="Resource" id="Resource_3vy0h"]
+script = ExtResource("3_lh7c1")
+label = "Anneau haut"
+half_extent = Vector2(50, 50)
+is_ellipse = true
+altitude = 8.0
+falloff = 13.0
+
+[sub_resource type="Resource" id="Resource_qx3p0"]
+script = ExtResource("3_lh7c1")
+label = "Anneau médian"
+half_extent = Vector2(32, 32)
+is_ellipse = true
+altitude = 3.5
+falloff = 26.0
+
+[sub_resource type="Resource" id="Resource_0fww4"]
+script = ExtResource("3_lh7c1")
+label = "Anneau bas"
+half_extent = Vector2(20, 20)
+is_ellipse = true
+altitude = -1.0
+falloff = 26.0
+
+[sub_resource type="Resource" id="Resource_7xc55"]
+script = ExtResource("3_lh7c1")
+label = "Seuil Nord"
+center = Vector2(-6, 66)
+half_extent = Vector2(20, 16)
+is_ellipse = true
+altitude = 8.6
+falloff = 14.0
+
+[sub_resource type="Resource" id="Resource_7o2q6"]
+script = ExtResource("3_lh7c1")
+label = "Seuil Est"
+center = Vector2(64, -12)
+half_extent = Vector2(18, 16)
+is_ellipse = true
+altitude = 8.6
+falloff = 14.0
+
+[sub_resource type="Resource" id="Resource_m6xhl"]
+script = ExtResource("3_lh7c1")
+label = "Souffleries"
+center = Vector2(-60, -42)
+half_extent = Vector2(22, 17)
+is_ellipse = true
+altitude = 8.8
+falloff = 14.0
+
+[sub_resource type="Resource" id="Resource_8q83x"]
+script = ExtResource("5_cifn8")
+base_altitude = 9.0
+plateaus = Array[ExtResource("3_lh7c1")]([SubResource("Resource_3vy0h"), SubResource("Resource_qx3p0"), SubResource("Resource_0fww4"), SubResource("Resource_7xc55"), SubResource("Resource_7o2q6"), SubResource("Resource_m6xhl")])
+basins = Array[ExtResource("2_tl2nx")]([SubResource("Resource_fpc72")])
+noise_amplitude = 0.5
+noise_scale = 11.0
+noise_seed = 20260809
+
+[sub_resource type="Resource" id="Resource_6ewc3"]
+script = ExtResource("5_cifn8")
+
+[sub_resource type="Resource" id="Resource_8fxhg"]
+script = ExtResource("6_ghxga")
+label = "Lac de lave"
+surface_altitude = -2.2
+minimum_depth = 0.2
+radii = Vector2(19, 19)
+material_path = "res://data/levels/forge_lava_material.tres"
+
+[sub_resource type="Resource" id="Resource_31rig"]
+script = ExtResource("8_f3w4k")
+label = "Cheminée centrale"
+radii = Vector2(11, 11)
+
+[sub_resource type="Resource" id="Resource_6coql"]
+script = ExtResource("8_f3w4k")
+label = "Évent Nord-Est"
+center = Vector2(26, 22)
+radii = Vector2(6, 8)
+rotation_degrees = 25.0
+
+[sub_resource type="Resource" id="Resource_asr3i"]
+script = ExtResource("8_f3w4k")
+label = "Évent Sud-Ouest"
+center = Vector2(-24, -18)
+radii = Vector2(7, 5.5)
+rotation_degrees = -15.0
+
+[resource]
+script = ExtResource("7_rdq8e")
+bounds_min = Vector2(-78, -78)
+bounds_max = Vector2(78, 78)
+cell_size = 1.25
+chambers = Array[ExtResource("1_klbrc")]([SubResource("Resource_qpqrx"), SubResource("Resource_vvckm"), SubResource("Resource_0ort5"), SubResource("Resource_qoqgs"), SubResource("Resource_lxelb"), SubResource("Resource_47xjm"), SubResource("Resource_tcgnm")])
+floor_field = SubResource("Resource_8q83x")
+headroom_field = SubResource("Resource_6ewc3")
+sky_openings = Array[ExtResource("8_f3w4k")]([SubResource("Resource_31rig"), SubResource("Resource_6coql"), SubResource("Resource_asr3i")])
+lake = SubResource("Resource_8fxhg")
+min_headroom = 9.0
+max_headroom = 16.0
+chunk_size = 40.0

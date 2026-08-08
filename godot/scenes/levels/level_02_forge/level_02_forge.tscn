@@ -1,0 +1,91 @@
+[gd_scene load_steps=7 format=3 uid="uid://bforge02level"]
+
+[ext_resource type="Script" uid="uid://bl8eqw121kq6k" path="res://scripts/world/cavern_terrain_builder.gd" id="1_terrain"]
+[ext_resource type="Script" uid="uid://bk8sulr4bcqss" path="res://scripts/world/cavern_environment.gd" id="2_env"]
+[ext_resource type="Script" uid="uid://l4t1uowcqn03" path="res://scripts/world/cavern_navigation.gd" id="3_nav"]
+[ext_resource type="Script" uid="uid://dsvuqgsm70x4p" path="res://scripts/world/cavern_marker_snapper.gd" id="4_snap"]
+[ext_resource type="Script" uid="uid://j0kkfohjyxn" path="res://scripts/world/forge_lighting.gd" id="5_light"]
+[ext_resource type="Script" path="res://scripts/world/forge_gameplay.gd" id="6_play"]
+
+[node name="Level02Forge" type="Node3D"]
+
+[node name="World" type="Node3D" parent="."]
+
+; Le terrain réutilise INTÉGRALEMENT le générateur du niveau 1 : ce sont les
+; données et les matériaux qui font le biome, pas le code. C'est ce qui rend
+; un nouveau niveau abordable.
+[node name="ForgeTerrain" type="Node3D" parent="World"]
+script = ExtResource("1_terrain")
+data_path = "res://data/levels/level02_forge_terrain.tres"
+floor_material_path = "res://data/levels/forge_rock_material.tres"
+vault_material_path = "res://data/levels/forge_vault_material.tres"
+
+[node name="Environment" type="WorldEnvironment" parent="World"]
+script = ExtResource("2_env")
+environment_path = "res://data/levels/level02_forge_environment.tres"
+
+[node name="Lighting" type="Node3D" parent="World"]
+script = ExtResource("5_light")
+terrain_data_path = "res://data/levels/level02_forge_terrain.tres"
+
+[node name="Navigation" type="NavigationRegion3D" parent="World"]
+script = ExtResource("3_nav")
+
+; On arrive par la Galerie Nord, en haut : le gouffre et son lac sont visibles
+; dès le premier pas, et on descend vers ce qu'on a déjà vu.
+[node name="PlayerSpawnPoints" type="Node3D" parent="World"]
+
+[node name="Spawn0" type="Marker3D" parent="World/PlayerSpawnPoints" groups=["spawn_above_ground"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 62)
+
+[node name="Spawn1" type="Marker3D" parent="World/PlayerSpawnPoints" groups=["spawn_above_ground"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 66)
+
+[node name="Spawn2" type="Marker3D" parent="World/PlayerSpawnPoints" groups=["spawn_above_ground"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 62)
+
+[node name="Spawn3" type="Marker3D" parent="World/PlayerSpawnPoints" groups=["spawn_above_ground"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 58)
+
+[node name="StartChestSpawn" type="Marker3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 54)
+
+[node name="RelicChestSpawnPoints" type="Node3D" parent="World"]
+
+[node name="ChestEst" type="Marker3D" parent="World/RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, -14)
+
+[node name="ChestSouffleries" type="Marker3D" parent="World/RelicChestSpawnPoints" groups=["relic_chest_spawns"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56, 0, -40)
+
+; Les rôdeurs tiennent les paliers : on ne descend pas d'un anneau sans le
+; payer.
+[node name="EnemySpawnPoints" type="Node3D" parent="World"]
+
+[node name="EnemyHaut0" type="Marker3D" parent="World/EnemySpawnPoints" groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 40)
+
+[node name="EnemyHaut1" type="Marker3D" parent="World/EnemySpawnPoints" groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0, 32)
+
+[node name="EnemyMedian0" type="Marker3D" parent="World/EnemySpawnPoints" groups=["enemy_ranged"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -18)
+
+[node name="EnemyMedian1" type="Marker3D" parent="World/EnemySpawnPoints" groups=["enemy_ranged"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26, 0, -24)
+
+[node name="EnemyBas0" type="Marker3D" parent="World/EnemySpawnPoints" groups=["enemy_melee"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 10)
+
+; Le boss attend sur l'anneau bas, au bord du bassin — pas dedans.
+[node name="BossArena" type="Node3D" parent="World"]
+
+[node name="BossSpawn" type="Marker3D" parent="World/BossArena"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
+
+[node name="MarkerSnapper" type="Node3D" parent="World"]
+script = ExtResource("4_snap")
+terrain_path = "res://data/levels/level02_forge_terrain.tres"
+
+[node name="Gameplay" type="Node" parent="World"]
+script = ExtResource("6_play")

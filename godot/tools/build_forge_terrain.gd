@@ -1,0 +1,241 @@
+extends SceneTree
+
+## Construit `res://data/levels/level02_forge_terrain.tres` — « La Forge »,
+## niveau 2.
+##
+## Lancer :
+##   godot --headless --path godot --script tools/build_forge_terrain.gd
+##
+## ## Le lieu
+##
+## Une cavité volcanique en entonnoir : trois anneaux concentriques qui
+## descendent vers un lac de lave central. On tourne autour du gouffre plutôt
+## que de le traverser — l'inverse exact du niveau 1, où le lac gelé est une
+## chaussée qu'on emprunte.
+##
+## ## Ce qui l'oppose à la Caverne Cristalline
+##
+## | | Niveau 1 | Niveau 2 |
+## |---|---|---|
+## | Lecture | horizontale, on traverse | **verticale**, on descend |
+## | Nappe | lac gelé, praticable | **lac de lave**, mortel |
+## | Lumière | par le haut (puits de jour) | **par le bas** (la lave) |
+## | Danger | signalé par le chaud | tout est chaud : le danger se signale par le **mouvement** |
+##
+## Ce dernier point est le vrai problème de design du biome. Au niveau 1,
+## l'ambre `#f2b45c` veut dire « esquive ». Ici la salle entière est ambre, et
+## une couleur ne peut plus rien dire. C'est donc **ce qui bouge** qui alerte :
+## la lave qui monte, les coulées qui s'ouvrent. Cf `level02_forge.md`.
+##
+## Bien plus petit que le niveau 1 — 150 × 150 m contre 310 × 210. Le niveau 1
+## est une exploration, celui-ci une arène : on doit voir le boss depuis la
+## crête et savoir tout de suite où l'on va.
+
+const OUTPUT_PATH := "res://data/levels/level02_forge_terrain.tres"
+
+## Pente visée sur les descentes. Comme au niveau 1, sous le plafond de
+## praticabilité : le bruit de surface ajoute son propre gradient.
+const PATH_TARGET_DEG := 18.0
+
+
+func _init() -> void:
+	var terrain := CavernTerrainData.new()
+	terrain.bounds_min = Vector2(-78.0, -78.0)
+	terrain.bounds_max = Vector2(78.0, 78.0)
+	terrain.cell_size = 1.25
+	terrain.chunk_size = 40.0
+	# Voûte plus basse et plus régulière qu'au niveau 1 : une forge est une
+	# salle, pas un réseau. On doit sentir le couvercle au-dessus de la tête.
+	terrain.min_headroom = 9.0
+	terrain.max_headroom = 16.0
+	terrain.playable_headroom_threshold = 2.5
+	terrain.max_slope_degrees = 36.0
+
+	terrain.chambers = _build_chambers()
+	terrain.floor_field = _build_floor()
+	terrain.headroom_field = CavernHeightfieldSpec.new()
+	terrain.sky_openings = _build_openings()
+	terrain.lake = _build_lava()
+
+	if ResourceSaver.save(terrain, OUTPUT_PATH) != OK:
+		push_error("Échec de l'écriture de %s" % OUTPUT_PATH)
+		quit(1)
+		return
+	print("[forge] écrit : %s" % OUTPUT_PATH)
+	_report(terrain)
+	quit(0)
+
+
+# ---------------------------------------------------------------------------
+# La silhouette : un entonnoir, pas un réseau
+# ---------------------------------------------------------------------------
+
+func _build_chambers() -> Array[CavernChamber]:
+	var chambers: Array[CavernChamber] = []
+
+	# LE PUITS — la grande salle ronde qui contient tout. Une seule poche, là
+	# où le niveau 1 en assemblait treize : la Forge se lit d'un coup d'œil.
+	chambers.append(_room("F1 Le Puits", Vector2(0.0, 0.0), Vector2(58.0, 58.0), 0.0, 16.0, 16.0))
+
+	# LES GALERIES D'ACCÈS. Trois entailles dans la paroi, décalées, qui
+	# donnent au pourtour une silhouette mordue plutôt qu'un cercle parfait.
+	chambers.append(_room("F2 Galerie Nord", Vector2(-6.0, 62.0), Vector2(22.0, 20.0), 15.0, 11.0, 9.0))
+	chambers.append(_room("F3 Galerie Est", Vector2(62.0, -12.0), Vector2(20.0, 18.0), -20.0, 10.0, 9.0))
+	chambers.append(_room("F4 Souffleries", Vector2(-58.0, -40.0), Vector2(24.0, 19.0), 35.0, 12.0, 10.0))
+
+	# Les goulets qui les relient au Puits.
+	chambers.append(_corridor("G1 Descente Nord", Vector2(-4.0, 56.0), Vector2(-2.0, 34.0), 7.0, 10.0, 6.0))
+	chambers.append(_corridor("G2 Descente Est", Vector2(56.0, -10.0), Vector2(34.0, -6.0), 6.5, 10.0, 6.0))
+	chambers.append(_corridor("G3 Descente Ouest", Vector2(-52.0, -36.0), Vector2(-32.0, -22.0), 6.5, 10.0, 6.0))
+
+	return chambers
+
+
+func _build_floor() -> CavernHeightfieldSpec:
+	var spec := CavernHeightfieldSpec.new()
+	# Le pourtour est haut : on ARRIVE par le haut et on voit le gouffre.
+	spec.base_altitude = 9.0
+	# Une roche cassée, plus rugueuse que la glace du niveau 1.
+	# Réduit de 0,9 à 0,5 : le bruit s'AJOUTE aux transitions de plateaux, et
+	# là où deux fondus se recouvrent il suffisait à faire passer la pente
+	# au-dessus du plafond de praticabilité.
+	spec.noise_amplitude = 0.5
+	spec.noise_scale = 11.0
+	spec.noise_seed = 20260809
+
+	var plateaus: Array[CavernPlateau] = []
+	# LES TROIS ANNEAUX. Chacun est un palier plat : on descend par marches, et
+	# chaque marche est un lieu où l'on peut se battre. Une pente continue
+	# aurait fait glisser le combat vers le bas sans jamais l'y arrêter.
+	# Les fondus sont dimensionnés sur le DÉNIVELÉ par rapport au palier
+	# précédent, jamais sur l'altitude absolue : un `smoothstep` pique à 1,5
+	# fois sa pente moyenne, et 4,5 m étalés sur 9 m donnent déjà 38°.
+	plateaus.append(_plateau("Anneau haut", Vector2(0.0, 0.0), Vector2(50.0, 50.0), 8.0, 13.0, true, 1.0))
+	plateaus.append(_plateau("Anneau médian", Vector2(0.0, 0.0), Vector2(32.0, 32.0), 3.5, 26.0, true, 4.5))
+	plateaus.append(_plateau("Anneau bas", Vector2(0.0, 0.0), Vector2(20.0, 20.0), -1.0, 26.0, true, 4.5))
+
+	# Les galeries d'accès sont à l'altitude du POURTOUR, pas au-dessus.
+	#
+	# Elles culminaient à 10,5-11 m alors que l'anneau haut est à 8 : leur
+	# fondu recouvrait celui de l'anneau médian, et deux transitions qui se
+	# superposent additionnent leurs pentes — 50° mesurés au premier essai.
+	# Supprimer le dénivelé est plus sûr que l'étaler indéfiniment ; la galerie
+	# se distingue déjà par sa voûte basse et son étroitesse.
+	plateaus.append(_plateau("Seuil Nord", Vector2(-6.0, 66.0), Vector2(20.0, 16.0), 8.6, 14.0, true, 0.6))
+	plateaus.append(_plateau("Seuil Est", Vector2(64.0, -12.0), Vector2(18.0, 16.0), 8.6, 14.0, true, 0.6))
+	plateaus.append(_plateau("Souffleries", Vector2(-60.0, -42.0), Vector2(22.0, 17.0), 8.8, 14.0, true, 0.8))
+	spec.plateaus = plateaus
+
+	var basins: Array[CavernBasin] = []
+	# LE BASSIN DE LAVE. Fond plat, margelle franche : c'est elle qui empêche
+	# d'y tomber par accident, et qui donne au gouffre son bord net.
+	basins.append(_basin("Bassin de Lave", Vector2(0.0, 0.0), Vector2(19.0, 19.0), 3.0, 0.8, 30.0, 0.42))
+	spec.basins = basins
+	return spec
+
+
+## Trois cheminées dans la voûte. Elles ne laissent pas entrer le jour — la
+## Forge est trop profonde — mais laissent SORTIR la lumière de la lave, et
+## c'est ce qui donne au plafond ses colonnes de fumée.
+func _build_openings() -> Array[CavernSkyOpening]:
+	var openings: Array[CavernSkyOpening] = []
+	openings.append(_opening("Cheminée centrale", Vector2(0.0, 0.0), Vector2(11.0, 11.0), 0.0))
+	openings.append(_opening("Évent Nord-Est", Vector2(26.0, 22.0), Vector2(6.0, 8.0), 25.0))
+	openings.append(_opening("Évent Sud-Ouest", Vector2(-24.0, -18.0), Vector2(7.0, 5.5), -15.0))
+	return openings
+
+
+## Le lac de lave. Même système que le lac gelé du niveau 1 — c'est ce qui
+## rend le biome bon marché à construire : une nappe, une altitude, une
+## emprise. Seuls le matériau et ce qu'elle fait au joueur changent.
+func _build_lava() -> CavernLake:
+	var lava := CavernLake.new()
+	lava.label = "Lac de lave"
+	lava.surface_altitude = -2.2
+	lava.minimum_depth = 0.2
+	lava.center = Vector2(0.0, 0.0)
+	lava.radii = Vector2(19.0, 19.0)
+	lava.material_path = "res://data/levels/forge_lava_material.tres"
+	return lava
+
+
+# ---------------------------------------------------------------------------
+# Fabriques (mêmes signatures que build_cavern_terrain.gd)
+# ---------------------------------------------------------------------------
+
+func _room(label: String, center: Vector2, radii: Vector2, rotation: float,
+		headroom: float, softness: float) -> CavernChamber:
+	var c := CavernChamber.new()
+	c.label = label
+	c.center = center
+	c.radii = radii
+	c.rotation_degrees = rotation
+	c.headroom = headroom
+	c.edge_softness = softness
+	return c
+
+
+func _corridor(label: String, from_point: Vector2, to_point: Vector2, half_width: float,
+		headroom: float, softness: float) -> CavernChamber:
+	var c := CavernChamber.new()
+	c.label = label
+	c.is_corridor = true
+	c.center = from_point
+	c.to_center = to_point
+	c.radii = Vector2(half_width, half_width)
+	c.headroom = headroom
+	c.edge_softness = softness
+	return c
+
+
+## `drop` est le dénivelé RÉEL par rapport au terrain voisin — pas l'altitude
+## absolue. Contrôler sur l'altitude donnait des alertes absurdes : un palier
+## à 10 m au-dessus du zéro mais à 1,5 m de son voisin réclamait 48 m de
+## fondu.
+func _plateau(label: String, center: Vector2, half_extent: Vector2, altitude: float,
+		falloff: float, is_ellipse: bool, drop: float = 0.0) -> CavernPlateau:
+	var required: float = CavernTerrainBuilder.min_falloff_for(drop, PATH_TARGET_DEG)
+	if falloff < required - 0.01:
+		push_warning("[forge] « %s » : fondu %.1f m < %.1f m requis à %.0f°."
+			% [label, falloff, required, PATH_TARGET_DEG])
+	var p := CavernPlateau.new()
+	p.label = label
+	p.center = center
+	p.half_extent = half_extent
+	p.altitude = altitude
+	p.falloff = falloff
+	p.is_ellipse = is_ellipse
+	return p
+
+
+func _basin(label: String, center: Vector2, radii: Vector2, depth: float,
+		rim_height: float, target_deg: float, flat_bottom: float = 0.0) -> CavernBasin:
+	var required: float = CavernTerrainBuilder.min_falloff_for(depth + rim_height, target_deg)
+	if minf(radii.x, radii.y) * (1.0 - flat_bottom) < required - 0.01:
+		push_warning("[forge] « %s » : rayon utile %.1f m < %.1f m requis."
+			% [label, minf(radii.x, radii.y) * (1.0 - flat_bottom), required])
+	var b := CavernBasin.new()
+	b.label = label
+	b.center = center
+	b.radii = radii
+	b.depth = depth
+	b.rim_height = rim_height
+	b.flat_bottom = flat_bottom
+	b.rim_width = CavernTerrainBuilder.min_falloff_for(rim_height, target_deg)
+	return b
+
+
+func _opening(label: String, center: Vector2, radii: Vector2, rotation: float) -> CavernSkyOpening:
+	var o := CavernSkyOpening.new()
+	o.label = label
+	o.center = center
+	o.radii = radii
+	o.rotation_degrees = rotation
+	return o
+
+
+func _report(terrain: CavernTerrainData) -> void:
+	var size: Vector2 = terrain.bounds_max - terrain.bounds_min
+	print("[forge] emprise %.0f × %.0f m, voûte %.0f→%.0f m, %d poches, %d cheminées."
+		% [size.x, size.y, terrain.min_headroom, terrain.max_headroom,
+		terrain.chambers.size(), terrain.sky_openings.size()])

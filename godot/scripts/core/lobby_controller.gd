@@ -5,8 +5,8 @@ extends Control
 ## Phases :
 ## - JOIN : aucun joueur encore inscrit. Les manettes peuvent presser Start
 ##   pour rejoindre. Boutons menu invisibles tant que personne n'est joint.
-## - MENU : 1+ joueur joint. 2 gros boutons (Niveau 1, Lancer le Run) +
-##   dropdown level select + boutons secondaires (Leaderboard, Settings).
+## - MENU : 1+ joueur joint. Un bouton principal (Lancer), le choix du niveau,
+##   et deux boutons secondaires (Leaderboard, Réglages).
 ## - PANEL : un sous-panel (leaderboard / settings) est ouvert. B pour
 ##   revenir au menu.
 ##
@@ -23,41 +23,22 @@ extends Control
 ## par player_id.
 
 const RUN_SHELL_SCENE := "res://scenes/run/run_shell.tscn"
-## Niveau du bouton "Tutoriel" : l'ancien niveau 1 (test_open_arena) sert
-## maintenant de tutoriel — petite arène ouverte avec boss Golem, parfait
-## pour apprendre tir / sort / combo / revive avant les niveaux complets.
-const TUTORIAL_PATH := "res://scenes/levels/test_open_arena.tscn"
 const MAX_PLAYERS: int = 4
 
-## Liste des niveaux jouables via le bouton "Lancer le Run". Le dropdown se
-## remplit dans cet ordre. Premier element = selection par defaut.
+## Les niveaux jouables. Un seul critère pour figurer ici : **être fini**.
 ##
-## Ajoutez une entree quand un nouveau niveau est pret. Le numero affiche
-## sert juste de tag (le path est la source de verite).
+## Il y en avait dix-sept — les huit sorties de la pipeline générative et les
+## huit blockouts archivés, aucun à la qualité du niveau 1. Une liste où
+## quinze entrées sur dix-sept déçoivent n'est pas un choix, c'est un piège.
+## Elles restent sur disque, elles ne sont simplement plus proposées.
+##
+## Le bouton « Tutoriel » a disparu avec elles : l'ancienne arène de test qu'il
+## lançait devient le **niveau 2**, refaite dans le biome de la Forge. On
+## n'apprend plus à jouer dans un décor de test — on apprend dans l'Antichambre
+## de Givre, qui ouvre le niveau 1.
 const LEVELS: Array = [
-	# Niveau 1 « Caverne Cristalline » — grande caverne continue FAITE MAIN, en
-	# sélection par défaut. C'est la vitrine du POC : il sort de la pipeline
-	# (cf docs/design/levels.md, décision A), qui reste la source des N2-N8.
-	{"id": 1, "name": "N1 — Caverne Cristalline", "path": "res://scenes/levels/level_01_cavern/level_01_cavern.tscn"},
-	# Niveaux générés par la pipeline (tools/dungeon_pipeline/). Format .tres
-	# consommé par DungeonBuilder.
-	{"id": 11, "name": "N1 [GEN] Caverne crystalline", "path": "res://data/levels/level_1.tres"},
-	{"id": 2, "name": "N2 [GEN] Marais toxique", "path": "res://data/levels/level_2.tres"},
-	{"id": 3, "name": "N3 [GEN] Temple gravité réduite", "path": "res://data/levels/level_3.tres"},
-	{"id": 4, "name": "N4 [GEN] Forge en fusion", "path": "res://data/levels/level_4.tres"},
-	{"id": 5, "name": "N5 [GEN] Bibliothèque hantée", "path": "res://data/levels/level_5.tres"},
-	{"id": 6, "name": "N6 [GEN] Montagne frozen", "path": "res://data/levels/level_6.tres"},
-	{"id": 7, "name": "N7 [GEN] Labyrinthe miroirs", "path": "res://data/levels/level_7.tres"},
-	{"id": 8, "name": "N8 [GEN] Vide cosmique", "path": "res://data/levels/level_8.tres"},
-	# Anciens blockouts archivés (référence visuelle, ne seront pas testés).
-	{"id": 101, "name": "N1 — Caverne crystalline [archive]", "path": "res://archive/levels/level_01_caverne/level_01_caverne.tscn"},
-	{"id": 102, "name": "N2 — Marais toxique [archive]", "path": "res://archive/levels/level_02_marais/level_02_marais.tscn"},
-	{"id": 103, "name": "N3 — Temple gravité réduite [archive]", "path": "res://archive/levels/level_03_temple/level_03_temple.tscn"},
-	{"id": 104, "name": "N4 — Forge en fusion [archive]", "path": "res://archive/levels/level_04_forge/level_04_forge.tscn"},
-	{"id": 105, "name": "N5 — Bibliothèque hantée [archive]", "path": "res://archive/levels/level_05_biblio/level_05_biblio.tscn"},
-	{"id": 106, "name": "N6 — Montagne frozen [archive]", "path": "res://archive/levels/level_06_montagne/level_06_montagne.tscn"},
-	{"id": 107, "name": "N7 — Labyrinthe miroirs [archive]", "path": "res://archive/levels/level_07_miroirs/level_07_miroirs.tscn"},
-	{"id": 108, "name": "N8 — Vide cosmique [archive]", "path": "res://archive/levels/level_08_vide/level_08_vide.tscn"},
+	{"id": 1, "name": "Caverne Cristalline", "path": "res://scenes/levels/level_01_cavern/level_01_cavern.tscn"},
+	{"id": 2, "name": "La Forge", "path": "res://scenes/levels/level_02_forge/level_02_forge.tscn"},
 ]
 
 enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
@@ -72,7 +53,6 @@ enum Phase { JOIN, MENU, LEADERBOARD, SETTINGS }
 @onready var _menu_panel: Control = %MenuPanel
 @onready var _leaderboard_panel: Control = %LeaderboardPanel
 @onready var _settings_panel: Control = %SettingsPanel
-@onready var _btn_tuto: Button = %BtnTuto
 @onready var _btn_run: Button = %BtnRun
 @onready var _level_dropdown: OptionButton = %LevelDropdown
 @onready var _btn_leaderboard: Button = %BtnLeaderboard
@@ -86,21 +66,67 @@ func _ready() -> void:
 	PlayerManager.player_left.connect(_on_player_left)
 	PlayerManager.open_lobby()
 
-	_btn_tuto.pressed.connect(_on_tuto_pressed)
 	_btn_run.pressed.connect(_on_run_pressed)
 	_btn_leaderboard.pressed.connect(_on_leaderboard_pressed)
 	_btn_settings.pressed.connect(_on_settings_pressed)
 
+	_apply_theme()
 	_populate_level_dropdown()
 	_set_phase(Phase.JOIN)
 	_refresh_status()
+
+
+## Habille l'écran. Il était en boutons Godot par défaut : gris, arrondis,
+## police système. C'est la première chose qu'un joueur voit du jeu, et un
+## menu par défaut annonce un jeu par défaut.
+func _apply_theme() -> void:
+	# L'ancien fond était un aplat opaque. Le masquer plutôt que le supprimer :
+	# la scène reste ouvrable sans ce script, et un `ColorRect` absent ferait
+	# un `@onready` cassé chez quiconque le référencerait.
+	var flat: CanvasItem = get_node_or_null("Background") as CanvasItem
+	if flat != null:
+		flat.visible = false
+
+	var backdrop := LobbyBackdrop.new()
+	backdrop.name = "Backdrop"
+	add_child(backdrop)
+	# Derrière tout le reste : ajouté en dernier, il passerait devant.
+	move_child(backdrop, 0)
+
+	# Le contenu était collé en haut de l'écran, le reste vide. On l'étale et
+	# on le centre : en 4-split comme en plein écran, le regard va au milieu.
+	var layout: Control = get_node_or_null("Layout") as Control
+	if layout is VBoxContainer:
+		layout.set_anchors_preset(Control.PRESET_FULL_RECT)
+		layout.offset_top = 60.0
+		layout.offset_bottom = -60.0
+		(layout as VBoxContainer).alignment = BoxContainer.ALIGNMENT_CENTER
+		layout.add_theme_constant_override("separation", 28)
+
+	var title: Label = get_node_or_null("Layout/Title") as Label
+	if title != null:
+		LobbyTheme.style_title(title, "PROJET CACTUS")
+	if _status_label != null:
+		LobbyTheme.style_subtitle(_status_label)
+
+	for button in [_btn_run, _btn_leaderboard, _btn_settings]:
+		if button != null:
+			LobbyTheme.style_button(button, button == _btn_run)
+
+	for panel in [_leaderboard_panel, _settings_panel]:
+		if panel is PanelContainer:
+			LobbyTheme.style_panel(panel as PanelContainer)
+
+	for i in _slots.size():
+		if _slots[i] != null:
+			_slots[i].apply_theme(i)
 
 
 func _populate_level_dropdown() -> void:
 	_level_dropdown.clear()
 	for i in LEVELS.size():
 		var lvl: Dictionary = LEVELS[i]
-		_level_dropdown.add_item("%02d — %s" % [lvl.id, lvl.name], i)
+		_level_dropdown.add_item("%d — %s" % [lvl.id, lvl.name], i)
 	if LEVELS.size() > 0:
 		_level_dropdown.select(0)
 
@@ -128,7 +154,7 @@ func _set_phase(new_phase: Phase) -> void:
 	_leaderboard_panel.visible = (new_phase == Phase.LEADERBOARD)
 	_settings_panel.visible = (new_phase == Phase.SETTINGS)
 	if new_phase == Phase.MENU:
-		_btn_tuto.grab_focus()
+		_btn_run.grab_focus()
 
 
 func _on_player_joined(player_id: int, device_id: int) -> void:
@@ -155,12 +181,6 @@ func _refresh_status() -> void:
 		_status_label.text = "Appuyez sur Start pour rejoindre."
 	else:
 		_status_label.text = "%d/%d joueur(s) — D-pad pour naviguer, A pour valider, Back pour quitter le slot." % [count, MAX_PLAYERS]
-
-
-func _on_tuto_pressed() -> void:
-	# Bouton "Tutoriel" : lance test_open_arena (mini-arène + boss Golem).
-	# Sert d'introduction aux mécaniques avant les 8 niveaux complets.
-	_launch_level(TUTORIAL_PATH)
 
 
 func _on_run_pressed() -> void:

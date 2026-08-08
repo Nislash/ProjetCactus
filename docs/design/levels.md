@@ -53,3 +53,54 @@ l'option B (niveau généré par la pipeline). Conséquences, à connaître avan
 
 Détail complet : [`level01_openworld_plan.md`](level01_openworld_plan.md) (roadmap E0→E7) et
 [`level01_art_bible.md`](level01_art_bible.md) (palette, matériaux, budget, brief topographique).
+
+
+---
+
+## Décision de portée (2026-08-09)
+
+**Deux niveaux, pas huit.** Le lobby proposait dix-sept entrées : les huit sorties de la pipeline
+générative et les huit blockouts archivés. Aucune n'était à la qualité du niveau 1, et une liste où
+quinze choix sur dix-sept déçoivent n'est pas un choix — c'est un piège. Elles restent sur disque,
+elles ne sont plus proposées.
+
+Le bouton « Tutoriel » disparaît avec elles. L'arène de test qu'il lançait devient le **niveau 2**,
+refaite dans son propre biome. On n'apprend plus à jouer dans un décor de test : on apprend dans
+l'Antichambre de Givre, qui ouvre le niveau 1.
+
+## Niveau 2 — « La Forge »
+
+Un puits volcanique : trois anneaux concentriques qui descendent vers un lac de lave. **156 × 156 m**,
+contre 310 × 210 pour la Caverne — le niveau 1 est une exploration, celui-ci est une arène. On voit le
+gouffre depuis la crête et on sait tout de suite où l'on va.
+
+### Ce qui l'oppose au niveau 1, point par point
+
+| | Caverne Cristalline | La Forge |
+|---|---|---|
+| Lecture | horizontale, on traverse | **verticale**, on descend |
+| Nappe | lac gelé, praticable | **lac de lave**, mortel |
+| Lumière | par le haut, deux puits de jour | **par le bas**, la lave est la seule source |
+| Palette | bleu délavé, saturation 0,88 | ambre saturé, saturation 1,18 |
+| Progression | un puzzle à résoudre | une descente à survivre |
+
+### Le vrai problème de design du biome
+
+Au niveau 1, l'ambre `#f2b45c` est **réservé** : il veut dire « esquive maintenant », et rien d'autre
+ne l'utilise. Dans la Forge, la salle entière est ambre — **la couleur ne peut plus rien signaler**.
+
+C'est donc le **mouvement** qui alerte : la lave qui monte, les braises qui s'emballent, les coulées
+qui s'ouvrent. Les telegraphs du boss devront battre plutôt que rougir. C'est la contrainte
+structurante du niveau, et elle vaut d'être retenue pour les biomes suivants : *une grammaire
+chromatique ne survit pas à un changement de biome, une grammaire de mouvement oui*.
+
+### Ce qui est fait, ce qui reste
+
+**Fait** : terrain (`tools/build_forge_terrain.gd`), matériaux basalte et lave, environnement à
+lumière basse, éclairage par le bassin (`forge_lighting.gd`), spawns, ennemis par palier, boss et sa
+zone d'éveil (`forge_gameplay.gd`). Six tests, dont deux qui vérifient les promesses géométriques du
+biome — que ça descende, et que la lumière vienne d'en bas.
+
+**Reste** : la lave montante branchée sur les phases du boss (`mechanic_rising_lava.gd` existe et
+n'est pas encore câblé), les props de basalte, l'audio, et un boss propre au niveau — pour l'instant
+c'est le Golem de la Caverne.

@@ -1,0 +1,22 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/cavern_rock.gdshader" id="1_rock"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_rock")
+; La voûte est plus sombre encore que le sol : la lumière vient d'en bas, donc
+; le plafond ne reçoit qu'un reflet. C'est l'inverse exact du niveau 1.
+shader_parameter/deep_color = Color(0.014, 0.012, 0.014, 1)
+shader_parameter/rock_color = Color(0.043, 0.035, 0.037, 1)
+shader_parameter/rock_highlight = Color(0.106, 0.075, 0.067, 1)
+shader_parameter/frost_color = Color(0.180, 0.153, 0.145, 1)
+shader_parameter/macro_scale = 0.24
+shader_parameter/detail_scale = 2.2
+shader_parameter/detail_strength = 0.8
+shader_parameter/blend_sharpness = 4.0
+shader_parameter/frost_slope_threshold = 0.90
+shader_parameter/frost_amount = 0.12
+shader_parameter/rock_roughness = 0.96
+shader_parameter/frost_roughness = 0.9
+shader_parameter/debug_mode = 0

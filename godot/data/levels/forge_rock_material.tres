@@ -1,0 +1,24 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/cavern_rock.gdshader" id="1_rock"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_rock")
+; Basalte : presque noir, à peine bleuté. C'est le fond sur lequel la lave
+; doit trancher — une roche claire lui volerait tout son éclat.
+shader_parameter/deep_color = Color(0.020, 0.018, 0.020, 1)
+shader_parameter/rock_color = Color(0.062, 0.053, 0.055, 1)
+shader_parameter/rock_highlight = Color(0.137, 0.110, 0.106, 1)
+; Le « givre » du shader devient ici la CENDRE déposée sur les surfaces
+; horizontales — même mécanique, même seuil de pente, autre matière.
+shader_parameter/frost_color = Color(0.294, 0.267, 0.259, 1)
+shader_parameter/macro_scale = 0.32
+shader_parameter/detail_scale = 2.9
+shader_parameter/detail_strength = 0.95
+shader_parameter/blend_sharpness = 4.0
+shader_parameter/frost_slope_threshold = 0.80
+shader_parameter/frost_amount = 0.26
+shader_parameter/rock_roughness = 0.94
+shader_parameter/frost_roughness = 0.88
+shader_parameter/debug_mode = 0
