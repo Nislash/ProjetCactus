@@ -59,6 +59,8 @@ signal respawned()
 signal death_count_changed(count: int)
 signal interaction_progress_changed(prompt: String, progress: float)
 signal weapon_equipped(weapon_kind: StringName)
+## Nombre d'éclats du verrou portés (puzzle B-O-S-S du niveau 1).
+signal boss_shards_changed(count: int)
 ## Émis quand le joueur appuie D-pad up pour cycler l'état de SA minimap.
 ## Le HUD écoute et bascule MINI → FULL → HIDDEN → MINI.
 signal minimap_toggle_requested()
@@ -83,6 +85,17 @@ var _dash_cooldown_left: float = 0.0
 var _dash_direction: Vector3 = Vector3.ZERO
 var _interact_target: Interactable = null
 var _interact_progress: float = 0.0
+## Éclats du verrou portés. PAR JOUEUR et non en commun : chacun voit sur SON
+## HUD ce que SA main tient, et deux joueurs peuvent alimenter deux colonnes
+## opposées en même temps. Un pot commun aurait fait de la coop une file
+## d'attente.
+##
+## Ce n'est pas de la persistance : les éclats meurent avec la run, comme
+## tout le reste (cf CLAUDE.md, roguelike rules).
+var _boss_shards: int = 0
+## Vrai entre un déclenchement et le relâchement du bouton. Empêche la jauge
+## de repartir en boucle sur une cible qui reste proposable.
+var _interact_consumed: bool = false
 ## Type d'arme actuellement equipee : "" (rien), "pistol", "melee".
 ## Set par equip_weapon_kind() (appele par WeaponPickup).
 var _equipped_weapon: StringName = &""
@@ -323,6 +336,20 @@ func _update_shooting() -> void:
 ## enfant des players DOWNED, cf scenes/characters/player/player.tscn).
 func _update_interact(delta: float) -> void:
 	var holding: bool = InputRouter.is_action_pressed(player_id, &"interact")
+
+	# UN DÉCLENCHEMENT PAR APPUI. Sans ce verrou, un interactable qui reste
+	# proposable après usage voit sa jauge se remplir, se déclencher, retomber
+	# à zéro et repartir — indéfiniment, tant que le bouton est tenu. C'était
+	# le cas du socle d'arme, et de tout coffre refusant l'interaction.
+	#
+	# Le corriger objet par objet ne tient pas : chaque nouvel interactable
+	# rouvrirait le trou. Ici, il faut relâcher pour retenter, ce qui est de
+	# toute façon ce qu'un joueur attend.
+	if not holding:
+		_interact_consumed = false
+	if _interact_consumed:
+		holding = false
+
 	var candidate: Interactable = _find_interactable_in_range() if holding else null
 
 	if candidate != null:
@@ -337,6 +364,7 @@ func _update_interact(delta: float) -> void:
 			var target: Interactable = _interact_target
 			_interact_target = null
 			_interact_progress = 0.0
+			_interact_consumed = true
 			interaction_progress_changed.emit("", 0.0)
 			target.try_interact(self)
 		return
@@ -586,3 +614,26 @@ func _physics_process_regen(delta: float) -> void:
 		var n: int = int(floor(_regen_accumulator))
 		_regen_accumulator -= float(n)
 		_health.heal(n)
+
+
+# ---------------------------------------------------------------------------
+# Les éclats du verrou (puzzle B-O-S-S, niveau 1)
+# ---------------------------------------------------------------------------
+
+func get_boss_shards() -> int:
+	return _boss_shards
+
+
+func add_boss_shard() -> void:
+	_boss_shards += 1
+	boss_shards_changed.emit(_boss_shards)
+
+
+## Retire un éclat de la main. Retourne false si la main était vide — le
+## poteau saura ne rien poser.
+func take_boss_shard() -> bool:
+	if _boss_shards <= 0:
+		return false
+	_boss_shards -= 1
+	boss_shards_changed.emit(_boss_shards)
+	return true

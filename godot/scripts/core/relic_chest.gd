@@ -52,7 +52,15 @@ func _ready() -> void:
 func can_interact(by_player: Node) -> bool:
 	if _opened:
 		return false
-	return by_player is PlayerController
+	var player: PlayerController = by_player as PlayerController
+	if player == null:
+		return false
+	# Inventaire plein : le coffre ne se propose pas. `try_interact` refusait
+	# déjà, mais sans marquer le coffre comme utilisé — la jauge se remplissait
+	# donc en boucle sur un refus muet.
+	if player.relic_inventory != null and player.relic_inventory.is_full():
+		return false
+	return true
 
 
 func try_interact(by_player: Node) -> bool:

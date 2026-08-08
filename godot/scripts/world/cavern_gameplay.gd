@@ -10,22 +10,25 @@
 ##
 ## La boucle, telle que la spec la décrit (`level01_topography.md` §6) :
 ##
-##   3 cristaux éveillés  →  la Serrure de Givre s'illumine
-##                        →  interagir avec elle fait tomber la Porte Effondrée
-##                        →  le Passage s'ouvre : raccourci vers le lac
-##                           ET accès au Fragment méta
+##   4 éclats ramassés  →  posés dans l'ordre B-O-S-S sur les colonnes du lac
+##                      →  le cadran du Pilier de l'Îlot s'allume, lettre après
+##                         lettre
+##                      →  le Seuil s'ouvre (l'arène du Golem) ET la Porte
+##                         Effondrée tombe (le Fragment méta)
 ##
-## Le boss, lui, ne dépend pas du puzzle : on peut aller le défier directement.
-## Le puzzle récompense l'exploration, il ne la taxe pas.
+## ## Pourquoi une seule mécanique de puzzle et non deux
+##
+## Il y en avait deux : trois cristaux à éveiller commandaient une Serrure de
+## Givre, pendant que le boss restait accessible directement. En jeu, personne
+## ne pouvait dire lequel des cristaux de la caverne servait à quoi, ni ce que
+## comptaient les trois glyphes de la Serrure. Deux systèmes à moitié lus valent
+## moins qu'un seul qu'on comprend : le puzzle B-O-S-S les remplace tous les
+## deux, et son cadran est gravé sur le pilier le plus visible du niveau.
 
 class_name CavernGameplay
 extends Node
 
-const PUZZLE_CRYSTAL_SCENE := "res://scenes/world/puzzle_crystal.tscn"
 const BOSS_SCENE := "res://scenes/boss/boss_golem.tscn"
-
-## Marqueurs des cristaux du puzzle, sous `World/PuzzleCrystals`.
-@export var crystal_marker_names: Array[String] = ["K1_Nid", "K2_Lanterne", "K3_Cuvette"]
 
 ## Si faux, le boss n'est pas instancié (utile pour explorer sans combat).
 @export var spawn_boss: bool = true
@@ -40,13 +43,11 @@ const BOSS_SCENE := "res://scenes/boss/boss_golem.tscn"
 
 @export_file("*.tres") var rock_material_path: String = "res://data/levels/cavern_wall_material.tres"
 
-## Émis quand les trois cristaux sont éveillés.
+## Émis quand le mot B-O-S-S est complet.
 signal puzzle_completed()
 
 var _world: Node3D
-var _crystals: Array[PuzzleCrystal] = []
-var _awakened: int = 0
-var _frost_lock: FrostLock
+var _boss_puzzle: BossPuzzle
 
 
 func _ready() -> void:
@@ -60,7 +61,6 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	_spawn_puzzle_crystals()
 	_spawn_secret_mechanism()
 	if spawn_boss:
 		_spawn_boss()
@@ -68,43 +68,6 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------------------
 # Le puzzle
-# ---------------------------------------------------------------------------
-
-func _spawn_puzzle_crystals() -> void:
-	var root: Node = _world.get_node_or_null("PuzzleCrystals")
-	if root == null:
-		push_warning("CavernGameplay : nœud PuzzleCrystals introuvable.")
-		return
-
-	var packed: PackedScene = load(PUZZLE_CRYSTAL_SCENE) as PackedScene
-	if packed == null:
-		push_error("CavernGameplay : %s introuvable." % PUZZLE_CRYSTAL_SCENE)
-		return
-
-	for marker_name in crystal_marker_names:
-		var marker: Node3D = root.get_node_or_null(marker_name) as Node3D
-		if marker == null:
-			push_warning("CavernGameplay : marqueur « %s » introuvable." % marker_name)
-			continue
-		var crystal: PuzzleCrystal = packed.instantiate() as PuzzleCrystal
-		crystal.name = "Crystal_%s" % marker_name
-		_world.add_child(crystal)
-		crystal.global_position = marker.global_transform.origin
-		crystal.activated.connect(_on_crystal_awakened)
-		_crystals.append(crystal)
-
-	print("[CavernGameplay] %d cristaux de puzzle posés." % _crystals.size())
-
-
-func _on_crystal_awakened(_by_player: Node) -> void:
-	_awakened += 1
-	print("[CavernGameplay] cristal %d/%d éveillé." % [_awakened, _crystals.size()])
-	if _frost_lock != null:
-		_frost_lock.set_progress(_awakened, _crystals.size())
-	if _awakened >= _crystals.size():
-		puzzle_completed.emit()
-
-
 # ---------------------------------------------------------------------------
 # Le mécanisme secret
 # ---------------------------------------------------------------------------
@@ -120,35 +83,53 @@ func _spawn_secret_mechanism() -> void:
 	var rock: Material = load(rock_material_path) as Material
 
 	var door_marker: Node3D = arena.get_node_or_null("CollapsedDoor") as Node3D
-	var lock_marker: Node3D = arena.get_node_or_null("FrostLock") as Node3D
 	var fragment_marker: Node3D = arena.get_node_or_null("MetaFragment") as Node3D
-	if door_marker == null or lock_marker == null:
-		push_warning("CavernGameplay : marqueurs du mécanisme secret incomplets.")
-		return
+	var gate_marker: Node3D = arena.get_node_or_null("PuzzleGate") as Node3D
 
-	var door := CollapsedDoor.new()
-	door.name = "PorteEffondree"
-	door.rock_material = rock
-	_world.add_child(door)
-	door.global_position = door_marker.global_transform.origin
+	var door: CollapsedDoor = null
+	if door_marker != null:
+		door = CollapsedDoor.new()
+		door.name = "PorteEffondree"
+		door.rock_material = rock
+		_world.add_child(door)
+		door.global_position = door_marker.global_transform.origin
 
-	_frost_lock = FrostLock.new()
-	_frost_lock.name = "SerrureDeGivre"
-	_frost_lock.rock_material = rock
-	_frost_lock.required_count = _crystals.size()
-	_world.add_child(_frost_lock)
-	_frost_lock.global_position = lock_marker.global_transform.origin
-	# La Serrure commande la Porte, pas l'inverse : c'est le joueur qui décide
-	# du moment où le passage s'ouvre, une fois qu'il en a gagné le droit.
-	_frost_lock.unlocked.connect(door.collapse)
+	# Le Seuil barré. C'est LUI qui rend le puzzle obligatoire : sans barrage,
+	# « résoudre pour ouvrir l'arène » ne serait qu'une phrase de design.
+	var gate: CollapsedDoor = null
+	if gate_marker != null:
+		gate = CollapsedDoor.new()
+		gate.name = "SeuilVerrouille"
+		gate.rock_material = rock
+		_world.add_child(gate)
+		gate.global_position = gate_marker.global_transform.origin
 
+	var fragment: MetaFragment = null
 	if fragment_marker != null:
-		var fragment := MetaFragment.new()
+		fragment = MetaFragment.new()
 		fragment.name = "FragmentMeta"
 		_world.add_child(fragment)
 		fragment.global_position = fragment_marker.global_transform.origin + Vector3(0.0, 1.4, 0.0)
 		fragment.visible = false
-		door.collapsed.connect(func() -> void: fragment.reveal())
+		if door != null:
+			door.collapsed.connect(func() -> void: fragment.reveal())
+
+	# Le puzzle commande les deux. On le crée après les obstacles pour que ses
+	# connexions ne pointent jamais vers un nœud qui n'existe pas encore.
+	_boss_puzzle = BossPuzzle.new()
+	_boss_puzzle.name = "PuzzleBoss"
+	_world.add_child(_boss_puzzle)
+	_boss_puzzle.progress_changed.connect(_on_puzzle_progress)
+	_boss_puzzle.solved.connect(func() -> void:
+		if gate != null:
+			gate.collapse()
+		if door != null:
+			door.collapse()
+		puzzle_completed.emit())
+
+
+func _on_puzzle_progress(lit: int, total: int) -> void:
+	print("[CavernGameplay] verrou du boss : %d/%d lettres." % [lit, total])
 
 
 # ---------------------------------------------------------------------------

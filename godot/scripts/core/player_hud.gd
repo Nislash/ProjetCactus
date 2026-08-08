@@ -41,6 +41,7 @@ const SPELL_NAME_TO_ELEMENT: Dictionary = {
 @onready var _relics_row: RelicsRow = %RelicsRow if has_node("%RelicsRow") else null
 @onready var _relic_reveal: RelicRevealPanel = %RelicRevealPanel if has_node("%RelicRevealPanel") else null
 @onready var _relic_inventory_screen: RelicInventoryScreen = %RelicInventoryScreen if has_node("%RelicInventoryScreen") else null
+var _shard_row: ShardRow = null
 @onready var _minimap_panel: Control = $MinimapPanel
 @onready var _minimap_background: ColorRect = $MinimapPanel/Background
 @onready var _minimap_container: SubViewportContainer = %MinimapViewportContainer
@@ -98,6 +99,14 @@ func bind_to_player(player: PlayerController) -> void:
 		player.relic_inventory.inventory_full_attempt.connect(_on_inventory_full_attempt)
 	if _relic_inventory_screen != null:
 		_relic_inventory_screen.bind(player)
+
+	# Les éclats du verrou (puzzle B-O-S-S). Créé ici plutôt que dans la scène :
+	# c'est un ajout de niveau 1, et le HUD est partagé par tous les niveaux.
+	if _shard_row == null:
+		_shard_row = ShardRow.new()
+		_shard_row.name = "ShardRow"
+		add_child(_shard_row)
+	_shard_row.bind(player)
 		# Cache le HpPanel et le StatsPanel pendant que l'inventaire reliques
 		# est ouvert (sinon ils chevauchent l'overlay centré).
 		_relic_inventory_screen.visibility_changed.connect(_on_inventory_visibility_changed)

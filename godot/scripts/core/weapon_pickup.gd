@@ -17,8 +17,10 @@ const KIND_MELEE := &"melee"
 
 @export var weapon_kind: StringName = &"pistol"
 @export var display_name: String = "Pistolet"
-## Couleur de l'indicateur visuel au-dessus du socle (set au _ready).
-@export var indicator_color: Color = Color(0.9, 0.3, 0.25, 1)
+## Couleur de la lame. Par défaut le blanc glacé de la famille « arme » — cf
+## `CrystalGrammar`. Un socle qui aurait sa propre couleur casserait la
+## grammaire au moment même où elle sert.
+@export var indicator_color: Color = CrystalGrammar.COLOR_WEAPON
 
 @onready var _indicator: MeshInstance3D = $Indicator if has_node("Indicator") else null
 
@@ -32,20 +34,23 @@ func _ready() -> void:
 	_apply_indicator_color()
 
 
+## Impose la SILHOUETTE de la famille « arme » : une lame verticale, plantée,
+## immobile. La forme est refaite ici plutôt que dans la scène pour que tous
+## les socles la partagent — un socle qui garderait l'ancien cube flottant se
+## lirait comme un pouvoir.
 func _apply_indicator_color() -> void:
 	if _indicator == null:
 		return
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = indicator_color
-	mat.emission_enabled = true
-	mat.emission = indicator_color
-	mat.emission_energy_multiplier = 2.5
-	mat.metallic = 0.5
-	_indicator.material_override = mat
-
-
+	_indicator.mesh = CrystalGrammar.weapon_blade_mesh()
+	_indicator.position = Vector3(0.0, 0.95, 0.0)
+	_indicator.material_override = CrystalGrammar.make_material(indicator_color, 2.2)
+	if not has_node("Glow"):
+		add_child(CrystalGrammar.make_glow(indicator_color, 1.2, 4.5))
 func can_interact(by_player: Node) -> bool:
-	return by_player is PlayerController
+	var player: PlayerController = by_player as PlayerController
+	if player == null:
+		return false
+	return player.get_equipped_weapon_kind() != weapon_kind
 
 
 func try_interact(by_player: Node) -> bool:

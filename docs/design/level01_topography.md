@@ -319,3 +319,47 @@ les hauteurs de G3 et du Seuil, élite au Jardin, béliers sur la glace du lac
 - [ ] Le Passage Effondré est traversable une fois la Porte retirée
 - [ ] Aucun marqueur enterré (snapper) ; K1 et piliers en `keep_altitude`
 - [ ] Les 3 lobes de la Brèche (O1-O3) forment UN SEUL trou au rendu
+
+
+---
+
+## Le verrou B-O-S-S (● Opus, playtest du 2026-08-08)
+
+Le puzzle du niveau a été **remplacé**, pas complété. Il y en avait deux à moitié lus : trois
+cristaux à éveiller commandaient une Serrure de Givre plaquée contre la paroi du Seuil, pendant que
+le boss restait accessible directement. En jeu, personne ne pouvait dire quel cristal servait à quoi
+ni ce que comptaient les trois glyphes de la Serrure.
+
+**La règle.** Quatre éclats identiques sont dispersés dans la caverne. Quatre colonnes du lac portent
+une lettre gravée — B, O, S, S — **dans le désordre**. Il faut les alimenter dans l'ordre du mot.
+Les éclats étant interchangeables, la seule question est l'ordre : y répondre demande d'avoir fait le
+tour du lac. C'est le seul endroit du niveau où la topographie sert d'énigme plutôt que de décor.
+
+**Le retour d'information, sans un mot.** Un éclat posé sur la mauvaise colonne reste posé **mais
+éteint** ; posé au bon rang, il s'allume. Le joueur voit que ça ne prend pas, il se reprend, il
+essaie ailleurs. Reprendre est toujours possible : dans un roguelike où rien ne persiste, une erreur
+d'ordre sans appel serait une punition, pas une énigme.
+
+**Le cadran.** Les octogones ne sont plus sur une dalle de deux mètres à l'autre bout du niveau : ils
+sont gravés en grand sur le **Pilier de l'Îlot**, le seul objet visible de partout autour du lac. Où
+qu'on soit sur la rive, on sait combien de lettres sont posées — en coop, cela remplace un appel
+vocal. Ils sont quatre, comme les lettres : le compteur EST le mot.
+
+**Ce que la résolution ouvre** : les deux à la fois. Le Seuil de l'arène du Golem *et* la Porte
+Effondrée vers le fragment du puzzle méta. Le puzzle est donc obligatoire, ce qui justifie que son
+cadran soit le plus visible du niveau.
+
+### La grammaire des cristaux
+
+Trois familles se distinguaient mal, parce qu'elles se ressemblaient toutes. Une silhouette et une
+couleur chacune (`scripts/world/crystal_grammar.gd`) :
+
+| Famille | Silhouette | Couleur |
+|---|---|---|
+| Décor | grappes, éclats muraux | cyan `#66d9ff` (signature du niveau) |
+| Arme | **lame** verticale plantée, immobile | blanc glacé `#cfe4f2` |
+| Pouvoir | **octaèdre** qui flotte et tourne | couleur de l'élément |
+| Verrou du boss | **éclat hexagonal** qui bat | vert glaciaire `#5ef0c0` |
+
+Le vert glaciaire n'existe nulle part ailleurs. On a écarté l'ambre `#f2b45c`, qui dit déjà « esquive
+maintenant » dans les telegraphs du boss, et le violet `#a98bff`, qui appartient au fragment méta.
