@@ -35,6 +35,9 @@ var _material: BaseMaterial3D
 
 
 func _ready() -> void:
+	# L'ambiance sonore accroche son scintillement sur ce groupe : un son de
+	# cristal doit venir d'un cristal qu'on peut aller voir.
+	add_to_group(&"crystal_sources")
 	super._ready()
 	prompt_text = "Éveiller le cristal"
 	hold_duration = 1.2

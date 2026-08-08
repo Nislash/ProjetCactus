@@ -146,3 +146,21 @@ saturent à 60 sur macOS). Chaque ligne affichait donc « OK » quelle que soit 
 faussement rassurant, le pire genre. Le bench dit maintenant **« GPU non mesuré »** quand le backend
 ne remonte pas de temps GPU, et ne prononce « HORS BUDGET » que sur un dépassement franc du temps de
 frame. Il n'écrit plus jamais « OK » sur une mesure absente.
+
+
+---
+
+## 7. Post-process activé (● Opus, tâche #31)
+
+Trois passes ajoutées à `level01_cavern_environment.tres` : **glow**, **SSAO**, **ajustements**.
+
+Le glow est la plus importante et de loin : toute l'identité du niveau repose sur des cristaux
+**émissifs**, et sans halo un émissif n'est qu'un aplat clair — il brille sur le papier, pas à
+l'écran. Le halo est volontairement **large** (niveaux 3-5, pas 1-2) : serré il ferait « néon »,
+large il fait « lumière dans la brume ».
+
+**Mesuré, pas supposé.** Une capture A/B au même point de vue, glow activé puis désactivé, donne deux
+images quasi identiques hors du halo des puits : le post-process **ne délave pas** l'image. Ce qui la
+délave à ce point de vue précis (arrêt 5 du tour, regard vers la voûte), c'est la brume volumétrique
+traversée sur toute sa longueur — un comportement antérieur à cette passe. À trancher par la review
+artistique (#33), pas par une retouche silencieuse d'un éclairage déjà validé.

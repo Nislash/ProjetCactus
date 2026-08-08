@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://00exj5fq6ye6" path="res://scripts/world/cavern_lake_structures.gd" id="6_x3kyt"]
 [ext_resource type="Script" uid="uid://drsbv6uwuvoxd" path="res://scripts/world/cavern_gameplay.gd" id="7_ujktn"]
 [ext_resource type="Script" uid="uid://yhl0rkc5s1js" path="res://scripts/world/cavern_fog_zones.gd" id="8_plsfg"]
+[ext_resource type="Script" uid="uid://d7hmngt8dp2x" path="res://scripts/world/cavern_ambience.gd" id="9_ulm8f"]
 
 [node name="Level01Cavern" type="Node3D" unique_id=1001146890]
 
@@ -143,3 +144,6 @@ script = ExtResource("7_ujktn")
 
 [node name="FogZones" type="Node" parent="World" unique_id=897571713]
 script = ExtResource("8_plsfg")
+
+[node name="Ambience" type="Node3D" parent="World" unique_id=1810203285]
+script = ExtResource("9_ulm8f")
