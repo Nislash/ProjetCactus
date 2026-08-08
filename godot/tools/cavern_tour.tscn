@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://do4j6cu0ltvg1"]
+
+[ext_resource type="Script" uid="uid://25dygr2xfaxw" path="res://tools/cavern_tour.gd" id="1_5gebb"]
+
+[node name="CavernTour" type="Node3D" unique_id=359407338]
+script = ExtResource("1_5gebb")

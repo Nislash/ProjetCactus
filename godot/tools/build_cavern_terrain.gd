@@ -72,8 +72,11 @@ func _build_floor() -> CavernHeightfieldSpec:
 	spec.base_altitude = 2.0
 	# Ondulations douces demandées par la spec (« bosses, creux »), graine fixe
 	# pour que deux générations donnent exactement le même terrain.
-	spec.noise_amplitude = 0.45
-	spec.noise_scale = 14.0
+	# Sol un peu plus accidente que la premiere passe : il restait la plus lisse
+	# des trois surfaces et se lisait comme une nappe. L'amplitude reste bornee
+	# par la contrainte de pente, verifiee par les tests apres chaque changement.
+	spec.noise_amplitude = 0.60
+	spec.noise_scale = 10.0
 	spec.noise_seed = 20260808
 
 	var plateaus: Array[CavernPlateau] = []
@@ -163,9 +166,16 @@ func _build_vault() -> CavernHeightfieldSpec:
 	var spec := CavernHeightfieldSpec.new()
 	# 12 m : la respiration par défaut, au milieu de la fourchette autorisée.
 	spec.base_altitude = 12.0
-	# Très peu d'ondulation : la voûte doit rester lisible en silhouette.
-	spec.noise_amplitude = 0.3
-	spec.noise_scale = 18.0
+	# Voûte RUGUEUSE, contrairement au sol : personne n'y marche, donc aucune
+	# contrainte de pente ne s'y applique. C'est la plus grande surface visible
+	# du niveau, et c'est elle qui donne — ou pas — l'impression d'être sous la
+	# roche. La première passe la laissait quasi lisse (amplitude 0,3 sur 18 m
+	# de période) : elle se lisait comme un plafond de béton.
+	#
+	# NOTE : la hauteur libre reste bornée 10-15 m par `compose_vault`, donc ce
+	# relief ne peut PAS violer la contrainte dure — il la sculpte à l'intérieur.
+	spec.noise_amplitude = 1.6
+	spec.noise_scale = 6.5
 	spec.noise_seed = 771102
 
 	var plateaus: Array[CavernPlateau] = []

@@ -366,12 +366,24 @@ func _build_heightfield_mesh(
 			var v01 := Vector3(p01.x, heights[(iz + 1) * dims.x + ix], p01.y)
 			var v11 := Vector3(p11.x, heights[(iz + 1) * dims.x + ix + 1], p11.y)
 
+			# ORDRE DES SOMMETS : Godot considere comme face AVANT celle dont
+			# les sommets tournent dans le SENS HORAIRE vus de face. Vu du
+			# dessus (+X a droite, +Z vers le bas de l'ecran), l'ordre horaire
+			# est v00 -> v10 -> v11 -> v01.
+			#
+			# Ces deux branches etaient INVERSEES : le sol etait genere faces
+			# vers le BAS, donc entierement cule quand on le regardait d'en
+			# haut — on voyait le ciel A TRAVERS le sol. Rien ne le signalait,
+			# car la collision (HeightMapShape3D) est independante du maillage
+			# et tous les tests de geometrie passaient.
 			if flip_faces:
-				_add_triangle(st, v00, v10, v11)
-				_add_triangle(st, v00, v11, v01)
-			else:
+				# Faces vers le BAS : la voute, qu'on regarde par en dessous.
 				_add_triangle(st, v00, v11, v10)
 				_add_triangle(st, v00, v01, v11)
+			else:
+				# Faces vers le HAUT : le sol, qu'on regarde d'en haut.
+				_add_triangle(st, v00, v10, v11)
+				_add_triangle(st, v00, v11, v01)
 
 	st.generate_normals()
 	st.generate_tangents()

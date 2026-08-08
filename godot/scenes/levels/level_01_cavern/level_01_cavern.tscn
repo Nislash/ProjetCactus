@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bl8eqw121kq6k" path="res://scripts/world/cavern_terrain_builder.gd" id="1_yaq6u"]
 [ext_resource type="Script" uid="uid://l4t1uowcqn03" path="res://scripts/world/cavern_navigation.gd" id="2_kfaml"]
 [ext_resource type="Script" uid="uid://bk8sulr4bcqss" path="res://scripts/world/cavern_environment.gd" id="3_isknd"]
+[ext_resource type="Script" uid="uid://c15yho3bfnbi2" path="res://scripts/world/cavern_lighting.gd" id="4_jsewr"]
 
 [node name="Level01Cavern" type="Node3D" unique_id=1001146890]
 
@@ -114,3 +115,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 2.85, -7)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="World" unique_id=329084426]
 script = ExtResource("3_isknd")
+
+[node name="Lighting" type="Node3D" parent="World" unique_id=46102120]
+script = ExtResource("4_jsewr")
