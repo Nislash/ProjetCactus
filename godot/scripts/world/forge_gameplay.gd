@@ -66,6 +66,20 @@ var _castle: ForgeCastle
 var _bridge: ForgeBridge
 var _puzzle: MoonPuzzle
 
+## Où se cache le levier : derrière le rideau de la cascade amont, sur la rive
+## nord. Assez loin du bord pour qu'on ne l'aperçoive pas depuis la corniche —
+## il faut sauter pour le découvrir.
+## Le chiffre est CONTRAINT, pas choisi : la corniche s'arrête à X = -42, le
+## palier commence à -61+9 = -52-9 = -61… et l'écart entre les deux est le saut.
+## Cinq mètres au-dessus de la coulée : franchissable d'un élan, impossible par
+## mégarde. Déplacer l'un des deux sans l'autre casse le niveau en silence,
+## d'où le test qui mesure cet écart.
+const LEVER_SPOT := Vector2(-72.0, -5.0)
+
+## Longueur du pylône. Elle doit franchir l'intervalle entre le palier et la
+## corniche : c'est ce chiffre, et lui seul, qui décide si le retour existe.
+const PYLON_SPAN: float = 24.0
+
 
 func _ready() -> void:
 	_world = get_parent() as Node3D
@@ -82,6 +96,7 @@ func _ready() -> void:
 	_build_bridge()
 	_build_lava_hazard()
 	_build_lava_falls()
+	_build_twist_chain()
 	_build_moon_puzzle()
 
 	if spawn_boss:
@@ -172,7 +187,9 @@ func _build_lava_falls() -> void:
 	var source := LavaFall.new()
 	source.name = "CascadeAmont"
 	source.at = Vector2(lava.center.x - lava.radii.x, lava.center.y)
-	source.top_altitude = 21.0
+	# Le sommet du rempart, et non plus 21 m : la lave doit déborder DU HAUT de
+	# la montagne, comme un cratère qui déverse.
+	source.top_altitude = 34.0
 	source.bottom_altitude = lava.surface_altitude
 	source.width = 15.0
 	source.facing = Vector2(1.0, 0.0)
@@ -185,11 +202,91 @@ func _build_lava_falls() -> void:
 	var sink := LavaFall.new()
 	sink.name = "CascadeAval"
 	sink.at = Vector2(lava.center.x + lava.radii.x, lava.center.y)
-	sink.top_altitude = lava.surface_altitude
+	# Le rideau démarre AU-DESSUS de la nappe, pour masquer par l'avant la
+	# silhouette en escalier de son bord.
+	sink.top_altitude = lava.surface_altitude + 1.4
 	sink.bottom_altitude = -4.0
-	sink.width = 15.0
+	# PLUS LARGE que le lit (16 m) : la nappe principale s'arrête sur la limite
+	# de son ellipse, quantifiée sur la grille de quads, et cette limite se
+	# termine en escalier au-dessus du vide. Le rideau doit la couvrir, pas
+	# l'effleurer.
+	sink.width = 26.0
 	sink.facing = Vector2(1.0, 0.0)
+	# Le bassin qui couvre le relief en marches au pied de la chute.
+	sink.pool_radius = 26.0
+	sink.pool_stretch = 2.6
 	_world.add_child(sink)
+
+
+## LA CHAÎNE DU DÉTOUR : levier derrière la cascade, rampe autour du donjon,
+## pylône qu'on abat pour rentrer.
+##
+## Les trois objets sont posés ensemble parce qu'ils ne veulent rien dire
+## séparément : le levier ouvre une rampe qu'on ne peut pas encore atteindre, et
+## le pylône n'est un chemin que pour revenir de là où le levier se trouve.
+func _build_twist_chain() -> void:
+	var terrain: CavernTerrainData = load(
+		"res://data/levels/level02_forge_terrain.tres") as CavernTerrainData
+	if terrain == null or _castle == null:
+		push_warning("ForgeGameplay : pas de terrain ou de château — pas de détour.")
+		return
+	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
+	var lava: CavernLake = terrain.lake
+
+	# LE PALIER DERRIÈRE LA CASCADE, côté aval du rideau. On y arrive en
+	# sautant depuis la corniche : c'est le seul saut obligatoire du niveau, et
+	# il se fait au-dessus de la coulée, donc il se réfléchit.
+	var ledge_at := Vector2(LEVER_SPOT.x, LEVER_SPOT.y)
+	var ledge_altitude: float = maxf(
+		CavernTerrainBuilder.sample_point(terrain.floor_field, ledge_at, noise),
+		lava.surface_altitude + 1.4)
+	var ledge := ForgeLedge.new()
+	ledge.name = "PalierDeLaCascade"
+	ledge.centre = ledge_at
+	ledge.altitude = ledge_altitude
+	# 9,5 et non 8 : la brèche mouille la berge de X = -66 à -58, et le palier
+	# doit s'avancer assez pour que l'écart tombe à cinq mètres et demi. C'est
+	# ce chiffre-là que le test surveille, pas la taille du palier.
+	ledge.half_extent = Vector2(9.5, 6.0)
+	_world.add_child(ledge)
+
+	var lever := ForgeLever.new()
+	lever.name = "LevierCache"
+	_world.add_child(lever)
+	lever.global_position = Vector3(ledge_at.x, ledge_altitude, ledge_at.y)
+
+	# LA RAMPE. Le donjon est un cylindre : son rayon vaut `keep_width * 0.52`,
+	# et on s'enroule juste au-delà.
+	# TOUTES ses cotes AVANT `add_child`.
+	#
+	# `add_child` déclenche `_ready`, donc la construction : régler les
+	# propriétés après revenait à bâtir la rampe avec ses valeurs par défaut.
+	# Elle s'enroulait autour de l'origine du monde, à quarante-cinq mètres du
+	# château, et le navmesh la cuisait consciencieusement là où elle ne servait
+	# à rien.
+	var ramp := KeepSpiralRamp.new()
+	ramp.name = "RampeDuDonjon"
+	ramp.keep_centre = Vector3(_castle.footprint_center.x,
+		_castle.get_threshold_altitude(), _castle.footprint_center.y)
+	ramp.keep_radius = _castle.keep_width * 0.52 + 1.2
+	ramp.bottom_altitude = _castle.get_threshold_altitude()
+	ramp.top_altitude = _castle.get_threshold_altitude() + _castle.keep_height * 0.92
+	ramp.descent_target = Vector3(0.0,
+		CavernTerrainBuilder.sample_point(terrain.floor_field, Vector2(0.0, -66.0), noise) + 1.0,
+		-66.0)
+	_world.add_child(ramp)
+
+	# LE PYLÔNE, sur le palier, orienté vers la corniche : il tombe en travers
+	# de la coulée, donc du côté d'où l'on est venu.
+	var pylon := FragilePylon.new()
+	pylon.name = "PyloneFragile"
+	pylon.fall_direction = Vector2(1.0, 0.0)
+	pylon.height = PYLON_SPAN
+	pylon.deck_altitude = lava.surface_altitude + 1.0
+	_world.add_child(pylon)
+	pylon.global_position = Vector3(ledge_at.x + 6.0, ledge_altitude, ledge_at.y)
+
+	lever.pulled.connect(func() -> void: ramp.deploy())
 
 
 func _build_castle() -> void:

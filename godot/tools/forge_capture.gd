@@ -18,22 +18,21 @@ const OUT_DIR := "user://forge_capture"
 ## Les cadrages. `from` = œil, `look` = cible.
 const SHOTS: Array = [
 	{
-		"name": "01_pont_vers_chateau",
-		"from": Vector3(0.0, 8.6, 18.0), "look": Vector3(0.0, 10.0, -44.0),
+		"name": "01_porte_du_chateau",
+		"from": Vector3(0.0, 9.5, -22.0), "look": Vector3(0.0, 11.0, -46.0),
 	},
 	{
-		"name": "02_cascade_amont",
-		"from": Vector3(-34.0, 12.0, 6.0), "look": Vector3(-70.0, 10.0, -14.0),
+		"name": "02_tour_et_rampe",
+		"from": Vector3(-34.0, 26.0, -14.0), "look": Vector3(0.0, 20.0, -46.0),
 	},
 	{
-		"name": "03_chute_aval",
-		"from": Vector3(44.0, 14.0, 12.0), "look": Vector3(72.0, -2.0, -14.0),
-	},
-	{
-		"name": "04_ensemble_depuis_la_crete",
-		"from": Vector3(-46.0, 40.0, 48.0), "look": Vector3(0.0, 6.0, -30.0),
+		"name": "03_palier_et_pylone",
+		"from": Vector3(-46.0, 12.0, 6.0), "look": Vector3(-72.0, 8.0, -5.0),
 	},
 ]
+
+## Tirer le levier avant de capturer, pour voir la rampe déployée.
+@export var pull_lever: bool = true
 
 ## Frames d'attente avant la première capture : le terrain, le château et le
 ## pont se bâtissent chacun sur plusieurs frames.
@@ -68,6 +67,13 @@ func _ready() -> void:
 func _run() -> void:
 	for i in warmup_frames:
 		await get_tree().process_frame
+
+	if pull_lever:
+		var lever: Node = find_child("LevierCache", true, false)
+		if lever != null:
+			lever.call("try_interact", null)
+			# Le déploiement dure environ deux secondes, en temps réel.
+			await get_tree().create_timer(3.2).timeout
 
 	for shot in SHOTS:
 		_camera.global_position = shot["from"]

@@ -52,6 +52,20 @@ extends Node3D
 ## contrefort ferme du même coup la tranchée qui filait vers l'ouest.
 @export var buttress: bool = false
 
+## Rayon du BASSIN de réception. 0 = pas de bassin.
+##
+## Signalé en jeu : « l'écoulement de lave est mal fini à droite ». La chute
+## aval s'arrêtait sur la roche nue, et le champ de hauteurs y descend par
+## marches — des marches que rien ne cachait. Un plan de lave au pied les
+## couvre, et il est de toute façon ce qu'on attend au bas d'une chute : la
+## lave ne s'évapore pas en touchant le sol.
+@export var pool_radius: float = 0.0
+
+## De combien le bassin déborde vers l'AVAL. Une flaque ronde au pied d'une
+## chute ne raconte rien ; une nappe allongée dans le sens de l'écoulement dit
+## que ça continue au-delà de ce qu'on voit.
+@export var pool_stretch: float = 2.4
+
 const MATERIAL_PATH := "res://data/levels/forge_lava_material.tres"
 ## LA ROCHE DU TERRAIN, et non la maçonnerie du château.
 ##
@@ -96,17 +110,12 @@ func _build() -> void:
 	# LA VASQUE. Un disque à peine au-dessus de la nappe, qui marque l'endroit
 	# où la chute frappe. Sans elle, le rideau semble traverser la coulée sans
 	# la toucher.
-	var basin := MeshInstance3D.new()
-	basin.name = "Vasque"
-	var basin_mesh := CylinderMesh.new()
-	basin_mesh.top_radius = width * 0.62
-	basin_mesh.bottom_radius = width * 0.62
-	basin_mesh.height = 0.12
-	basin_mesh.radial_segments = 18
-	basin.mesh = basin_mesh
-	basin.material_override = material
-	add_child(basin)
-	basin.global_position = Vector3(at.x, bottom_altitude + 0.10, at.y)
+	_add_pool("Vasque", width * 0.62, 1.0, bottom_altitude + 0.10)
+
+	# LE BASSIN. Beaucoup plus large, et allongé vers l'aval : c'est lui qui
+	# couvre le relief en marches au pied de la chute.
+	if pool_radius > 0.0:
+		_add_pool("Bassin", pool_radius, pool_stretch, bottom_altitude + 0.04)
 
 	# LA LUMIÈRE. Une chute est la source la plus brillante du niveau : c'est
 	# de la lave en mouvement sur toute une hauteur. Deux lampes, une au
@@ -115,8 +124,38 @@ func _build() -> void:
 	_add_light("LueurVasque", Vector3(at.x, bottom_altitude + 2.0, at.y), 30.0, 5.0)
 
 
-## LE CONTREFORT : deux épaules de roche et un linteau, laissant entre eux
-## l'échancrure par où la lave sort.
+## Une nappe plate de lave, éventuellement étirée dans le sens du courant.
+func _add_pool(pool_name: String, radius: float, stretch: float,
+		altitude: float) -> void:
+	var pool := MeshInstance3D.new()
+	pool.name = pool_name
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = 0.12
+	mesh.radial_segments = 22
+	pool.mesh = mesh
+	# La nappe reste HORIZONTALE : c'est du liquide au repos, pas une chute.
+	# Elle garde donc le `flow_plane` de la coulée.
+	pool.material_override = load(MATERIAL_PATH) as Material
+	add_child(pool)
+	pool.global_position = Vector3(at.x, altitude, at.y)
+	var along := Vector3(facing.x, 0.0, facing.y).normalized()
+	pool.scale = Vector3(1.0 + (stretch - 1.0) * absf(along.x), 1.0,
+		1.0 + (stretch - 1.0) * absf(along.z))
+	# Décalée vers l'aval : une chute ne remplit pas autant en amont qu'en aval.
+	pool.global_position += along * radius * (stretch - 1.0) * 0.45
+
+
+## LE CONTREFORT : la montagne d'où la lave sort.
+##
+## ELLE DÉBORDE PAR LE HAUT, comme un cratère qui déverse.
+##
+## Première version : une échancrure à mi-hauteur, avec un linteau au-dessus.
+## Ça se lisait comme une vanne dans un barrage — un ouvrage, pas un volcan.
+## Le linteau a disparu et les épaules montent maintenant au-dessus du
+## déversoir : la lave passe par-dessus la lèvre, et ce sont les épaules qui
+## font les bords du cratère.
 ##
 ## Trois blocs plutôt qu'un bloc percé : Godot ne sait pas soustraire un volume
 ## d'un autre, et une boîte creuse serait de toute façon plus chère qu'un
@@ -129,28 +168,41 @@ func _build_buttress(drop: float, heading: float) -> void:
 		flat.roughness = 0.93
 		rock = flat
 
-	var height: float = drop + 14.0
 	var mouth: float = width * 0.92
-	var shoulder: float = 17.0
 	var base: float = bottom_altitude - 3.0
+	var lip: float = top_altitude
 
-	# Les deux épaules.
-	for side in [-1.0, 1.0]:
-		_slab("Epaule", rock,
-			Vector3(mouth * 0.5 + shoulder * 0.5, 0.0, 0.0) * side,
-			Vector3(shoulder, height, 7.0), base + height * 0.5, heading)
+	# LES DEUX ÉPAULES, plus hautes que le déversoir : ce sont les bords du
+	# cratère. Elles montent en s'écartant, pour que la montagne s'évase vers
+	# le haut au lieu de faire deux piliers.
+	var shoulders: Array[float] = [9.0, 15.0, 21.0]
+	for step in shoulders.size():
+		var lift: float = 5.0 * float(step + 1)
+		var span: float = shoulders[step]
+		for side in [-1.0, 1.0]:
+			_slab("Epaule", rock,
+				Vector3((mouth * 0.5 + span * 0.5 - float(step) * 1.5) * side, 0.0,
+					1.5 + float(step) * 2.0),
+				Vector3(span, lip - base + lift, 8.0 + float(step) * 2.0),
+				base + (lip - base + lift) * 0.5, heading)
 
-	# Le linteau, au-dessus de l'échancrure.
-	var lintel_height: float = maxf(height - (top_altitude - base) - 1.0, 3.0)
-	_slab("Linteau", rock, Vector3.ZERO, Vector3(mouth, lintel_height, 7.0),
-		base + height - lintel_height * 0.5, heading)
+	# LA LÈVRE, par-dessus laquelle la lave bascule. Elle est BASSE et large :
+	# c'est une échancrure dans le rebord du cratère, pas une porte.
+	_slab("Levre", rock, Vector3(0.0, 0.0, 3.4), Vector3(mouth, 1.2, 6.0),
+		lip - 0.6, heading)
 
-	# Et le seuil : la lèvre par-dessus laquelle la lave bascule. Sans elle, le
-	# rideau part d'une arête invisible.
-	_slab("Seuil", rock, Vector3.ZERO, Vector3(mouth, 1.4, 5.0),
-		top_altitude - 0.7, heading)
+	# Le massif sous la lèvre : la montagne est pleine, on ne doit pas voir le
+	# ciel sous la coulée.
+	_slab("Massif", rock, Vector3(0.0, 0.0, 5.2), Vector3(mouth, lip - base, 7.0),
+		base + (lip - base) * 0.5 - 0.6, heading)
 
 
+## `offset.x` écarte latéralement, `offset.z` recule DERRIÈRE le rideau.
+##
+## Le recul n'est pas cosmétique : la première version posait le massif dans le
+## plan même de la coulée, et la montagne bouchait donc entièrement la cascade.
+## On ne voyait plus que la flaque au pied. La roche doit être derrière l'eau,
+## pas devant — c'est vrai de toutes les cascades.
 func _slab(slab_name: String, material: Material, offset: Vector3, size: Vector3,
 		altitude: float, heading: float) -> void:
 	var block := MeshInstance3D.new()
@@ -161,7 +213,9 @@ func _slab(slab_name: String, material: Material, offset: Vector3, size: Vector3
 	block.material_override = material
 	add_child(block)
 	var side_axis := Vector3(cos(heading), 0.0, -sin(heading))
-	block.global_position = Vector3(at.x, altitude, at.y) + side_axis * offset.x
+	var back_axis := Vector3(facing.x, 0.0, facing.y).normalized()
+	block.global_position = Vector3(at.x, altitude, at.y) \
+		+ side_axis * offset.x - back_axis * offset.z
 	block.rotation.y = heading
 
 	var body := StaticBody3D.new()

@@ -109,6 +109,7 @@ func _build() -> void:
 	_terrace_top = base + TERRACE_LIFT + TERRACE_THICKNESS * 0.5
 	_build_terrace(stone_dark)
 	_build_keep(stone)
+	_build_doorway(stone_dark)
 	_build_towers(stone)
 	_build_gate()
 
@@ -149,11 +150,80 @@ func _build_keep(material: Material) -> void:
 	keep.material_override = material
 	keep.position = Vector3(0.0, 2.5 + keep_height * 0.5, 0.0)
 	add_child(keep)
-	_add_collider(keep, Vector3(keep_width * 0.9, keep_height, keep_width * 0.9), keep.position)
+	_hollow_keep(material)
 
 	# Les créneaux. C'est ce qui fait lire « château » plutôt que « tour » :
 	# une découpe en dents sur le ciel se reconnaît de très loin.
 	_crown(Vector3(0.0, 2.5 + keep_height, 0.0), keep_width * 0.44, 10, material)
+
+
+## LE DONJON EST CREUX, et sa collision le dit.
+##
+## Signalé en jeu : « quand on active le mécanisme ça descend un élément mais
+## aucun passage ne s'ouvre ». Le sceau descendait devant un cylindre PLEIN —
+## un seul collider en boîte pour toute la tour. Le mécanisme tenait sa
+## promesse d'animation et pas celle du niveau.
+##
+## La collision est donc faite de huit murs, un par pan, avec un vide au sud
+## là où se trouve l'embrasure. Ça coûte huit boîtes au lieu d'une, et ça rend
+## la salle réelle : on entre, il y a un sol, et le reste tient debout.
+##
+## La salle est un CUL-DE-SAC, et c'est voulu. La route du boss passe par la
+## rampe qui monte à l'extérieur (cf [KeepSpiralRamp]) — l'intérieur du donjon
+## est la récompense du puzzle des miroirs, pas son passage obligé. Deux
+## chemins pour la même porte les rendraient tous deux facultatifs.
+func _hollow_keep(material: Material) -> void:
+	var radius: float = keep_width * 0.46
+	var wall: float = 1.8
+	var faces: int = 8
+	# Le pan 6 (compté depuis l'est, dans le sens du donjon) regarde le sud :
+	# c'est là qu'est l'embrasure, donc c'est celui qu'on laisse ouvert.
+	var doorway_face: int = 2
+
+	for i in faces:
+		if i == doorway_face:
+			continue
+		var a: float = TAU * float(i) / float(faces)
+		var body := StaticBody3D.new()
+		body.name = "Col_Pan_%d" % i
+		body.collision_layer = CavernTerrainBuilder.WORLD_COLLISION_LAYER
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		# Un peu plus large que la corde d'un pan, pour que deux murs voisins
+		# se recouvrent : sans recouvrement, on se coince dans l'angle.
+		box.size = Vector3(radius * 0.92, keep_height, wall)
+		shape.shape = box
+		body.add_child(shape)
+		add_child(body)
+		body.position = Vector3(cos(a) * radius, 2.5 + keep_height * 0.5, sin(a) * radius)
+		body.rotation.y = -a
+
+	# LE SOL de la salle. Sans lui on tomberait à travers la terrasse.
+	var floor_slab := MeshInstance3D.new()
+	floor_slab.name = "SolDuDonjon"
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = 0.6
+	mesh.radial_segments = 8
+	floor_slab.mesh = mesh
+	floor_slab.material_override = material
+	floor_slab.position = Vector3(0.0, 2.8, 0.0)
+	add_child(floor_slab)
+	_add_collider(floor_slab, Vector3(radius * 2.0, 0.6, radius * 2.0),
+		floor_slab.position,
+		CavernTerrainBuilder.WORLD_COLLISION_LAYER | CavernTerrainBuilder.NAVMESH_SOURCE_LAYER)
+
+	# Un feu au centre : la salle serait autrement un trou noir, et personne
+	# n'entre dans un trou noir.
+	var brazier := OmniLight3D.new()
+	brazier.name = "BrasierDuDonjon"
+	brazier.light_color = SEAL
+	brazier.light_energy = 2.6
+	brazier.omni_range = 20.0
+	brazier.shadow_enabled = false
+	brazier.position = Vector3(0.0, 6.0, 0.0)
+	add_child(brazier)
 
 
 ## LES TOURS. Quatre, plus hautes que le donjon : elles montent au-dessus de
@@ -201,6 +271,54 @@ func _crown(centre: Vector3, radius: float, count: int, material: Material) -> v
 		merlon.position = centre + Vector3(cos(a) * radius, mesh.size.y * 0.5, sin(a) * radius)
 		merlon.rotation.y = -a
 		add_child(merlon)
+
+
+## L'EMBRASURE. Un vrai trou dans la base du donjon, derrière le sceau.
+##
+## Signalé en jeu : « dans le château il n'y a pas de porte pour rentrer ; quand
+## on active le mécanisme ça descend un élément mais aucun passage ne s'ouvre ».
+## C'était exact — le sceau descendait devant un mur plein. Le mécanisme tenait
+## sa promesse d'animation et pas sa promesse de niveau.
+##
+## Le donjon étant un cylindre plein, on ne perce pas : on encadre. Deux
+## jambages et un linteau posés en avant du fût dessinent une embrasure, et le
+## vestibule derrière est un volume sombre qui donne au trou une PROFONDEUR.
+## Sans lui, l'ouverture se lirait comme un décalque noir collé sur la tour.
+func _build_doorway(material: Material) -> void:
+	var opening := Node3D.new()
+	opening.name = "Embrasure"
+	opening.position = Vector3(0.0, TERRACE_LIFT + TERRACE_THICKNESS * 0.5,
+		keep_width * 0.46)
+	add_child(opening)
+
+	var width: float = 7.6
+	var height: float = 10.5
+	var jamb: float = 2.2
+
+	for side in [-1.0, 1.0]:
+		var pillar := MeshInstance3D.new()
+		pillar.name = "Jambage"
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(jamb, height, 2.4)
+		pillar.mesh = mesh
+		pillar.material_override = material
+		pillar.position = Vector3((width * 0.5 + jamb * 0.5) * side, height * 0.5, 0.0)
+		opening.add_child(pillar)
+		_add_collider(pillar, mesh.size, opening.position + pillar.position)
+
+	var lintel := MeshInstance3D.new()
+	lintel.name = "Linteau"
+	var lintel_mesh := BoxMesh.new()
+	lintel_mesh.size = Vector3(width + jamb * 2.0, 2.4, 2.4)
+	lintel.mesh = lintel_mesh
+	lintel.material_override = material
+	lintel.position = Vector3(0.0, height + 1.2, 0.0)
+	opening.add_child(lintel)
+	_add_collider(lintel, lintel_mesh.size, opening.position + lintel.position)
+
+	# Pas de fond : l'embrasure DONNE sur la salle, qui est creuse. Une plaque
+	# noire au fond ferait un trompe-l'œil, et c'est précisément ce qu'on
+	# reprochait à la version précédente.
 
 
 ## LA PORTE, scellée par une coulée figée.
