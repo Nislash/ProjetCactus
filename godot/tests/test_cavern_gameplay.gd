@@ -52,6 +52,7 @@ func _run() -> void:
 	failed += _test_boss_is_in_the_arena()
 	failed += _test_something_can_wake_the_boss()
 	failed += _test_every_pylon_has_an_altar()
+	failed += _test_the_lake_edge_follows_its_shore()
 	failed += _test_order_matters()
 	failed += await _test_solving_opens_both_ways()
 
@@ -200,7 +201,84 @@ func _test_every_pylon_has_an_altar() -> int:
 		print("[FAIL] gravures : toutes à la même hauteur (écart %.2f m)" % spread)
 		return 1
 
-	print("[OK] every_pylon_has_an_altar (hauteurs étalées sur %.1f m)" % spread)
+	# AU-DESSUS DU SOL. Les colonnes plongent jusqu'au lit du lac : une hauteur
+	# comptée depuis leur base enterrait la gravure sous la rive — c'est arrivé
+	# au O, et rien ne le signalait.
+	var terrain: CavernTerrainData = load("res://data/levels/level01_cavern_terrain.tres")
+	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
+	for p in pylons:
+		var node: Node3D = p as Node3D
+		var flat := Vector2(node.global_position.x, node.global_position.z)
+		var ground: float = CavernTerrainBuilder.sample_point(terrain.floor_field, flat, noise)
+		var glyph: Node3D = node.get_node_or_null("Gravure") as Node3D
+		if glyph == null:
+			print("[FAIL] gravure : absente sur « %s »" % node.name)
+			return 1
+		if glyph.global_position.y < ground + 1.0:
+			print("[FAIL] gravure « %s » : à %.1f m alors que le sol est à %.1f m — enterrée"
+				% [String(node.get("letter")), glyph.global_position.y, ground])
+			return 1
+
+	print("[OK] every_pylon_has_an_altar (hauteurs étalées sur %.1f m, toutes hors sol)" % spread)
+	return 0
+
+
+## Le CONTOUR de la nappe doit épouser la BERGE, pas la grille.
+##
+## Le lac est bâti quad par quad, et chaque quad était gardé ou rejeté en
+## bloc : le bord suivait donc les cellules de 1,5 m, et la rive se lisait en
+## dents de scie. On vérifie qu'aucun sommet ne déborde de l'ellipse.
+func _test_the_lake_edge_follows_its_shore() -> int:
+	var lake_node: MeshInstance3D = _world.find_child("Lake", true, false) as MeshInstance3D
+	if lake_node == null or lake_node.mesh == null:
+		print("[FAIL] lac : aucune nappe construite")
+		return 1
+	var terrain: CavernTerrainData = load("res://data/levels/level01_cavern_terrain.tres")
+	var lake: CavernLake = terrain.lake
+	if lake == null:
+		print("[FAIL] lac : pas de données de lac")
+		return 1
+
+	# LA MESURE QUI COMPTE : la proportion de sommets qui ne tombent PAS sur la
+	# grille. Tant que le contour était découpé à la maille, tous les sommets
+	# étaient des multiples de `cell_size` — c'est exactement ce que l'œil lit
+	# comme des dents de scie. Les sommets ramenés sur la berge, eux, tombent
+	# n'importe où.
+	var cell: float = terrain.cell_size
+	var total: int = 0
+	var off_grid: int = 0
+	var outside: int = 0
+	var rx: float = maxf(lake.radii.x, 0.001)
+	var rz: float = maxf(lake.radii.y, 0.001)
+	for surface in lake_node.mesh.get_surface_count():
+		var arrays: Array = lake_node.mesh.surface_get_arrays(surface)
+		var verts: Variant = arrays[Mesh.ARRAY_VERTEX]
+		if not (verts is PackedVector3Array):
+			continue
+		for v in (verts as PackedVector3Array):
+			total += 1
+			var dx: float = absf(fposmod(v.x, cell))
+			var dz: float = absf(fposmod(v.z, cell))
+			var on_grid: bool = minf(dx, cell - dx) < 0.01 and minf(dz, cell - dz) < 0.01
+			if not on_grid:
+				off_grid += 1
+			var local := Vector2(v.x - lake.center.x, v.z - lake.center.y)
+			if Vector2(local.x / rx, local.y / rz).length() > 1.002:
+				outside += 1
+
+	if total == 0:
+		print("[FAIL] lac : nappe vide")
+		return 1
+	if outside > 0:
+		print("[FAIL] lac : %d sommets débordent de l'emprise" % outside)
+		return 1
+	var ratio: float = float(off_grid) / float(total)
+	if ratio < 0.10:
+		print("[FAIL] lac : %.0f %% des sommets seulement sont hors grille — la rive suit les mailles"
+			% (ratio * 100.0))
+		return 1
+	print("[OK] the_lake_edge_follows_its_shore (%.0f %% des sommets recalés sur la berge)"
+		% (ratio * 100.0))
 	return 0
 
 
