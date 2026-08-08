@@ -26,6 +26,13 @@ extends Resource
 ## Zéro = cuvette non bordée = chute possible : les tests le refusent.
 @export_range(0.0, 6.0, 0.1) var rim_height: float = 0.5
 
+## Fraction centrale du creux qui reste au FOND PLAT, de 0 à 1.
+##
+## Sans elle, le profil descend en pointe : le fond n'est qu'un point, et un lac
+## posé dessus se réduit à une flaque. Un vrai lit de lac est plat — c'est aussi
+## ce qui rend la glace praticable au lieu d'être une cuvette où l'on glisse.
+@export_range(0.0, 0.95, 0.05) var flat_bottom: float = 0.0
+
 ## Largeur de la margelle, en mètres : la distance sur laquelle le bourrelet
 ## retombe vers le terrain environnant.
 @export_range(0.5, 15.0, 0.5) var rim_width: float = 3.0

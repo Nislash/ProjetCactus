@@ -23,49 +23,44 @@ const CAVERN_SCENE := "res://scenes/levels/level_01_cavern/level_01_cavern.tscn"
 ## Les arrêts, dans l'ordre. `from` = position de l'œil, `look` = cible visée.
 const STOPS: Array = [
 	{
-		"title": "1/9 — VUE D'ENSEMBLE (aérienne)",
-		"note": "La combe entière : corniche à gauche, lac au centre, arène à droite",
-		"from": Vector3(-30.0, 34.0, 34.0), "look": Vector3(4.0, 0.0, 0.0),
+		"title": "1/8 — VUE D'ENSEMBLE (aérienne)",
+		"note": "La caverne entière : loot à gauche, lac au centre, salle du boss à droite",
+		"from": Vector3(-40.0, 96.0, 130.0), "look": Vector3(0.0, 0.0, -10.0),
 	},
 	{
-		"title": "2/9 — V1 · Corniche du Réveil",
-		"note": "Le cadrage d'ouverture : ce que les joueurs voient à la 1re seconde",
-		"from": Vector3(-41.0, 7.5, 0.0), "look": Vector3(5.0, 3.0, -8.0),
+		"title": "2/8 — Spawn (ouest de la Grande Nef)",
+		"note": "Ce que les joueurs voient à la 1re seconde",
+		"from": Vector3(-104.0, 9.6, -38.0), "look": Vector3(-20.0, 4.0, -30.0),
 	},
 	{
-		"title": "3/9 — Z2 · Forêt de Stalactites",
-		"note": "La descente vers le lac, visibilité hachée",
-		"from": Vector3(-24.0, 6.8, 2.0), "look": Vector3(0.0, 1.0, -2.0),
+		"title": "3/8 — La Grande Nef (vers l'est)",
+		"note": "La longue traversée : 200 m d'ouest en est",
+		"from": Vector3(-60.0, 7.5, -36.0), "look": Vector3(40.0, 4.0, -40.0),
 	},
 	{
-		"title": "4/9 — Z3 · Le Lac Gelé (vers le Monolithe)",
-		"note": "Le hub. Rive nord, emplacement du Monolithe et du coffre de puzzle",
-		"from": Vector3(0.0, 1.6, 4.0), "look": Vector3(5.0, 3.0, -12.0),
+		"title": "4/8 — Le Lac Gelé",
+		"note": "La nappe de glace et le grand puits de plafond au-dessus",
+		"from": Vector3(-6.0, 1.0, -6.0), "look": Vector3(-6.0, -1.0, 40.0),
 	},
 	{
-		"title": "5/9 — Z3 · Le Lac (regard vers la voûte, puits P1)",
-		"note": "Le puits de ciel : le trou dans la voûte doit être visible",
-		"from": Vector3(2.0, 1.6, 6.0), "look": Vector3(2.0, 14.0, -2.0),
+		"title": "5/8 — Le Lac (regard vers la voûte)",
+		"note": "Le puits de plafond à contour libre doit se lire",
+		"from": Vector3(-6.0, 0.6, 44.0), "look": Vector3(-2.0, 14.0, 32.0),
 	},
 	{
-		"title": "6/9 — Z4 · Le Nid (terrasses)",
-		"note": "Les 3 terrasses et l'emplacement du cristal K1",
-		"from": Vector3(12.0, 4.5, 10.0), "look": Vector3(22.0, 4.0, 20.0),
+		"title": "6/8 — La Poche du Loot (ouest)",
+		"note": "L'alcôve perchée au bout du boyau étroit",
+		"from": Vector3(-104.0, 8.0, 6.0), "look": Vector3(-130.0, 9.0, 6.0),
 	},
 	{
-		"title": "7/9 — Z5 · La Lanterne",
-		"note": "La chambre nord, seul point chaud du niveau (non posé encore)",
-		"from": Vector3(6.0, 4.6, -14.0), "look": Vector3(16.0, 3.0, -22.0),
+		"title": "7/8 — LA RÉVÉLATION (crête du seuil)",
+		"note": "Compression du goulet, puis ouverture sur le bol de l'arène",
+		"from": Vector3(46.0, 8.2, -47.0), "look": Vector3(100.0, -3.0, -52.0),
 	},
 	{
-		"title": "8/9 — V3 · LA RÉVÉLATION (crête du seuil)",
-		"note": "Le moment clé : compression puis ouverture sur le bol de l'arène",
-		"from": Vector3(27.0, 4.8, 0.0), "look": Vector3(44.0, -3.0, 0.0),
-	},
-	{
-		"title": "9/9 — Z6 · Fond de l'arène (regard vers la crête)",
-		"note": "Le contrechamp : ce que voit le joueur une fois descendu",
-		"from": Vector3(44.0, -1.7, 0.0), "look": Vector3(20.0, 6.0, 0.0),
+		"title": "8/8 — Fond de l'arène (regard vers la crête)",
+		"note": "Le contrechamp, une fois descendu dans le bol",
+		"from": Vector3(100.0, -1.5, -52.0), "look": Vector3(30.0, 10.0, -46.0),
 	},
 ]
 

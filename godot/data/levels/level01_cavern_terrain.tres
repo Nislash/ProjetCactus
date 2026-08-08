@@ -1,175 +1,266 @@
 [gd_resource type="Resource" script_class="CavernTerrainData" format=3]
 
-[ext_resource type="Script" path="res://scripts/world/cavern_basin.gd" id="1_grvdt"]
-[ext_resource type="Script" path="res://scripts/world/cavern_plateau.gd" id="2_rtr8b"]
-[ext_resource type="Script" path="res://scripts/world/cavern_ramp.gd" id="3_o5eun"]
-[ext_resource type="Script" path="res://scripts/world/cavern_heightfield_spec.gd" id="4_wst8a"]
-[ext_resource type="Script" path="res://scripts/world/cavern_terrain_data.gd" id="5_53npu"]
-[ext_resource type="Script" path="res://scripts/world/cavern_sky_well.gd" id="6_q5wng"]
-
-[sub_resource type="Resource" id="Resource_4nq64"]
-script = ExtResource("1_grvdt")
-label = "C1 cuvette de K3"
-center = Vector2(-20, 6)
-depth = 0.8
-rim_height = 0.4
-rim_width = 1.4850521120497777
-
-[sub_resource type="Resource" id="Resource_amgfu"]
-script = ExtResource("1_grvdt")
-label = "Z3 lac gelé"
-radii = Vector2(16, 12)
-depth = 2.0
-rim_width = 1.856315140062222
-
-[sub_resource type="Resource" id="Resource_0ymyn"]
-script = ExtResource("1_grvdt")
-label = "Z6 bol d'arène"
-center = Vector2(42, 0)
-radii = Vector2(14, 14)
-depth = 5.0
-rim_width = 1.071111005056586
-
-[sub_resource type="Resource" id="Resource_we563"]
-script = ExtResource("2_rtr8b")
-label = "Z2 forêt"
-center = Vector2(-22, 0)
-half_extent = Vector2(10, 14)
-altitude = 3.5
-falloff = 7.8466824986420445
+[ext_resource type="Script" path="res://scripts/world/cavern_chamber.gd" id="1_o5eun"]
+[ext_resource type="Script" path="res://scripts/world/cavern_basin.gd" id="2_wst8a"]
+[ext_resource type="Script" path="res://scripts/world/cavern_plateau.gd" id="3_53npu"]
+[ext_resource type="Script" path="res://scripts/world/cavern_ramp.gd" id="4_q5wng"]
+[ext_resource type="Script" path="res://scripts/world/cavern_heightfield_spec.gd" id="5_4nq64"]
+[ext_resource type="Script" path="res://scripts/world/cavern_lake.gd" id="6_amgfu"]
+[ext_resource type="Script" path="res://scripts/world/cavern_terrain_data.gd" id="7_0ymyn"]
+[ext_resource type="Script" path="res://scripts/world/cavern_sky_opening.gd" id="8_we563"]
 
 [sub_resource type="Resource" id="Resource_w20u3"]
-script = ExtResource("2_rtr8b")
-label = "Z1 corniche"
-center = Vector2(-38.5, 0)
-half_extent = Vector2(6.5, 9)
-altitude = 6.0
-falloff = 20.924486663045453
+script = ExtResource("1_o5eun")
+label = "Salle du Boss"
+center = Vector2(88, -52)
+radii = Vector2(60, 42)
+rotation_degrees = -12.0
+edge_softness = 16.0
+headroom = 14.0
 
 [sub_resource type="Resource" id="Resource_q46wv"]
-script = ExtResource("2_rtr8b")
-label = "Z4 terrasse T2"
-center = Vector2(18, 16)
-half_extent = Vector2(5, 4)
-altitude = 3.0
-falloff = 5.231121665761363
+script = ExtResource("1_o5eun")
+label = "Grande Nef"
+center = Vector2(-18, -40)
+radii = Vector2(86, 36)
+rotation_degrees = 8.0
+edge_softness = 18.0
+headroom = 13.0
 
 [sub_resource type="Resource" id="Resource_ckt5p"]
-script = ExtResource("2_rtr8b")
-label = "Z4 terrasse T3 (K1)"
-center = Vector2(22, 20)
-half_extent = Vector2(5, 4)
-altitude = 4.0
-falloff = 10.462243331522727
+script = ExtResource("1_o5eun")
+label = "Seuil du Boss"
+center = Vector2(30, -44)
+to_center = Vector2(54, -50)
+is_corridor = true
+radii = Vector2(11, 11)
+edge_softness = 9.0
+headroom = 10.5
 
 [sub_resource type="Resource" id="Resource_i10oe"]
-script = ExtResource("2_rtr8b")
-label = "Z5 la lanterne"
-center = Vector2(14, -21)
-half_extent = Vector2(8, 7)
-altitude = 3.0
-falloff = 5.231121665761363
+script = ExtResource("1_o5eun")
+label = "Salle du Lac"
+center = Vector2(-6, 34)
+radii = Vector2(44, 52)
+rotation_degrees = -6.0
+edge_softness = 20.0
+headroom = 15.0
 
 [sub_resource type="Resource" id="Resource_8hroj"]
-script = ExtResource("2_rtr8b")
-label = "Z6 crête du seuil"
-center = Vector2(27, 0)
-half_extent = Vector2(3, 10)
-altitude = 3.0
-falloff = 5.231121665761363
+script = ExtResource("1_o5eun")
+label = "Descente du Lac"
+center = Vector2(-22, -14)
+to_center = Vector2(-8, 6)
+is_corridor = true
+radii = Vector2(13, 13)
+edge_softness = 10.0
 
 [sub_resource type="Resource" id="Resource_ulwrf"]
-script = ExtResource("3_o5eun")
-label = "RN rampe nord"
-from_point = Vector2(29, -8)
-to_point = Vector2(38, -4)
-from_altitude = 3.0
-to_altitude = 1.0
-width = 4.0
-falloff = 5.0
+script = ExtResource("1_o5eun")
+label = "Poche du Loot"
+center = Vector2(-126, 6)
+radii = Vector2(24, 21)
+rotation_degrees = 18.0
+edge_softness = 11.0
+headroom = 10.0
 
 [sub_resource type="Resource" id="Resource_l1jl5"]
-script = ExtResource("3_o5eun")
-label = "RS rampe sud"
-from_point = Vector2(29, 8)
-to_point = Vector2(38, 4)
-from_altitude = 3.0
-to_altitude = 1.0
-width = 4.0
-falloff = 5.0
+script = ExtResource("1_o5eun")
+label = "Boyau du Loot"
+center = Vector2(-100, -24)
+to_center = Vector2(-118, 0)
+is_corridor = true
+radii = Vector2(9, 9)
+headroom = 10.0
 
 [sub_resource type="Resource" id="Resource_5rmll"]
-script = ExtResource("4_wst8a")
+script = ExtResource("1_o5eun")
+label = "Anse Sud-Ouest"
+center = Vector2(-84, 30)
+radii = Vector2(38, 30)
+rotation_degrees = -24.0
+edge_softness = 16.0
+
+[sub_resource type="Resource" id="Resource_dv17l"]
+script = ExtResource("1_o5eun")
+label = "Passe Sud-Ouest"
+center = Vector2(-70, -8)
+to_center = Vector2(-78, 14)
+is_corridor = true
+radii = Vector2(12, 12)
+edge_softness = 10.0
+headroom = 11.5
+
+[sub_resource type="Resource" id="Resource_4brth"]
+script = ExtResource("2_wst8a")
+label = "Bol de l'Arène"
+center = Vector2(100, -52)
+radii = Vector2(38, 30)
+depth = 5.0
+rim_height = 0.6
+flat_bottom = 0.42
+rim_width = 1.5588457268119897
+
+[sub_resource type="Resource" id="Resource_ap0s8"]
+script = ExtResource("2_wst8a")
+label = "Cuvette du Lac"
+center = Vector2(-6, 36)
+radii = Vector2(34, 42)
+depth = 3.2
+rim_height = 0.7
+flat_bottom = 0.55
+rim_width = 2.1528190336582607
+
+[sub_resource type="Resource" id="Resource_dnqmo"]
+script = ExtResource("3_53npu")
+label = "Nef ouest (haut)"
+center = Vector2(-96, -34)
+half_extent = Vector2(34, 22)
+is_ellipse = true
+altitude = 8.0
+falloff = 20.924486663045453
+
+[sub_resource type="Resource" id="Resource_kaknu"]
+script = ExtResource("3_53npu")
+label = "Nef centre"
+center = Vector2(-16, -38)
+half_extent = Vector2(46, 24)
+is_ellipse = true
+altitude = 4.5
+falloff = 13.077804164403409
+
+[sub_resource type="Resource" id="Resource_dkjtj"]
+script = ExtResource("3_53npu")
+label = "Poche du Loot"
+center = Vector2(-126, 6)
+half_extent = Vector2(18, 15)
+is_ellipse = true
+altitude = 9.0
+falloff = 15.693364997284089
+
+[sub_resource type="Resource" id="Resource_qkpaj"]
+script = ExtResource("3_53npu")
+label = "Anse Sud-Ouest"
+center = Vector2(-84, 30)
+half_extent = Vector2(28, 22)
+is_ellipse = true
+altitude = 3.0
+falloff = 15.693364997284089
+
+[sub_resource type="Resource" id="Resource_ah3b3"]
+script = ExtResource("3_53npu")
+label = "Crête du Seuil"
+center = Vector2(42, -47)
+half_extent = Vector2(9, 8)
+is_ellipse = true
+altitude = 6.0
+falloff = 10.462243331522727
+
+[sub_resource type="Resource" id="Resource_56ctt"]
+script = ExtResource("4_q5wng")
+label = "Rampe nord"
+from_point = Vector2(66, -66)
+to_point = Vector2(84, -58)
+from_altitude = 5.0
+to_altitude = 3.0
+width = 9.0
+falloff = 7.0
+
+[sub_resource type="Resource" id="Resource_mcrtn"]
+script = ExtResource("4_q5wng")
+label = "Rampe sud"
+from_point = Vector2(66, -38)
+to_point = Vector2(84, -46)
+from_altitude = 5.0
+to_altitude = 3.0
+width = 9.0
+falloff = 7.0
+
+[sub_resource type="Resource" id="Resource_3y3na"]
+script = ExtResource("5_4nq64")
 base_altitude = 2.0
-plateaus = Array[ExtResource("2_rtr8b")]([SubResource("Resource_we563"), SubResource("Resource_w20u3"), SubResource("Resource_q46wv"), SubResource("Resource_ckt5p"), SubResource("Resource_i10oe"), SubResource("Resource_8hroj")])
-ramps = Array[ExtResource("3_o5eun")]([SubResource("Resource_ulwrf"), SubResource("Resource_l1jl5")])
-basins = Array[ExtResource("1_grvdt")]([SubResource("Resource_4nq64"), SubResource("Resource_amgfu"), SubResource("Resource_0ymyn")])
+plateaus = Array[ExtResource("3_53npu")]([SubResource("Resource_dnqmo"), SubResource("Resource_kaknu"), SubResource("Resource_dkjtj"), SubResource("Resource_qkpaj"), SubResource("Resource_ah3b3")])
+ramps = Array[ExtResource("4_q5wng")]([SubResource("Resource_56ctt"), SubResource("Resource_mcrtn")])
+basins = Array[ExtResource("2_wst8a")]([SubResource("Resource_4brth"), SubResource("Resource_ap0s8")])
 noise_amplitude = 0.6
 noise_scale = 10.0
 
-[sub_resource type="Resource" id="Resource_dv17l"]
-script = ExtResource("6_q5wng")
-label = "P1"
-center = Vector2(2, -2)
-
-[sub_resource type="Resource" id="Resource_4brth"]
-script = ExtResource("6_q5wng")
-label = "P2"
-center = Vector2(14, -20)
-diameter = 3.0
-
-[sub_resource type="Resource" id="Resource_ap0s8"]
-script = ExtResource("2_rtr8b")
-label = "voûte Z1"
-center = Vector2(-38.5, 0)
-half_extent = Vector2(8, 11)
-altitude = 12.0
-falloff = 14.0
-
-[sub_resource type="Resource" id="Resource_dnqmo"]
-script = ExtResource("2_rtr8b")
-label = "voûte Z3 lac"
-half_extent = Vector2(16, 12)
+[sub_resource type="Resource" id="Resource_xueqt"]
+script = ExtResource("3_53npu")
+label = "Compression du seuil"
+center = Vector2(42, -47)
+half_extent = Vector2(11, 10)
 is_ellipse = true
-altitude = 14.0
-falloff = 12.0
+altitude = -6.0
+falloff = 10.0
 
-[sub_resource type="Resource" id="Resource_kaknu"]
-script = ExtResource("2_rtr8b")
-label = "voûte Z5"
-center = Vector2(14, -21)
-half_extent = Vector2(9, 8)
-altitude = 10.0
-falloff = 8.0
-
-[sub_resource type="Resource" id="Resource_dkjtj"]
-script = ExtResource("2_rtr8b")
-label = "voûte seuil"
-center = Vector2(27, 0)
-half_extent = Vector2(4, 11)
-altitude = 10.0
-
-[sub_resource type="Resource" id="Resource_qkpaj"]
-script = ExtResource("2_rtr8b")
-label = "voûte arène"
-center = Vector2(42, 0)
-half_extent = Vector2(14, 14)
+[sub_resource type="Resource" id="Resource_ynavs"]
+script = ExtResource("3_53npu")
+label = "Ouverture de l'arène"
+center = Vector2(100, -52)
+half_extent = Vector2(34, 26)
 is_ellipse = true
-altitude = 15.0
-falloff = 8.0
+altitude = 5.0
+falloff = 16.0
 
-[sub_resource type="Resource" id="Resource_ah3b3"]
-script = ExtResource("4_wst8a")
-base_altitude = 12.0
-plateaus = Array[ExtResource("2_rtr8b")]([SubResource("Resource_ap0s8"), SubResource("Resource_dnqmo"), SubResource("Resource_kaknu"), SubResource("Resource_dkjtj"), SubResource("Resource_qkpaj")])
-noise_amplitude = 1.6
-noise_scale = 6.5
-noise_seed = 771102
+[sub_resource type="Resource" id="Resource_8adk0"]
+script = ExtResource("3_53npu")
+label = "Nef haute"
+center = Vector2(-6, 34)
+half_extent = Vector2(36, 44)
+is_ellipse = true
+altitude = 4.0
+falloff = 18.0
+
+[sub_resource type="Resource" id="Resource_81kut"]
+script = ExtResource("5_4nq64")
+plateaus = Array[ExtResource("3_53npu")]([SubResource("Resource_xueqt"), SubResource("Resource_ynavs"), SubResource("Resource_8adk0")])
+noise_amplitude = 0.8
+noise_scale = 22.0
+noise_seed = 4412
+
+[sub_resource type="Resource" id="Resource_ixype"]
+script = ExtResource("6_amgfu")
+label = "Lac gelé"
+surface_altitude = -0.55
+minimum_depth = 0.2
+center = Vector2(-6, 36)
+radii = Vector2(36, 44)
+material_path = "res://data/levels/cavern_ice_material.tres"
+
+[sub_resource type="Resource" id="Resource_83euj"]
+script = ExtResource("8_we563")
+label = "P1 lac (a)"
+center = Vector2(-4, 30)
+radii = Vector2(15, 11)
+rotation_degrees = -18.0
+
+[sub_resource type="Resource" id="Resource_mmufq"]
+script = ExtResource("8_we563")
+label = "P1 lac (b)"
+center = Vector2(6, 38)
+radii = Vector2(10, 13)
+rotation_degrees = 24.0
+
+[sub_resource type="Resource" id="Resource_6uuf7"]
+script = ExtResource("8_we563")
+label = "P2 loot"
+center = Vector2(-126, 4)
+radii = Vector2(6, 5)
+
+[sub_resource type="Resource" id="Resource_ear6g"]
+script = ExtResource("8_we563")
+label = "P3 nef"
+center = Vector2(-58, -34)
+radii = Vector2(4, 11)
+rotation_degrees = 32.0
 
 [resource]
-script = ExtResource("5_53npu")
-bounds_max = Vector2(56, 26)
-floor_field = SubResource("Resource_5rmll")
-vault_field = SubResource("Resource_ah3b3")
-sky_wells = Array[ExtResource("6_q5wng")]([SubResource("Resource_dv17l"), SubResource("Resource_4brth")])
-max_slope_degrees = 36.0
+script = ExtResource("7_0ymyn")
+bounds_min = Vector2(-155, -105)
+bounds_max = Vector2(155, 105)
+chambers = Array[ExtResource("1_o5eun")]([SubResource("Resource_w20u3"), SubResource("Resource_q46wv"), SubResource("Resource_ckt5p"), SubResource("Resource_i10oe"), SubResource("Resource_8hroj"), SubResource("Resource_ulwrf"), SubResource("Resource_l1jl5"), SubResource("Resource_5rmll"), SubResource("Resource_dv17l")])
+floor_field = SubResource("Resource_3y3na")
+headroom_field = SubResource("Resource_81kut")
+sky_openings = Array[ExtResource("8_we563")]([SubResource("Resource_83euj"), SubResource("Resource_mmufq"), SubResource("Resource_6uuf7"), SubResource("Resource_ear6g")])
+lake = SubResource("Resource_ixype")
