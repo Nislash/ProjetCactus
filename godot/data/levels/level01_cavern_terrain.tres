@@ -11,87 +11,174 @@
 
 [sub_resource type="Resource" id="Resource_w20u3"]
 script = ExtResource("1_o5eun")
-label = "Salle du Boss"
-center = Vector2(88, -52)
-radii = Vector2(60, 42)
-rotation_degrees = -12.0
-edge_softness = 16.0
-headroom = 14.0
+label = "B1 Salle du Boss"
+center = Vector2(96, -54)
+radii = Vector2(49, 36)
+rotation_degrees = -14.0
+edge_softness = 14.0
+headroom = 15.0
 
 [sub_resource type="Resource" id="Resource_q46wv"]
 script = ExtResource("1_o5eun")
-label = "Grande Nef"
-center = Vector2(-18, -40)
-radii = Vector2(86, 36)
-rotation_degrees = 8.0
-edge_softness = 18.0
-headroom = 13.0
+label = "B2 Lobe NO du Boss"
+center = Vector2(66, -70)
+radii = Vector2(24, 18)
+rotation_degrees = 22.0
+edge_softness = 10.0
+headroom = 14.0
 
 [sub_resource type="Resource" id="Resource_ckt5p"]
 script = ExtResource("1_o5eun")
-label = "Seuil du Boss"
-center = Vector2(30, -44)
-to_center = Vector2(54, -50)
-is_corridor = true
-radii = Vector2(11, 11)
-edge_softness = 9.0
-headroom = 10.5
+label = "B3 Encoche Est"
+center = Vector2(122, -30)
+radii = Vector2(14, 10)
+rotation_degrees = -30.0
+edge_softness = 6.0
 
 [sub_resource type="Resource" id="Resource_i10oe"]
 script = ExtResource("1_o5eun")
-label = "Salle du Lac"
-center = Vector2(-6, 34)
-radii = Vector2(44, 52)
-rotation_degrees = -6.0
-edge_softness = 20.0
-headroom = 15.0
+label = "G1 Galerie Ouest"
+center = Vector2(-102, -38)
+radii = Vector2(34, 24)
+rotation_degrees = 18.0
+edge_softness = 12.0
+headroom = 13.0
 
 [sub_resource type="Resource" id="Resource_8hroj"]
 script = ExtResource("1_o5eun")
-label = "Descente du Lac"
-center = Vector2(-22, -14)
-to_center = Vector2(-8, 6)
-is_corridor = true
-radii = Vector2(13, 13)
-edge_softness = 10.0
+label = "G2 Galerie Centrale"
+center = Vector2(-54, -44)
+radii = Vector2(32, 22)
+rotation_degrees = -10.0
 
 [sub_resource type="Resource" id="Resource_ulwrf"]
 script = ExtResource("1_o5eun")
-label = "Poche du Loot"
-center = Vector2(-126, 6)
-radii = Vector2(24, 21)
-rotation_degrees = 18.0
-edge_softness = 11.0
-headroom = 10.0
+label = "G3 Galerie Est"
+center = Vector2(-12, -36)
+radii = Vector2(30, 22)
+rotation_degrees = 8.0
+edge_softness = 16.0
+headroom = 13.0
 
 [sub_resource type="Resource" id="Resource_l1jl5"]
 script = ExtResource("1_o5eun")
-label = "Boyau du Loot"
-center = Vector2(-100, -24)
-to_center = Vector2(-118, 0)
-is_corridor = true
-radii = Vector2(9, 9)
-headroom = 10.0
+label = "N1 Baie Nord (K3)"
+center = Vector2(-44, -64)
+radii = Vector2(11, 8)
+rotation_degrees = 25.0
+edge_softness = 5.0
+headroom = 11.0
 
 [sub_resource type="Resource" id="Resource_5rmll"]
 script = ExtResource("1_o5eun")
-label = "Anse Sud-Ouest"
-center = Vector2(-84, 30)
-radii = Vector2(38, 30)
-rotation_degrees = -24.0
-edge_softness = 16.0
+label = "L1 Salle du Lac"
+center = Vector2(-4, 36)
+radii = Vector2(49, 42)
+rotation_degrees = -8.0
+edge_softness = 18.0
+headroom = 15.0
 
 [sub_resource type="Resource" id="Resource_dv17l"]
 script = ExtResource("1_o5eun")
-label = "Passe Sud-Ouest"
-center = Vector2(-70, -8)
-to_center = Vector2(-78, 14)
-is_corridor = true
-radii = Vector2(12, 12)
-edge_softness = 10.0
-headroom = 11.5
+label = "L2 Lobe Nord-Est"
+center = Vector2(28, 16)
+radii = Vector2(22, 16)
+rotation_degrees = 30.0
+headroom = 14.0
 
 [sub_resource type="Resource" id="Resource_4brth"]
+script = ExtResource("1_o5eun")
+label = "L3 Queue Sud"
+center = Vector2(-14, 74)
+radii = Vector2(14, 10)
+rotation_degrees = -20.0
+edge_softness = 6.0
+headroom = 11.0
+
+[sub_resource type="Resource" id="Resource_ap0s8"]
+script = ExtResource("1_o5eun")
+label = "P1 Poche du Loot"
+center = Vector2(-128, 8)
+radii = Vector2(20, 15)
+rotation_degrees = 20.0
+edge_softness = 5.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_dnqmo"]
+script = ExtResource("1_o5eun")
+label = "J1 Jardin de Givre"
+center = Vector2(-86, 34)
+radii = Vector2(30, 22)
+rotation_degrees = -28.0
+edge_softness = 14.0
+
+[sub_resource type="Resource" id="Resource_kaknu"]
+script = ExtResource("1_o5eun")
+label = "J2 Jardin (lobe est)"
+center = Vector2(-60, 52)
+radii = Vector2(16, 12)
+rotation_degrees = 15.0
+headroom = 11.0
+
+[sub_resource type="Resource" id="Resource_dkjtj"]
+script = ExtResource("1_o5eun")
+label = "C1 Le Détroit"
+center = Vector2(-32, -42)
+to_center = Vector2(-24, -38)
+is_corridor = true
+radii = Vector2(5, 5)
+edge_softness = 6.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_qkpaj"]
+script = ExtResource("1_o5eun")
+label = "C2 Boyau du Loot"
+center = Vector2(-104, -22)
+to_center = Vector2(-120, 2)
+is_corridor = true
+radii = Vector2(4.5, 4.5)
+edge_softness = 5.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_ah3b3"]
+script = ExtResource("1_o5eun")
+label = "C3 Passe du Jardin"
+center = Vector2(-74, -8)
+to_center = Vector2(-80, 16)
+is_corridor = true
+radii = Vector2(6, 6)
+headroom = 11.0
+
+[sub_resource type="Resource" id="Resource_56ctt"]
+script = ExtResource("1_o5eun")
+label = "C4 La Descente"
+center = Vector2(-20, -14)
+to_center = Vector2(-10, 6)
+is_corridor = true
+radii = Vector2(7, 7)
+edge_softness = 9.0
+
+[sub_resource type="Resource" id="Resource_mcrtn"]
+script = ExtResource("1_o5eun")
+label = "C5 Seuil du Boss"
+center = Vector2(30, -40)
+to_center = Vector2(52, -48)
+is_corridor = true
+radii = Vector2(8, 8)
+edge_softness = 9.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_3y3na"]
+script = ExtResource("1_o5eun")
+label = "C6 Passage Effondré"
+center = Vector2(50, -32)
+to_center = Vector2(30, 2)
+is_corridor = true
+radii = Vector2(4, 4)
+edge_softness = 5.0
+headroom = 10.0
+
+[sub_resource type="Resource" id="Resource_xueqt"]
 script = ExtResource("2_wst8a")
 label = "Bol de l'Arène"
 center = Vector2(100, -52)
@@ -101,166 +188,206 @@ rim_height = 0.6
 flat_bottom = 0.42
 rim_width = 1.5588457268119897
 
-[sub_resource type="Resource" id="Resource_ap0s8"]
+[sub_resource type="Resource" id="Resource_ynavs"]
 script = ExtResource("2_wst8a")
-label = "Cuvette du Lac"
-center = Vector2(-6, 36)
-radii = Vector2(34, 42)
+label = "Lit du Lac"
+center = Vector2(-4, 38)
+radii = Vector2(30, 26)
 depth = 3.2
 rim_height = 0.7
 flat_bottom = 0.55
 rim_width = 2.1528190336582607
 
-[sub_resource type="Resource" id="Resource_dnqmo"]
+[sub_resource type="Resource" id="Resource_8adk0"]
 script = ExtResource("3_53npu")
-label = "Nef ouest (haut)"
-center = Vector2(-96, -34)
-half_extent = Vector2(34, 22)
-is_ellipse = true
-altitude = 8.0
-falloff = 20.924486663045453
-
-[sub_resource type="Resource" id="Resource_kaknu"]
-script = ExtResource("3_53npu")
-label = "Nef centre"
-center = Vector2(-16, -38)
-half_extent = Vector2(46, 24)
-is_ellipse = true
-altitude = 4.5
-falloff = 13.077804164403409
-
-[sub_resource type="Resource" id="Resource_dkjtj"]
-script = ExtResource("3_53npu")
-label = "Poche du Loot"
-center = Vector2(-126, 6)
-half_extent = Vector2(18, 15)
+label = "Perchoir Ouest"
+center = Vector2(-112, -38)
+half_extent = Vector2(26, 20)
 is_ellipse = true
 altitude = 9.0
+falloff = 20.924486663045453
+
+[sub_resource type="Resource" id="Resource_81kut"]
+script = ExtResource("3_53npu")
+label = "Galerie mi-pente"
+center = Vector2(-54, -42)
+half_extent = Vector2(26, 18)
+is_ellipse = true
+altitude = 6.0
 falloff = 15.693364997284089
 
-[sub_resource type="Resource" id="Resource_qkpaj"]
+[sub_resource type="Resource" id="Resource_ixype"]
 script = ExtResource("3_53npu")
-label = "Anse Sud-Ouest"
-center = Vector2(-84, 30)
-half_extent = Vector2(28, 22)
+label = "Galerie basse"
+center = Vector2(-12, -36)
+half_extent = Vector2(26, 18)
+is_ellipse = true
+altitude = 4.0
+falloff = 10.462243331522727
+
+[sub_resource type="Resource" id="Resource_83euj"]
+script = ExtResource("3_53npu")
+label = "Perchoir du Loot"
+center = Vector2(-128, 8)
+half_extent = Vector2(16, 12)
+is_ellipse = true
+altitude = 9.5
+falloff = 15.693364997284089
+
+[sub_resource type="Resource" id="Resource_mmufq"]
+script = ExtResource("3_53npu")
+label = "Jardin"
+center = Vector2(-82, 36)
+half_extent = Vector2(26, 20)
 is_ellipse = true
 altitude = 3.0
 falloff = 15.693364997284089
 
-[sub_resource type="Resource" id="Resource_ah3b3"]
+[sub_resource type="Resource" id="Resource_6uuf7"]
 script = ExtResource("3_53npu")
 label = "Crête du Seuil"
-center = Vector2(42, -47)
-half_extent = Vector2(9, 8)
+center = Vector2(42, -46)
+half_extent = Vector2(9, 7)
 is_ellipse = true
-altitude = 6.0
+altitude = 6.5
 falloff = 10.462243331522727
 
-[sub_resource type="Resource" id="Resource_56ctt"]
+[sub_resource type="Resource" id="Resource_ear6g"]
+script = ExtResource("3_53npu")
+label = "Berge du Passage"
+center = Vector2(40, -14)
+half_extent = Vector2(8, 12)
+is_ellipse = true
+altitude = 4.0
+falloff = 10.462243331522727
+
+[sub_resource type="Resource" id="Resource_walj3"]
 script = ExtResource("4_q5wng")
 label = "Rampe nord"
-from_point = Vector2(66, -66)
+from_point = Vector2(64, -68)
 to_point = Vector2(84, -58)
-from_altitude = 5.0
-to_altitude = 3.0
-width = 9.0
-falloff = 7.0
+from_altitude = 3.0
+to_altitude = 2.0
+width = 10.0
+falloff = 8.0
 
-[sub_resource type="Resource" id="Resource_mcrtn"]
+[sub_resource type="Resource" id="Resource_kr2ob"]
 script = ExtResource("4_q5wng")
 label = "Rampe sud"
-from_point = Vector2(66, -38)
+from_point = Vector2(64, -36)
 to_point = Vector2(84, -46)
-from_altitude = 5.0
-to_altitude = 3.0
-width = 9.0
-falloff = 7.0
+from_altitude = 3.0
+to_altitude = 2.0
+width = 10.0
+falloff = 8.0
 
-[sub_resource type="Resource" id="Resource_3y3na"]
+[sub_resource type="Resource" id="Resource_ynsvb"]
 script = ExtResource("5_4nq64")
 base_altitude = 2.0
-plateaus = Array[ExtResource("3_53npu")]([SubResource("Resource_dnqmo"), SubResource("Resource_kaknu"), SubResource("Resource_dkjtj"), SubResource("Resource_qkpaj"), SubResource("Resource_ah3b3")])
-ramps = Array[ExtResource("4_q5wng")]([SubResource("Resource_56ctt"), SubResource("Resource_mcrtn")])
-basins = Array[ExtResource("2_wst8a")]([SubResource("Resource_4brth"), SubResource("Resource_ap0s8")])
+plateaus = Array[ExtResource("3_53npu")]([SubResource("Resource_8adk0"), SubResource("Resource_81kut"), SubResource("Resource_ixype"), SubResource("Resource_83euj"), SubResource("Resource_mmufq"), SubResource("Resource_6uuf7"), SubResource("Resource_ear6g")])
+ramps = Array[ExtResource("4_q5wng")]([SubResource("Resource_walj3"), SubResource("Resource_kr2ob")])
+basins = Array[ExtResource("2_wst8a")]([SubResource("Resource_xueqt"), SubResource("Resource_ynavs")])
 noise_amplitude = 0.6
 noise_scale = 10.0
 
-[sub_resource type="Resource" id="Resource_xueqt"]
+[sub_resource type="Resource" id="Resource_5gd5v"]
 script = ExtResource("3_53npu")
-label = "Compression du seuil"
-center = Vector2(42, -47)
+label = "Compression du Seuil"
+center = Vector2(42, -46)
 half_extent = Vector2(11, 10)
 is_ellipse = true
 altitude = -6.0
 falloff = 10.0
 
-[sub_resource type="Resource" id="Resource_ynavs"]
+[sub_resource type="Resource" id="Resource_jxp1q"]
 script = ExtResource("3_53npu")
-label = "Ouverture de l'arène"
+label = "Ouverture de l'Arène"
 center = Vector2(100, -52)
 half_extent = Vector2(34, 26)
 is_ellipse = true
 altitude = 5.0
 falloff = 16.0
 
-[sub_resource type="Resource" id="Resource_8adk0"]
+[sub_resource type="Resource" id="Resource_w7c41"]
 script = ExtResource("3_53npu")
-label = "Nef haute"
-center = Vector2(-6, 34)
+label = "Nef de la Brèche"
+center = Vector2(-4, 36)
 half_extent = Vector2(36, 44)
 is_ellipse = true
 altitude = 4.0
 falloff = 18.0
 
-[sub_resource type="Resource" id="Resource_81kut"]
+[sub_resource type="Resource" id="Resource_7obmm"]
+script = ExtResource("3_53npu")
+label = "Étranglement du Détroit"
+center = Vector2(-28, -40)
+half_extent = Vector2(8, 6)
+is_ellipse = true
+altitude = -4.0
+falloff = 8.0
+
+[sub_resource type="Resource" id="Resource_dlpdf"]
 script = ExtResource("5_4nq64")
-plateaus = Array[ExtResource("3_53npu")]([SubResource("Resource_xueqt"), SubResource("Resource_ynavs"), SubResource("Resource_8adk0")])
-noise_amplitude = 0.8
-noise_scale = 22.0
+plateaus = Array[ExtResource("3_53npu")]([SubResource("Resource_5gd5v"), SubResource("Resource_jxp1q"), SubResource("Resource_w7c41"), SubResource("Resource_7obmm")])
+noise_amplitude = 1.2
+noise_scale = 14.0
 noise_seed = 4412
 
-[sub_resource type="Resource" id="Resource_ixype"]
+[sub_resource type="Resource" id="Resource_jkio6"]
 script = ExtResource("6_amgfu")
 label = "Lac gelé"
 surface_altitude = -0.55
 minimum_depth = 0.2
-center = Vector2(-6, 36)
-radii = Vector2(36, 44)
+center = Vector2(-4, 38)
+radii = Vector2(30, 26)
 material_path = "res://data/levels/cavern_ice_material.tres"
 
-[sub_resource type="Resource" id="Resource_83euj"]
+[sub_resource type="Resource" id="Resource_7ia23"]
 script = ExtResource("8_we563")
-label = "P1 lac (a)"
-center = Vector2(-4, 30)
-radii = Vector2(15, 11)
-rotation_degrees = -18.0
+label = "O1 Brèche (principal)"
+center = Vector2(-8, 32)
+radii = Vector2(16, 12)
+rotation_degrees = -20.0
 
-[sub_resource type="Resource" id="Resource_mmufq"]
+[sub_resource type="Resource" id="Resource_7ialu"]
 script = ExtResource("8_we563")
-label = "P1 lac (b)"
-center = Vector2(6, 38)
-radii = Vector2(10, 13)
-rotation_degrees = 24.0
+label = "O2 Brèche (est)"
+center = Vector2(6, 40)
+radii = Vector2(12, 14)
+rotation_degrees = 35.0
 
-[sub_resource type="Resource" id="Resource_6uuf7"]
+[sub_resource type="Resource" id="Resource_3gr23"]
 script = ExtResource("8_we563")
-label = "P2 loot"
-center = Vector2(-126, 4)
+label = "O3 Brèche (échancrure)"
+center = Vector2(-18, 44)
+radii = Vector2(9, 7)
+
+[sub_resource type="Resource" id="Resource_klcvc"]
+script = ExtResource("8_we563")
+label = "O4 Loot"
+center = Vector2(-128, 6)
 radii = Vector2(6, 5)
 
-[sub_resource type="Resource" id="Resource_ear6g"]
+[sub_resource type="Resource" id="Resource_e7pi8"]
 script = ExtResource("8_we563")
-label = "P3 nef"
-center = Vector2(-58, -34)
-radii = Vector2(4, 11)
-rotation_degrees = 32.0
+label = "O5 Lame de la Galerie"
+center = Vector2(-58, -36)
+radii = Vector2(4, 12)
+rotation_degrees = 30.0
+
+[sub_resource type="Resource" id="Resource_chn72"]
+script = ExtResource("8_we563")
+label = "O6 Fissure d'Arène"
+center = Vector2(104, -44)
+radii = Vector2(2.5, 9)
+rotation_degrees = -40.0
 
 [resource]
 script = ExtResource("7_0ymyn")
 bounds_min = Vector2(-155, -105)
 bounds_max = Vector2(155, 105)
-chambers = Array[ExtResource("1_o5eun")]([SubResource("Resource_w20u3"), SubResource("Resource_q46wv"), SubResource("Resource_ckt5p"), SubResource("Resource_i10oe"), SubResource("Resource_8hroj"), SubResource("Resource_ulwrf"), SubResource("Resource_l1jl5"), SubResource("Resource_5rmll"), SubResource("Resource_dv17l")])
-floor_field = SubResource("Resource_3y3na")
-headroom_field = SubResource("Resource_81kut")
-sky_openings = Array[ExtResource("8_we563")]([SubResource("Resource_83euj"), SubResource("Resource_mmufq"), SubResource("Resource_6uuf7"), SubResource("Resource_ear6g")])
-lake = SubResource("Resource_ixype")
+chambers = Array[ExtResource("1_o5eun")]([SubResource("Resource_w20u3"), SubResource("Resource_q46wv"), SubResource("Resource_ckt5p"), SubResource("Resource_i10oe"), SubResource("Resource_8hroj"), SubResource("Resource_ulwrf"), SubResource("Resource_l1jl5"), SubResource("Resource_5rmll"), SubResource("Resource_dv17l"), SubResource("Resource_4brth"), SubResource("Resource_ap0s8"), SubResource("Resource_dnqmo"), SubResource("Resource_kaknu"), SubResource("Resource_dkjtj"), SubResource("Resource_qkpaj"), SubResource("Resource_ah3b3"), SubResource("Resource_56ctt"), SubResource("Resource_mcrtn"), SubResource("Resource_3y3na")])
+floor_field = SubResource("Resource_ynsvb")
+headroom_field = SubResource("Resource_dlpdf")
+sky_openings = Array[ExtResource("8_we563")]([SubResource("Resource_7ia23"), SubResource("Resource_7ialu"), SubResource("Resource_3gr23"), SubResource("Resource_klcvc"), SubResource("Resource_e7pi8"), SubResource("Resource_chn72")])
+lake = SubResource("Resource_jkio6")
