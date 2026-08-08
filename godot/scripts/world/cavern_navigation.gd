@@ -25,8 +25,13 @@ extends NavigationRegion3D
 ## largeur d'agent que personne n'avait choisie.
 @export var agent_radius: float = 0.5
 
-## Hauteur d'agent, alignée sur la capsule du joueur.
-@export var agent_height: float = 1.8
+## Hauteur d'agent. MULTIPLE EXACT de [member cell_height] (8 voxels), que le
+## baker arrondit au SUPÉRIEUR.
+##
+## 2,0 plutôt que les 1,8 de la capsule joueur : arrondir vers le HAUT est le
+## sens sûr — le navmesh ne promet jamais un passage où le joueur ne tiendrait
+## pas. La voûte étant partout à 10-15 m, aucun passage bas n'est perdu.
+@export var agent_height: float = 2.0
 
 ## Pente maximale franchissable. DOIT rester alignée sur le `floor_max_angle`
 ## du CharacterBody3D du joueur (45° par défaut dans Godot) — voir l'entête.
@@ -34,13 +39,18 @@ extends NavigationRegion3D
 
 ## Hauteur de marche franchissable. MULTIPLE EXACT de [member cell_height], que
 ## le baker arrondit au voxel INFÉRIEUR.
-@export var agent_max_climb: float = 0.4
+@export var agent_max_climb: float = 0.5
 
 ## Finesse de la grille de voxelisation. 0,25 m tient le compromis entre
 ## précision sur le relief et temps de cuisson sur une emprise de ~100 × 55 m.
 @export var cell_size: float = 0.25
 
-@export var cell_height: float = 0.2
+## DOIT correspondre au `cell_height` de la carte de navigation (0,25 par
+## défaut moteur). Un écart provoque des erreurs de rastérisation sur les bords
+## du navmesh — Godot le signale, et ça se traduit en pathing qui accroche.
+## Changer la carte plutôt que le navmesh toucherait `project.godot`, zone
+## partagée : on s'aligne sur le moteur.
+@export var cell_height: float = 0.25
 
 ## Nœud dont la géométrie est parsée. Laissé vide : le parent.
 @export var geometry_root_path: NodePath
