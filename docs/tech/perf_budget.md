@@ -88,3 +88,61 @@ attendant le **CPU render time**, qui ne capture que la soumission côté proces
   Le run post-E3 sur la vraie scène est donc le seul qui fasse foi pour le budget final.
 - La **tenue thermique** : les mesures durent quelques secondes, pas une session de jeu. Un playtest
   long reste nécessaire pour détecter un throttling.
+
+
+---
+
+## 6. Mesure post-texturing (● Opus, tâche #20, 2026-08-08)
+
+Relancé à l'identique après E3 (matériaux PBR, éclairage, brume par zone) et E4/E6 (props bakés,
+gameplay câblé, boss habillé). Machine : Apple M4, Forward+, fenêtre 1920 × 942, écran 60 Hz.
+
+### 6.1. Ce que coûte le niveau
+
+| | 1 viewport | 2 viewports | **4 viewports** |
+|---|---|---|---|
+| Draw calls (total) | 107 | 224 | **428** |
+| Draw calls **par viewport** | 107 | 112 | **107** |
+| Primitives | 119 k | 256 k | **478 k** |
+| VRAM | 249 Mo | 280 Mo | **341 Mo** |
+| CPU rendu | 0,44 ms | 0,66 ms | **0,74 ms** |
+
+Géométrie du niveau : 63 `MeshInstance3D`, **102 892 triangles**.
+
+Le coût par viewport est **plat** (107 → 112 → 107) : le split-screen multiplie le travail sans
+surcoût par écran. C'est ce qu'on veut, et ce n'était pas acquis — les quatre vues partagent le même
+`world_3d`, donc tout gain de culling profite quatre fois.
+
+### 6.2. L'écart avec le checkpoint E2
+
+Le blockout non texturé tournait à **70 draw calls/viewport et 310 Mo**. On est à **107 et 341 Mo**.
+Le texturing, les props, la brume, le boss et la chaîne de puzzle coûtent donc **+37 draw calls par
+viewport (+53 %) et +31 Mo**. C'est cher en proportion et négligeable en absolu : le décrochage
+géométrique est deux ordres de grandeur plus loin.
+
+### 6.3. Où sont les murs
+
+| Rampe | Dernier palier tenu | Premier palier décroché | Marge du niveau |
+|---|---|---|---|
+| Géométrie | **4 000 mailles — 10,5 M primitives, 60 fps** | 8 000 mailles — 20,4 M primitives, **54 fps** | le niveau en consomme 478 k, soit **×22** |
+| Lumières ombrées | **32 — 60 fps, aucun décrochage** | *jamais atteint dans la rampe* | le niveau en a une poignée |
+
+La rampe de lumières ne décroche pas : ce n'est pas le temps de rendu qui limite les sources ombrées
+ici, c'est la **VRAM des atlas d'ombres** (347 → 433 Mo entre 1 et 32 lumières, +2,7 Mo par source).
+
+**Conclusion : aucune optimisation n'est justifiée à ce stade.** Le niveau tient 60 fps en 4-split
+avec vingt fois la marge géométrique, et le poste qui bouge vraiment est la mémoire vidéo — c'est là
+qu'il faudra regarder au packaging (#32), pas dans le nombre de draw calls.
+
+### 6.4. Deux défauts de l'outil, corrigés au passage
+
+**Le compteur de triangles renvoyait 0.** Une surface non indexée renvoie `null` à l'emplacement des
+indices ; l'affecter à un `PackedInt32Array` typé levait une erreur par maille. Toute la caverne est
+générée en triangles bruts non indexés, donc le rapport annonçait « 0 triangles » sur une scène qui
+en a cent mille.
+
+**Le verdict s'appuyait sur les fps.** Le fichier documentait pourtant l'inverse (§3.2 : les fps
+saturent à 60 sur macOS). Chaque ligne affichait donc « OK » quelle que soit la charge — un verdict
+faussement rassurant, le pire genre. Le bench dit maintenant **« GPU non mesuré »** quand le backend
+ne remonte pas de temps GPU, et ne prononce « HORS BUDGET » que sur un dépassement franc du temps de
+frame. Il n'écrit plus jamais « OK » sur une mesure absente.
