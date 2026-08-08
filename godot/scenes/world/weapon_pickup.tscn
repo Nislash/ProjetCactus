@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://weapon_pickup_m2"]
 
-[ext_resource type="Script" path="res://scripts/core/weapon_pickup.gd" id="1_pickup"]
+[ext_resource type="Script" uid="uid://5kpuj5eflhrn" path="res://scripts/core/weapon_pickup.gd" id="1_pickup"]
 
 ; Socle (cube métallique au sol)
 [sub_resource type="BoxShape3D" id="Shape_base"]

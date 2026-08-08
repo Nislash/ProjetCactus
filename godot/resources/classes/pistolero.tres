@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="ClassData" load_steps=4 format=3 uid="uid://class_pistolero_m1"]
 
-[ext_resource type="Script" path="res://scripts/core/data/class_data.gd" id="1_class"]
+[ext_resource type="Script" uid="uid://cxunee2xmvb35" path="res://scripts/core/data/class_data.gd" id="1_class"]
 [ext_resource type="Resource" path="res://resources/weapons/pistol.tres" id="2_weapon"]
 [ext_resource type="Resource" path="res://resources/spells/fire.tres" id="3_spell"]
 

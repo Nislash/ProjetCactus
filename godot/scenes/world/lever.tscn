@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://lever_m2"]
 
-[ext_resource type="Script" path="res://scripts/core/lever.gd" id="1_lever"]
+[ext_resource type="Script" uid="uid://dv1x8h2thbokm" path="res://scripts/core/lever.gd" id="1_lever"]
 
 ; Base (socle posé au sol)
 [sub_resource type="BoxShape3D" id="Shape_base"]

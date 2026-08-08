@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3 uid="uid://relic_bitter_lead"]
 
-[ext_resource type="Script" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
+[ext_resource type="Script" uid="uid://b4dqh5cm1e0j0" path="res://scripts/core/data/relic_data.gd" id="1_relic"]
 
 [resource]
 script = ExtResource("1_relic")

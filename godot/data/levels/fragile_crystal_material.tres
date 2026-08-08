@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" format=3]
 
-[ext_resource type="Shader" path="res://shaders/fragile_crystal.gdshader" id="1_fragile"]
+[ext_resource type="Shader" uid="uid://r65kxvndpuuv" path="res://shaders/fragile_crystal.gdshader" id="1_fragile"]
 
 [resource]
 render_priority = 0

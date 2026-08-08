@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://door_m2"]
 
-[ext_resource type="Script" path="res://scripts/core/door.gd" id="1_door"]
+[ext_resource type="Script" uid="uid://oaxddus8yij4" path="res://scripts/core/door.gd" id="1_door"]
 
 [sub_resource type="BoxShape3D" id="Shape_door"]
 size = Vector3(4, 4, 0.4)

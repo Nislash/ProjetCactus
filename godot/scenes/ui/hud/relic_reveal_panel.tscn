@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://relic_reveal_panel_m2"]
 
-[ext_resource type="Script" path="res://scripts/core/relic_reveal_panel.gd" id="1_reveal"]
+[ext_resource type="Script" uid="uid://chfvnwm0jc74x" path="res://scripts/core/relic_reveal_panel.gd" id="1_reveal"]
 
 [sub_resource type="StyleBoxFlat" id="Style_panel"]
 bg_color = Color(0.05, 0.06, 0.09, 0.92)
