@@ -35,6 +35,9 @@ const _BINDINGS: Dictionary = {
 	&"dash":             [{&"type": _BUTTON, &"button": JOY_BUTTON_B}],
 	&"interact":         [{&"type": _BUTTON, &"button": JOY_BUTTON_X}],
 	&"toggle_map":       [{&"type": _BUTTON, &"button": JOY_BUTTON_DPAD_UP}],
+	## Bascule vue subjective ↔ troisième personne. Sur la croix, à côté de la
+	## carte : ce sont les deux réglages de confort qu'on change en jouant.
+	&"toggle_view":      [{&"type": _BUTTON, &"button": JOY_BUTTON_DPAD_DOWN}],
 	&"toggle_inventory": [{&"type": _BUTTON, &"button": JOY_BUTTON_Y}],
 	&"pause":            [{&"type": _BUTTON, &"button": JOY_BUTTON_START}],
 	&"lobby_join":       [{&"type": _BUTTON, &"button": JOY_BUTTON_START}],

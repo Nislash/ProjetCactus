@@ -92,6 +92,10 @@ func _spawn_slot(player_id: int, _device_id: int) -> void:
 	_world.add_child(player)
 	player.set_spawn_position(_get_spawn_position(player_id))
 	player.attach_camera_to(viewport)
+	# La vue enregistrée pour SA manette. Après le rattachement : la bascule
+	# reparente le relais de caméra, qui doit donc déjà pointer vers la bonne
+	# caméra.
+	player.apply_saved_view_preference()
 
 	# Le HUD vit DANS le SubViewport du joueur pour que le rendu split-screen
 	# affiche le HUD côte à côte de la caméra correspondante (cf docs/tech/split_screen.md).
