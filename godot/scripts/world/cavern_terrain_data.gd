@@ -56,6 +56,21 @@ extends Resource
 @export var lake: CavernLake
 
 ## Hauteur libre minimale dans les zones jouables (contrainte dure du plan).
+## À CIEL OUVERT. Aucune voûte n'est construite : le volume est borné par des
+## falaises, pas par un plafond.
+##
+## La hauteur libre continue d'être CALCULÉE — elle définit la zone jouable et
+## sert aux tests — mais plus aucune géométrie ne la matérialise. Le joueur
+## voit le ciel ; le moteur, lui, raisonne comme avant.
+@export var open_sky: bool = false
+
+## Hauteur des falaises qui bordent un niveau à ciel ouvert, en mètres.
+##
+## Elles remplacent la voûte dans son rôle d'enceinte : là où le masque des
+## chambres retombe à zéro, le SOL monte de cette hauteur au lieu que le
+## plafond descende. C'est ce qui garantit « aucune sortie » sans plafond.
+@export var open_sky_rim_height: float = 34.0
+
 @export var min_headroom: float = 10.0
 
 ## Hauteur libre maximale (contrainte dure du plan).

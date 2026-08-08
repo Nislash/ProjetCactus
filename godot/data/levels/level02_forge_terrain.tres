@@ -12,8 +12,8 @@
 [sub_resource type="Resource" id="Resource_qpqrx"]
 script = ExtResource("1_klbrc")
 label = "F1 Le Puits"
-radii = Vector2(58, 58)
-edge_softness = 16.0
+radii = Vector2(46, 46)
+edge_softness = 9.0
 headroom = 16.0
 
 [sub_resource type="Resource" id="Resource_vvckm"]
@@ -152,25 +152,6 @@ minimum_depth = 0.2
 radii = Vector2(19, 19)
 material_path = "res://data/levels/forge_lava_material.tres"
 
-[sub_resource type="Resource" id="Resource_31rig"]
-script = ExtResource("8_f3w4k")
-label = "Cheminée centrale"
-radii = Vector2(11, 11)
-
-[sub_resource type="Resource" id="Resource_6coql"]
-script = ExtResource("8_f3w4k")
-label = "Évent Nord-Est"
-center = Vector2(26, 22)
-radii = Vector2(6, 8)
-rotation_degrees = 25.0
-
-[sub_resource type="Resource" id="Resource_asr3i"]
-script = ExtResource("8_f3w4k")
-label = "Évent Sud-Ouest"
-center = Vector2(-24, -18)
-radii = Vector2(7, 5.5)
-rotation_degrees = -15.0
-
 [resource]
 script = ExtResource("7_rdq8e")
 bounds_min = Vector2(-78, -78)
@@ -179,8 +160,9 @@ cell_size = 1.25
 chambers = Array[ExtResource("1_klbrc")]([SubResource("Resource_qpqrx"), SubResource("Resource_vvckm"), SubResource("Resource_0ort5"), SubResource("Resource_qoqgs"), SubResource("Resource_lxelb"), SubResource("Resource_47xjm"), SubResource("Resource_tcgnm")])
 floor_field = SubResource("Resource_8q83x")
 headroom_field = SubResource("Resource_6ewc3")
-sky_openings = Array[ExtResource("8_f3w4k")]([SubResource("Resource_31rig"), SubResource("Resource_6coql"), SubResource("Resource_asr3i")])
 lake = SubResource("Resource_8fxhg")
+open_sky = true
+open_sky_rim_height = 38.0
 min_headroom = 9.0
 max_headroom = 16.0
 chunk_size = 40.0
