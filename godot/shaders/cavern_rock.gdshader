@@ -49,6 +49,12 @@ group_uniforms Surface;
 uniform float rock_roughness : hint_range(0.0, 1.0) = 0.92;
 uniform float frost_roughness : hint_range(0.0, 1.0) = 0.55;
 
+group_uniforms Diagnostic;
+// 0 = rendu normal. Les autres modes rendent une grandeur brute EN NON-ECLAIRE,
+// pour distinguer un probleme de materiau d'un probleme d'eclairage :
+//   1 = albedo seul   2 = normale monde   3 = `value` (le bruit)   4 = masque de givre
+uniform int debug_mode : hint_range(0, 4) = 0;
+
 varying vec3 world_position;
 varying vec3 world_normal;
 
@@ -130,14 +136,31 @@ void fragment() {
 		* smoothstep(0.35, 0.75, macro) * frost_amount;
 	albedo = mix(albedo, frost_color, frost_mask);
 
-	ALBEDO = albedo;
-	ROUGHNESS = mix(rock_roughness, frost_roughness, frost_mask);
-	METALLIC = 0.0;
-	// Micro-relief : le bruit fin perturbe la normale, ce qui donne du grain
-	// sans consommer une seule texture.
-	NORMAL_MAP = normalize(vec3(
-		(detail - 0.5) * 0.6,
-		(detail_tri - 0.5) * 0.6,
-		1.0)) * 0.5 + 0.5;
-	NORMAL_MAP_DEPTH = 0.7;
+	// GDShader INTERDIT `return` dans une fonction de traitement (fragment,
+	// vertex, light) : la compilation echoue silencieusement pour le rendu et
+	// le shader n'expose plus AUCUN uniforme. Les materiaux se resauvegardent
+	// alors vides et tournent sur les defauts du shader -- panne difficile a
+	// voir, puisque rien ne casse visiblement. D'ou un if/else, jamais un
+	// early-return.
+	if (debug_mode != 0) {
+		vec3 dbg = albedo;
+		if (debug_mode == 2) { dbg = world_normal * 0.5 + 0.5; }
+		if (debug_mode == 3) { dbg = vec3(value); }
+		if (debug_mode == 4) { dbg = vec3(frost_mask); }
+		ALBEDO = vec3(0.0);
+		EMISSION = dbg;
+		ROUGHNESS = 1.0;
+		METALLIC = 0.0;
+	} else {
+		ALBEDO = albedo;
+		ROUGHNESS = mix(rock_roughness, frost_roughness, frost_mask);
+		METALLIC = 0.0;
+		// Micro-relief : le bruit fin perturbe la normale, ce qui donne du
+		// grain sans consommer une seule texture.
+		NORMAL_MAP = normalize(vec3(
+			(detail - 0.5) * 0.6,
+			(detail_tri - 0.5) * 0.6,
+			1.0)) * 0.5 + 0.5;
+		NORMAL_MAP_DEPTH = 0.7;
+	}
 }

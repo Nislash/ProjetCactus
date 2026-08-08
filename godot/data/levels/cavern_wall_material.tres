@@ -5,15 +5,16 @@
 [resource]
 render_priority = 0
 shader = ExtResource("1_u56hm")
-shader_parameter/deep_color = null
-shader_parameter/rock_color = null
-shader_parameter/rock_highlight = null
-shader_parameter/frost_color = null
-shader_parameter/macro_scale = 0.07
-shader_parameter/detail_scale = 0.7
-shader_parameter/detail_strength = 0.55
-shader_parameter/blend_sharpness = null
+shader_parameter/deep_color = Color(0.03, 0.044, 0.066, 1)
+shader_parameter/rock_color = Color(0.095, 0.128, 0.18, 1)
+shader_parameter/rock_highlight = Color(0.205, 0.26, 0.335, 1)
+shader_parameter/frost_color = Color(0.56, 0.64, 0.72, 1)
+shader_parameter/macro_scale = 0.18
+shader_parameter/detail_scale = 1.6
+shader_parameter/detail_strength = 0.85
+shader_parameter/blend_sharpness = 3.0
 shader_parameter/frost_slope_threshold = 0.95
 shader_parameter/frost_amount = 0.1
 shader_parameter/rock_roughness = 0.94
-shader_parameter/frost_roughness = null
+shader_parameter/frost_roughness = 0.62
+shader_parameter/debug_mode = 0

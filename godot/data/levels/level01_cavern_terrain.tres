@@ -104,8 +104,8 @@ base_altitude = 2.0
 plateaus = Array[ExtResource("2_rtr8b")]([SubResource("Resource_we563"), SubResource("Resource_w20u3"), SubResource("Resource_q46wv"), SubResource("Resource_ckt5p"), SubResource("Resource_i10oe"), SubResource("Resource_8hroj")])
 ramps = Array[ExtResource("3_o5eun")]([SubResource("Resource_ulwrf"), SubResource("Resource_l1jl5")])
 basins = Array[ExtResource("1_grvdt")]([SubResource("Resource_4nq64"), SubResource("Resource_amgfu"), SubResource("Resource_0ymyn")])
-noise_amplitude = 0.45
-noise_scale = 14.0
+noise_amplitude = 0.6
+noise_scale = 10.0
 
 [sub_resource type="Resource" id="Resource_dv17l"]
 script = ExtResource("6_q5wng")
@@ -162,8 +162,8 @@ falloff = 8.0
 script = ExtResource("4_wst8a")
 base_altitude = 12.0
 plateaus = Array[ExtResource("2_rtr8b")]([SubResource("Resource_ap0s8"), SubResource("Resource_dnqmo"), SubResource("Resource_kaknu"), SubResource("Resource_dkjtj"), SubResource("Resource_qkpaj")])
-noise_amplitude = 0.3
-noise_scale = 18.0
+noise_amplitude = 1.6
+noise_scale = 6.5
 noise_seed = 771102
 
 [resource]

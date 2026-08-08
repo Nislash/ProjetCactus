@@ -22,6 +22,7 @@ func _init() -> void:
 	failed += _test_slope_stays_walkable()
 	failed += _test_sky_well_detection()
 	failed += _test_min_falloff_rule()
+	failed += _test_surfaces_face_the_right_way()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -289,6 +290,67 @@ func _test_min_falloff_rule() -> int:
 			print("[FAIL] min_falloff_for(%.0f°) : pente réelle %.1f°" % [target_slope, worst])
 			return 1
 	print("[OK] min_falloff_rule")
+	return 0
+
+
+## LE test qui manquait. Le sol doit présenter ses faces vers le HAUT et la
+## voûte vers le BAS — sinon le culling arrière les rend invisibles et on voit
+## le ciel à travers.
+##
+## Ce défaut a survécu à toute la suite de tests parce qu'ils vérifiaient la
+## GÉOMÉTRIE (altitudes, pentes, chemins) et jamais l'ORIENTATION. La collision
+## vient d'un HeightMapShape3D indépendant du maillage : on marchait donc
+## normalement sur un sol qu'on ne voyait pas.
+func _test_surfaces_face_the_right_way() -> int:
+	var terrain := _make_terrain(_flat_spec(0.0))
+	var builder := CavernTerrainBuilder.new()
+	builder.data = terrain
+	builder.build_on_ready = false
+	root.add_child(builder)
+	builder.build()
+
+	for probe in [["Floor", 1.0], ["Vault", -1.0]]:
+		var mesh_instance: MeshInstance3D = builder.get_node_or_null("%s/Mesh" % probe[0]) as MeshInstance3D
+		if mesh_instance == null or mesh_instance.mesh == null:
+			print("[FAIL] orientation : maillage « %s » absent" % probe[0])
+			builder.queue_free()
+			return 1
+
+		var arrays: Array = (mesh_instance.mesh as ArrayMesh).surface_get_arrays(0)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		var agreeing: int = 0
+		var sampled: int = 0
+		var i: int = 0
+		while i + 2 < vertices.size() and sampled < 300:
+			# CONVENTION : Godot considère comme face avant celle dont les sommets
+			# tournent dans le sens HORAIRE vue de face — l'inverse de la règle de
+			# la main droite habituelle. La normale correspondante est donc
+			# (c-a) × (b-a), et non (b-a) × (c-a).
+			var winding: Vector3 = (vertices[i + 2] - vertices[i]).cross(vertices[i + 1] - vertices[i])
+			if winding.length_squared() > 0.000001:
+				sampled += 1
+				if signf(winding.normalized().y) == probe[1]:
+					agreeing += 1
+				# Contrôle croisé : la normale que Godot a lui-même dérivée de
+				# l'ordre des sommets doit pointer dans le même sens. Si les deux
+				# divergent, c'est la convention ci-dessus qui est fausse, pas le
+				# maillage — et le test le dit plutôt que de mentir.
+				if normals.size() > i and signf(normals[i].y) != signf(winding.normalized().y):
+					print("[FAIL] orientation « %s » : la convention du test contredit ARRAY_NORMAL" % probe[0])
+					builder.queue_free()
+					return 1
+			i += 3
+
+		if sampled == 0 or agreeing < sampled:
+			var direction: String = "le haut" if probe[1] > 0.0 else "le bas"
+			print("[FAIL] orientation « %s » : %d/%d triangles tournés vers %s (culling arrière → surface invisible)"
+				% [probe[0], agreeing, sampled, direction])
+			builder.queue_free()
+			return 1
+
+	builder.queue_free()
+	print("[OK] surfaces_face_the_right_way (sol vers le haut, voûte vers le bas)")
 	return 0
 
 
