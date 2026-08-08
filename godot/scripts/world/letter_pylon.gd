@@ -73,6 +73,9 @@ func _build() -> void:
 	_socket_mesh.mesh = CrystalGrammar.boss_shard_mesh()
 	_socket_material = CrystalGrammar.make_material(CrystalGrammar.COLOR_BOSS_LOCK, 0.0)
 	_socket_mesh.material_override = _socket_material
+	# Même échelle que l'éclat au sol : ce qu'on pose doit être RECONNU comme
+	# ce qu'on portait.
+	_socket_mesh.scale = Vector3.ONE * 0.55
 	_socket_mesh.position = Vector3(0.0, 1.35, 0.0)
 	add_child(_socket_mesh)
 

@@ -42,6 +42,8 @@ const SPELL_NAME_TO_ELEMENT: Dictionary = {
 @onready var _relic_reveal: RelicRevealPanel = %RelicRevealPanel if has_node("%RelicRevealPanel") else null
 @onready var _relic_inventory_screen: RelicInventoryScreen = %RelicInventoryScreen if has_node("%RelicInventoryScreen") else null
 var _shard_row: ShardRow = null
+var _interact_label: Label = null
+var _interact_bar: ProgressBar = null
 @onready var _minimap_panel: Control = $MinimapPanel
 @onready var _minimap_background: ColorRect = $MinimapPanel/Background
 @onready var _minimap_container: SubViewportContainer = %MinimapViewportContainer
@@ -99,6 +101,9 @@ func bind_to_player(player: PlayerController) -> void:
 		player.relic_inventory.inventory_full_attempt.connect(_on_inventory_full_attempt)
 	if _relic_inventory_screen != null:
 		_relic_inventory_screen.bind(player)
+		# Cache le HpPanel et le StatsPanel pendant que l'inventaire reliques
+		# est ouvert (sinon ils chevauchent l'overlay centré).
+		_relic_inventory_screen.visibility_changed.connect(_on_inventory_visibility_changed)
 
 	# Les éclats du verrou (puzzle B-O-S-S). Créé ici plutôt que dans la scène :
 	# c'est un ajout de niveau 1, et le HUD est partagé par tous les niveaux.
@@ -107,9 +112,6 @@ func bind_to_player(player: PlayerController) -> void:
 		_shard_row.name = "ShardRow"
 		add_child(_shard_row)
 	_shard_row.bind(player)
-		# Cache le HpPanel et le StatsPanel pendant que l'inventaire reliques
-		# est ouvert (sinon ils chevauchent l'overlay centré).
-		_relic_inventory_screen.visibility_changed.connect(_on_inventory_visibility_changed)
 
 	# Refresh immédiat sur changement d'inventaire (ajout/perte de relique).
 	# Le _process se charge des buffs temporaires entre deux events.
@@ -390,12 +392,65 @@ func _current_element_key() -> String:
 
 
 ## Le slot _spell_label sert aussi de message d'interaction pendant un hold.
+## Le prompt d'interaction, AU CENTRE-BAS et non dans le panneau « Sort ».
+##
+## Il y était rangé pour éviter d'ajouter de l'UI. Le résultat, en playtest :
+## un joueur qui maintenait le bouton ne voyait rien se passer — il regardait
+## le centre de l'écran, là où il visait, pendant que la jauge s'écrivait dans
+## un coin réservé à autre chose. Un retour qu'on ne trouve pas ne compte pas.
 func _on_interaction_progress_changed(prompt: String, progress: float) -> void:
+	if _interact_label == null:
+		_build_interact_prompt()
 	if progress <= 0.0 or prompt.is_empty():
-		_spell_label.text = "Sort : —"
+		_interact_label.visible = false
+		_interact_bar.visible = false
 		return
-	var pct: int = int(progress * 100.0)
-	_spell_label.text = "%s… %d%%" % [prompt, pct]
+	_interact_label.visible = true
+	_interact_bar.visible = true
+	_interact_label.text = "%s  %d%%" % [prompt, int(progress * 100.0)]
+	_interact_bar.value = progress * 100.0
+
+
+## Construit le prompt à la demande : le HUD est partagé par tous les niveaux,
+## et l'ajouter à la scène l'imposerait partout.
+func _build_interact_prompt() -> void:
+	_interact_label = Label.new()
+	_interact_label.name = "InteractPrompt"
+	_interact_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_interact_label.anchor_left = 0.0
+	_interact_label.anchor_right = 1.0
+	_interact_label.anchor_top = 1.0
+	_interact_label.anchor_bottom = 1.0
+	# Au-dessus du bas de l'écran, sous le réticule : dans l'axe du regard.
+	_interact_label.offset_top = -132.0
+	_interact_label.offset_bottom = -108.0
+	_interact_label.add_theme_font_size_override("font_size", 18)
+	_interact_label.add_theme_color_override("font_color", Color(0.85, 0.94, 1.0))
+	_interact_label.add_theme_color_override("font_outline_color", Color(0.02, 0.05, 0.09))
+	_interact_label.add_theme_constant_override("outline_size", 6)
+	_interact_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_interact_label.visible = false
+	add_child(_interact_label)
+
+	# Une barre sous le texte : le pourcentage chiffré dit COMBIEN, la barre
+	# dit *qu'il se passe quelque chose* — c'est elle qu'on perçoit du coin
+	# de l'œil en visant.
+	_interact_bar = ProgressBar.new()
+	_interact_bar.name = "InteractBar"
+	_interact_bar.show_percentage = false
+	_interact_bar.min_value = 0.0
+	_interact_bar.max_value = 100.0
+	_interact_bar.anchor_left = 0.5
+	_interact_bar.anchor_right = 0.5
+	_interact_bar.anchor_top = 1.0
+	_interact_bar.anchor_bottom = 1.0
+	_interact_bar.offset_left = -110.0
+	_interact_bar.offset_right = 110.0
+	_interact_bar.offset_top = -104.0
+	_interact_bar.offset_bottom = -96.0
+	_interact_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_interact_bar.visible = false
+	add_child(_interact_bar)
 
 
 ## Petit toast quand l'inventaire de reliques est plein et que le joueur tente

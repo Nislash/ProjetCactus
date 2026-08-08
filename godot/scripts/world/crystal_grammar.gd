@@ -74,9 +74,21 @@ static func power_gem_mesh() -> Mesh:
 	return mesh
 
 
-## L'éclat du verrou : hexagonal, trapu, taillé. Il tient dans la main — c'est
-## ce qui dit qu'on peut l'emporter.
+## L'éclat du verrou. On réutilise la **flèche de cristal sculptée** des props
+## du niveau plutôt qu'une primitive : elle est déjà là, elle est belle, et
+## une pyramide à six pans à côté d'elle se lisait comme un placeholder.
+##
+## Seule la GÉOMÉTRIE est empruntée — le matériau reste celui du verrou, en
+## vert glaciaire. Garder la texture d'origine rendrait l'éclat indiscernable
+## des cristaux de décor, et c'est exactement ce qu'il ne doit pas être.
+const SHARD_MESH_PATH := "res://assets/level01/meshes/crystal_spire_b.res"
+
 static func boss_shard_mesh() -> Mesh:
+	var sculpted: Mesh = load(SHARD_MESH_PATH) as Mesh
+	if sculpted != null:
+		return sculpted
+	# Repli si le prop n'est pas importé : mieux vaut une primitive qu'un
+	# éclat invisible.
 	var mesh := CylinderMesh.new()
 	mesh.top_radius = 0.10
 	mesh.bottom_radius = 0.28
