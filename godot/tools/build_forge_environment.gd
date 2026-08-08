@@ -57,31 +57,36 @@ func _init() -> void:
 	# la nuit reste noire, c'est la lune qui découpe.
 	env.ambient_light_sky_contribution = 0.40
 
-	# BRUME. Chaude, et **deux fois moins dense** qu'au premier réglage.
+	# BRUME. Chaude, et **six fois moins dense** qu'au premier réglage.
 	#
 	# Elle avalait tout : dans un cirque de 156 m, une densité de 0,011
-	# éteignait la paroi d'en face et le château avec. Un niveau à ciel ouvert
-	# n'a pas les mêmes besoins qu'une caverne — là-bas la brume cache pour
-	# créer la tension, ici elle doit seulement donner de la profondeur.
+	# éteignait la paroi d'en face et le château avec. Un premier correctif l'a
+	# divisée par deux — encore trop, constaté en jeu.
+	#
+	# La leçon est de portée : un niveau à ciel ouvert n'a pas les mêmes
+	# besoins qu'une caverne. Au niveau 1 la brume CACHE, c'est la mécanique
+	# signature et sa densité est le sujet. Ici elle ne doit rien cacher du
+	# tout — juste teinter les lointains pour qu'on sente la distance. La bonne
+	# valeur est celle qu'on ne remarque pas.
 	# Elle affecte MAINTENANT le ciel : sans ça, un horizon net trahirait que
 	# le cirque est une boîte.
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.235, 0.125, 0.095)
 	env.fog_light_energy = 0.75
-	env.fog_density = 0.0055
-	env.fog_sky_affect = 0.35
+	env.fog_density = 0.0018
+	env.fog_sky_affect = 0.15
 	env.fog_aerial_perspective = 0.0
 
 	# Brume VOLUMÉTRIQUE : c'est elle qui matérialise la chaleur montant du
 	# bassin, et qui donne aux cheminées leurs colonnes de fumée.
 	env.volumetric_fog_enabled = true
-	env.volumetric_fog_density = 0.010
+	env.volumetric_fog_density = 0.004
 	env.volumetric_fog_albedo = Color(0.35, 0.24, 0.20)
 	# Une émission propre, faible : l'air lui-même rougeoie près de la lave.
 	env.volumetric_fog_emission = Color(0.14, 0.045, 0.020)
 	env.volumetric_fog_emission_energy = 1.1
 	env.volumetric_fog_gi_inject = 0.0
-	env.volumetric_fog_length = 70.0
+	env.volumetric_fog_length = 48.0
 
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	# Blanc plus haut qu'au niveau 1 : la lave dépasse largement 1,0 et on ne
