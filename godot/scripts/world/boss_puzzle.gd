@@ -169,14 +169,29 @@ func _mount_indicator() -> void:
 	_indicator.name = "VerrouCadran"
 	var pillar: Node3D = _world.find_child("PilierIlot", true, false) as Node3D
 	if pillar != null:
+		# On donne au cadran les cotes RÉELLES du fût pour qu'il s'y incruste :
+		# posé à un décalage fixe, il flottait à côté du pilier.
+		_measure_shaft(pillar, _indicator)
 		pillar.add_child(_indicator)
-		# Sorti du fût : un tore centré sur l'axe serait à moitié dans la
-		# pierre. Le fût fait 2,6 m de rayon en bas — on dégage un peu plus.
-		_indicator.position = Vector3(0.0, 0.0, 2.9)
+		_indicator.position = Vector3.ZERO
 	else:
 		push_warning("BossPuzzle : PilierIlot introuvable — cadran posé à la racine.")
 		_world.add_child(_indicator)
 		_indicator.global_position = _ground(Vector2(4.0, 28.0))
+
+
+## Lit le maillage du pilier pour en connaître le profil. Recopier les valeurs
+## à la main les ferait diverger au premier réglage de la colonnade.
+func _measure_shaft(pillar: Node3D, indicator: BossLockIndicator) -> void:
+	var mesh_instance: MeshInstance3D = pillar.get_node_or_null("Mesh") as MeshInstance3D
+	if mesh_instance == null:
+		return
+	var cylinder: CylinderMesh = mesh_instance.mesh as CylinderMesh
+	if cylinder == null:
+		return
+	indicator.shaft_bottom_radius = cylinder.bottom_radius
+	indicator.shaft_top_radius = cylinder.top_radius
+	indicator.shaft_height = cylinder.height
 
 
 # ---------------------------------------------------------------------------

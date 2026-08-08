@@ -21,12 +21,29 @@ extends Node3D
 ## disposition en cercle ne dirait aussi vite.
 
 ## Rayon des octogones, en mètres. Grand : ils se lisent depuis l'autre rive.
-@export var glyph_radius: float = 1.45
+@export var glyph_radius: float = 1.15
 ## Espacement vertical. Resserré pour que les quatre tiennent dans le tiers
 ## bas du fût : étalés sur toute sa hauteur, le dernier frôlait la voûte et on
 ## ne pouvait plus les compter d'un regard.
 @export var spacing: float = 2.7
 @export var base_height: float = 3.6
+
+## Le fût sur lequel on grave. Renseignés par [BossPuzzle] depuis la colonne
+## réelle : sans eux, les octogones flottaient **à côté** du pilier au lieu
+## d'y être incrustés — ils se lisaient comme une guirlande accrochée là,
+## pas comme une gravure.
+@export var shaft_bottom_radius: float = 2.6
+@export var shaft_top_radius: float = 1.7
+@export var shaft_height: float = 16.0
+
+## Fraction du rayon à laquelle le CENTRE de l'anneau est posé.
+##
+## À 1, le centre tombe pile sur la surface du fût : l'anneau est donc à
+## moitié dans la pierre et à moitié dehors — c'est ce qui se lit comme une
+## gravure. En dessous, il s'enfonce et disparaît (essayé à 0,72 : on ne
+## voyait plus que quelques éclats affleurants) ; au-dessus, il décolle et
+## redevient une guirlande accrochée à côté du pilier.
+@export_range(0.3, 1.4, 0.01) var sink: float = 1.0
 
 var _rings: Array[MeshInstance3D] = []
 var _materials: Array[StandardMaterial3D] = []
@@ -54,7 +71,11 @@ func _build() -> void:
 		ring.mesh = mesh
 		# Debout, face à l'extérieur : un tore couché ne se verrait que d'en haut.
 		ring.rotation_degrees = Vector3(90.0, 0.0, 0.0)
-		ring.position = Vector3(0.0, base_height + float(i) * spacing, 0.0)
+		var height: float = base_height + float(i) * spacing
+		# Incrusté DANS le fût : on suit le rayon local, qui rétrécit avec la
+		# hauteur puisque la colonne est conique. Un décalage constant aurait
+		# laissé les anneaux du haut flotter dans le vide.
+		ring.position = Vector3(0.0, height, _shaft_radius_at(height) * sink)
 
 		# Éteint mais PAS invisible : un cadran qu'on ne voit qu'une fois
 		# résolu n'aurait jamais dit au joueur qu'il y avait quelque chose à
@@ -66,9 +87,16 @@ func _build() -> void:
 		_rings.append(ring)
 		_materials.append(material)
 
+	var mid: float = base_height + spacing * 1.5
 	_glow = CrystalGrammar.make_glow(CrystalGrammar.COLOR_BOSS_LOCK, 0.0, 26.0)
-	_glow.position = Vector3(0.0, base_height + spacing * 1.5, 0.0)
+	_glow.position = Vector3(0.0, mid, _shaft_radius_at(mid) * sink)
 	add_child(_glow)
+
+
+## Rayon du fût à cette hauteur. La colonne est conique — plus large en bas.
+func _shaft_radius_at(height: float) -> float:
+	var t: float = clampf(height / maxf(shaft_height, 0.001), 0.0, 1.0)
+	return lerpf(shaft_bottom_radius, shaft_top_radius, t)
 
 
 ## Met le cadran à jour. `lit` = nombre de lettres correctement posées.

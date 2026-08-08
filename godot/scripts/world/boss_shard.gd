@@ -51,7 +51,10 @@ func _build() -> void:
 	_mesh.name = "Mesh"
 	_mesh.mesh = CrystalGrammar.boss_shard_mesh()
 	_mesh.material_override = _material
-	_mesh.position = Vector3(0.0, 0.9, 0.0)
+	# La flèche sculptée fait 1,9 m : à l'échelle 1 ce serait un menhir, pas
+	# un objet qu'on ramasse. Réduite à hauteur de genou.
+	_mesh.scale = Vector3.ONE * 0.55
+	_mesh.position = Vector3(0.0, 0.55, 0.0)
 	add_child(_mesh)
 
 	_glow = CrystalGrammar.make_glow(CrystalGrammar.COLOR_BOSS_LOCK, 2.2, 7.0)
@@ -65,7 +68,7 @@ func _process(delta: float) -> void:
 	_time += delta
 	if _mesh != null:
 		_mesh.rotate_y(delta * 0.9)
-		_mesh.position.y = 0.9 + sin(_time * 1.6) * FLOAT_AMPLITUDE
+		_mesh.position.y = 0.55 + sin(_time * 1.6) * FLOAT_AMPLITUDE
 	# Le battement. Lent, ample : il attire l'œil de loin sans clignoter.
 	var pulse: float = 0.5 + 0.5 * sin(_time * TAU / PULSE_PERIOD)
 	if _material != null:
