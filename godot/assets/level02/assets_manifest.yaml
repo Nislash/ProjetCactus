@@ -1,0 +1,105 @@
+# =============================================================================
+# assets_manifest.yaml — Niveau 2 « La Forge de Magma »
+# =============================================================================
+# Même règle qu'au niveau 1 : tout asset généré présent dans
+# godot/assets/level02/ DOIT avoir une entrée ici. Pas d'entrée = pas de merge.
+# Schéma et champs : cf godot/assets/level01/assets_manifest.yaml.
+#
+# CE QUI DIFFÈRE DU NIVEAU 1
+#
+# Le niveau 1 produisait des MAILLAGES (cristaux, props, habillage du Golem).
+# Le niveau 2 ne produit ici que des MATIÈRES, et pour une raison technique :
+# le château et le pont sont bâtis en primitives À L'EXÉCUTION, depuis les
+# cotes du terrain. Il n'existe donc aucun maillage à envoyer à
+# `meshy_retexture`, qui réclame un `input_task_id` Meshy ou une URL publique —
+# le pipeline « retexture-first » du projet ne s'applique pas.
+#
+# La voie retenue : Meshy rend l'ALBÉDO, les cartes normal et rugosité en sont
+# dérivées par `godot/tools/build_forge_materials.gd`, et le tout est projeté en
+# TRIPLANAIRE, donc sans UV. Cf l'entête de ce script pour le détail.
+#
+# Docs liées :
+#   docs/tech/meshy_setup.md — setup, licence, règles de production
+# =============================================================================
+
+schema_version: 1
+
+generator:
+  provider: meshy
+  account_plan: paid
+  mcp_server: "@meshy-ai/meshy-mcp-server"
+
+assets:
+  - name: forge-masonry
+    path: res://assets/level02/textures/forge_masonry_albedo.png
+    type: texture_only
+    applies_to:
+      - res://assets/level02/materials/forge_masonry.tres
+    used_by:
+      - res://scripts/world/forge_castle.gd   # murs, tours, terrasse, créneaux
+      - res://scripts/world/forge_bridge.gd   # pylônes d'ancrage
+    prompt: >-
+      Seamless tileable PBR texture, top-down orthographic view, perfectly flat
+      even lighting, no cast shadows, no perspective, no vignette. Hand-cut
+      basalt block masonry: large irregular near-black volcanic stone blocks,
+      deep recessed mortar joints, chipped and fractured edges, fine grey ash
+      settled in the recesses, faint warm ember staining deep in the cracks.
+      Photoreal game material, fills the entire frame edge to edge, repeating
+      pattern.
+    meshy_task_id: 019fe35e-71e0-7244-b981-b83b5bcfb139
+    meshy_model: nano-banana-pro
+    credits_spent: 9
+    resolution: 1024x1024
+    license: meshy-paid-full-ownership
+    generated_on: 2026-08-08
+    derived_maps:
+      # Dérivées de l'albédo, pas générées : cf build_forge_materials.gd sur ce
+      # que vaut — et ne vaut pas — un relief déduit de la luminance.
+      - res://assets/level02/textures/forge_masonry_normal.png
+      - res://assets/level02/textures/forge_masonry_rough.png
+
+  - name: forge-deck
+    path: res://assets/level02/textures/forge_deck_albedo.png
+    type: texture_only
+    applies_to:
+      - res://assets/level02/materials/forge_deck.tres
+    used_by:
+      - res://scripts/world/forge_bridge.gd   # le tablier, et rien d'autre
+    prompt: >-
+      Seamless tileable PBR texture, top-down orthographic view, perfectly flat
+      even lighting, no cast shadows, no perspective, no vignette. Worn dark
+      volcanic stone paving slabs of a bridge deck: long rectangular basalt
+      slabs laid side by side, cracked and heat-scorched, soot streaks, fine
+      grey ash packed in the gaps, centres worn smooth by traffic. Photoreal
+      game material, fills the entire frame edge to edge, repeating pattern.
+    meshy_task_id: 019fe35e-8afc-7c34-abbe-6e6c2bf480b5
+    meshy_model: nano-banana-pro
+    credits_spent: 9
+    resolution: 1024x1024
+    license: meshy-paid-full-ownership
+    generated_on: 2026-08-08
+    notes: >-
+      Meshy a servi ce fichier en JPEG sous une extension .png. Godot le
+      rejetait en ERR_FILE_CORRUPT sans dire pourquoi. Reconverti en PNG avant
+      import ; le tool distingue désormais « introuvable » d'« illisible ».
+    derived_maps:
+      - res://assets/level02/textures/forge_deck_normal.png
+      - res://assets/level02/textures/forge_deck_rough.png
+
+# --- Généré mais NON embarqué ------------------------------------------------
+# Consigné pour que les crédits dépensés restent traçables, et pour qu'on ne
+# regénère pas la même chose en croyant qu'elle manque.
+rejected:
+  - name: forge-iron
+    meshy_task_id: 019fe35e-a59b-7bce-9e68-64f939147e4b
+    meshy_model: nano-banana-pro
+    credits_spent: 9
+    generated_on: 2026-08-08
+    reason: >-
+      Deux motifs. La matière rendue est trop claire pour une palette bâtie sur
+      du basalte quasi noir, et sa rouille orange empiète sur un registre
+      réservé aux télégraphes de danger. Surtout, elle était destinée aux
+      câbles du pont, qui font 16 cm de section : une texture 1024² y serait
+      invisible. Les câbles gardent une teinte plate.
+
+credits_total: 27   # dont 9 non embarqués

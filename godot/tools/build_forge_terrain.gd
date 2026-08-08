@@ -196,7 +196,19 @@ func _build_openings() -> Array[CavernSkyOpening]:
 func _build_lava() -> CavernLake:
 	var lava := CavernLake.new()
 	lava.label = "Douves de lave"
-	lava.surface_altitude = -2.2
+	# +1,9 ET PAS -2,2.
+	#
+	# À -2,2, la nappe était SOUS la roche partout : le lit des douves ne
+	# descend jamais plus bas que +1,18, donc la lave était enterrée de trois
+	# mètres et rien n'en apparaissait. Le cirque montrait un fossé sec, et ce
+	# que je prenais pour de la coulée dans les captures n'était que la lueur
+	# des lampes posées sur les berges.
+	#
+	# La leçon est qu'une altitude de nappe ne se choisit pas dans l'absolu :
+	# elle se choisit CONTRE le lit qu'on a creusé. À +1,9 la coulée remplit le
+	# lit sur 0,5 à 0,7 m et lèche des berges qui montent à 2,4 — assez pour se
+	# lire de loin, trop peu pour qu'on la prenne pour un lac.
+	lava.surface_altitude = 1.9
 	lava.minimum_depth = 0.2
 	lava.center = Vector2(0.0, -14.0)
 	lava.radii = Vector2(62.0, 8.0)

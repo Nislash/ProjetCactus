@@ -197,7 +197,7 @@ script = ExtResource("5_cifn8")
 [sub_resource type="Resource" id="Resource_sa7ro"]
 script = ExtResource("6_ghxga")
 label = "Douves de lave"
-surface_altitude = -2.2
+surface_altitude = 1.9
 minimum_depth = 0.2
 center = Vector2(0, -14)
 radii = Vector2(62, 8)
