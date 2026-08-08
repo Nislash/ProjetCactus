@@ -36,11 +36,16 @@ const DEFAULT_DATA_PATH := "res://data/levels/level01_cavern_terrain.tres"
 ## régénération — et la review créative #15 va en demander plusieurs.
 @export_file("*.tres") var data_path: String = DEFAULT_DATA_PATH
 
-## Matériau du sol (provisoire au blockout ; le PBR arrive en E3).
+## Matériaux du terrain. Laissés vides, les chemins ci-dessous sont chargés
+## (même contournement que [member data_path] : le MCP Godot n'assigne pas les
+## propriétés typées `Resource`, cf docs/tech/godot_mcp_setup.md).
 @export var floor_material: Material
+@export var wall_material: Material
+@export var vault_material: Material
 
-## Matériau de la voûte et des parois.
-@export var rock_material: Material
+@export_file("*.tres") var floor_material_path: String = "res://data/levels/cavern_floor_material.tres"
+@export_file("*.tres") var wall_material_path: String = "res://data/levels/cavern_wall_material.tres"
+@export_file("*.tres") var vault_material_path: String = "res://data/levels/cavern_vault_material.tres"
 
 ## Reconstruit le terrain au `_ready`. Laisser vrai : le terrain est dérivé de
 ## la donnée, il n'a pas à être sérialisé dans la scène.
@@ -61,11 +66,21 @@ func _resolve_data() -> void:
 		push_error("CavernTerrainBuilder : impossible de charger « %s »." % data_path)
 
 
+func _resolve_materials() -> void:
+	if floor_material == null:
+		floor_material = load(floor_material_path) as Material
+	if wall_material == null:
+		wall_material = load(wall_material_path) as Material
+	if vault_material == null:
+		vault_material = load(vault_material_path) as Material
+
+
 ## Reconstruit intégralement le terrain. Idempotent : purge d'abord ce qui a été
 ## généré précédemment, pour qu'une réitération sur les données ne laisse aucun
 ## résidu.
 func build() -> void:
 	_resolve_data()
+	_resolve_materials()
 	assert(data != null, "CavernTerrainBuilder : aucune CavernTerrainData assignée.")
 	assert(data.floor_field != null, "CavernTerrainBuilder : floor_field manquant.")
 	assert(data.vault_field != null, "CavernTerrainBuilder : vault_field manquant.")
@@ -84,7 +99,7 @@ func build() -> void:
 	_build_surface("Floor", floor_heights, dims, floor_material, false, true,
 		WORLD_COLLISION_LAYER | NAVMESH_SOURCE_LAYER)
 	# La voûte est retournée (faces vers le bas) et trouée visuellement.
-	_build_surface("Vault", vault_heights, dims, rock_material, true, false, WORLD_COLLISION_LAYER)
+	_build_surface("Vault", vault_heights, dims, vault_material, true, false, WORLD_COLLISION_LAYER)
 	_build_walls(floor_heights, vault_heights, dims)
 
 
@@ -430,8 +445,8 @@ func _build_walls(
 	var mesh_instance: MeshInstance3D = MeshInstance3D.new()
 	mesh_instance.name = "Mesh"
 	mesh_instance.mesh = mesh
-	if rock_material != null:
-		mesh_instance.material_override = rock_material
+	if wall_material != null:
+		mesh_instance.material_override = wall_material
 	root.add_child(mesh_instance)
 	mesh_instance.owner = owner
 

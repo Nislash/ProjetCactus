@@ -55,7 +55,7 @@ const NOMINAL_VIEWPORTS: int = 4
 const SPAWN_POINTS_NODE_NAME := "PlayerSpawnPoints"
 const CAMERA_EYE_HEIGHT: float = 1.6
 
-@export_file("*.tscn") var level_scene_path: String = "res://scenes/levels/level_01_poc/level_01_poc.tscn"
+@export_file("*.tscn") var level_scene_path: String = "res://scenes/levels/level_01_cavern/level_01_cavern.tscn"
 
 ## Configurations mesurées en mode baseline.
 @export var viewport_counts: Array[int] = [1, 2, 4]

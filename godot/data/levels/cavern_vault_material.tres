@@ -1,0 +1,19 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/cavern_rock.gdshader" id="1_w6dii"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_w6dii")
+shader_parameter/deep_color = null
+shader_parameter/rock_color = Color(0.075, 0.106, 0.157, 1)
+shader_parameter/rock_highlight = Color(0.141, 0.184, 0.243, 1)
+shader_parameter/frost_color = null
+shader_parameter/macro_scale = 0.05
+shader_parameter/detail_scale = 0.45
+shader_parameter/detail_strength = 0.35
+shader_parameter/blend_sharpness = null
+shader_parameter/frost_slope_threshold = 0.95
+shader_parameter/frost_amount = 0.0
+shader_parameter/rock_roughness = 0.96
+shader_parameter/frost_roughness = null

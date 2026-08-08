@@ -147,6 +147,25 @@ reste donc en vigueur, et sera revalidée sur la vraie caverne en E3.
 Conséquence pratique : **sur une machine Windows/Vulkan, ces deux limites tombent** et les mêmes runs
 donneront des chiffres plus fins. Le budget ci-dessus est volontairement prudent pour cette raison.
 
+### 5.5bis. Mesure de la caverne texturée (2026-08-08, E3 #17)
+
+Même protocole, sur `level_01_cavern` avec les matériaux de roche tri-planaires :
+
+| Viewports | draw calls | dc / viewport | primitives | CPU render | VRAM |
+|---|---|---|---|---|---|
+| 1 | 4 | 4 | 22 366 | 0,08 ms | 107 Mo |
+| 2 | 8 | 4 | 44 732 | 1,27 ms | 110 Mo |
+| **4** | **16** | **4** | **89 464** | **2,11 ms** | **113 Mo** |
+
+**4 draw calls par viewport** contre un budget de 140 : le terrain n'est que trois maillages (sol,
+voûte, parois), et le shader procédural n'échantillonne aucune texture. On est à **2,3 %** du budget
+de draw calls et à **0,4 %** de celui des primitives — toute la marge reste disponible pour les props,
+les cristaux émissifs et les ennemis.
+
+> ⚠️ La ligne « niveau : N MeshInstance3D » du rapport de bench affiche désormais **0 triangle** : le
+> terrain est généré à l'exécution, donc invisible au comptage statique de la scène. Ce sont les
+> colonnes `primitives` et `draw calls`, mesurées au rendu, qui font foi.
+
 ### 5.6. Fallback renderer
 
 Le **renderer Mobile** reste prévu si le Forward+ ne tient pas une fois la caverne texturée (cf
