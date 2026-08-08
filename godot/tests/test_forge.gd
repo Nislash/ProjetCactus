@@ -55,6 +55,7 @@ func _run() -> void:
 	failed += _test_the_sky_is_open()
 	failed += _test_the_castle_closes_the_pit()
 	failed += _test_the_moon_puzzle_is_solvable()
+	failed += _test_the_boss_waits_behind_the_gate()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -332,4 +333,48 @@ func _test_the_moon_puzzle_is_solvable() -> int:
 		print("[FAIL] puzzle : AUCUNE combinaison n'ouvre la porte — insoluble")
 		return 1
 	print("[OK] the_moon_puzzle_is_solvable (crans %s)" % [found])
+	return 0
+
+
+## LE BOSS NE DOIT PAS S'ÉVEILLER DEPUIS LE CIRQUE.
+##
+## Il se tenait au bord du bassin, à vingt-deux mètres du centre, avec une zone
+## d'éveil de trente : il attaquait donc pendant qu'on descendait encore, et le
+## puzzle perdait tout son sens puisqu'on se battait avant de l'avoir résolu.
+##
+## On vérifie les deux causes séparément — sa distance, et le rayon de sa zone.
+func _test_the_boss_waits_behind_the_gate() -> int:
+	var boss: Node3D = _world.get_node_or_null("BossGolem") as Node3D
+	if boss == null:
+		print("[FAIL] boss : absent")
+		return 1
+
+	# Loin du cirque, où le joueur passe l'essentiel de son temps.
+	var to_pit: float = Vector2(boss.global_position.x, boss.global_position.z).length()
+	if to_pit < 60.0:
+		print("[FAIL] boss : à %.0f m du centre du cirque — trop près" % to_pit)
+		return 1
+
+	var zone: Area3D = _world.find_child("ReveilDuGolem", true, false) as Area3D
+	if zone == null:
+		print("[FAIL] boss : aucune zone d'éveil")
+		return 1
+	var shape: CollisionShape3D = null
+	for child in zone.get_children():
+		shape = child as CollisionShape3D
+		if shape != null:
+			break
+	if shape == null or not (shape.shape is SphereShape3D):
+		print("[FAIL] boss : zone d'éveil sans forme")
+		return 1
+	var radius: float = (shape.shape as SphereShape3D).radius
+
+	# Elle ne doit pas déborder jusqu'au cirque : sinon on réveille le Golem
+	# en s'approchant de la porte, avant même de l'avoir ouverte.
+	var reach: float = to_pit - radius
+	if reach < 35.0:
+		print("[FAIL] boss : sa zone d'éveil arrive à %.0f m du cirque" % reach)
+		return 1
+	print("[OK] the_boss_waits_behind_the_gate (%.0f m du cirque, éveil à %.0f m)"
+		% [to_pit, radius])
 	return 0

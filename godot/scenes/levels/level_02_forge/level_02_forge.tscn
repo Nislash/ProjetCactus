@@ -81,7 +81,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 10)
 [node name="BossArena" type="Node3D" parent="World"]
 
 [node name="BossSpawn" type="Marker3D" parent="World/BossArena"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -96)
 
 [node name="MarkerSnapper" type="Node3D" parent="World"]
 script = ExtResource("4_snap")

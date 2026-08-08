@@ -29,6 +29,10 @@ extends Node
 signal solved()
 signal beam_progress(mirrors_lit: int, total: int)
 
+## Couche du décor. Le rayon s'arrête dessus — c'est ce qui manquait à la
+## première version, qui traversait les falaises.
+const WORLD_LAYER: int = 1
+
 ## Tolérance de visée, en mètres. Volontairement large : viser au degré près à
 ## la manette serait une épreuve d'adresse, pas une énigme. Elle doit aussi
 ## rester cohérente avec le pas des crans — à 30 m, 7 m couvrent 13°, soit
@@ -57,28 +61,36 @@ func _on_mirror_aimed(_mirror: MoonMirror) -> void:
 	_recompute()
 
 
-## Suit le rayon de miroir en miroir. Le premier reçoit la lune ; chacun des
-## suivants ne s'allume que s'il est effectivement touché.
+## Suit le rayon de miroir en miroir, **par de vrais raycasts physiques**.
+##
+## La première version calculait des distances à un axe : elle ignorait donc
+## le décor. Un rayon traversait une falaise pour atteindre un miroir situé
+## derrière, et le joueur voyait un trait s'arrêter contre la roche pendant que
+## la logique, elle, continuait — d'où un comportement qui paraissait
+## arbitraire.
+##
+## Maintenant chaque segment est un `intersect_ray` sur le décor ET sur les
+## surfaces optiques. Ce que le rayon rencontre EN PREMIER décide de la suite :
+## un miroir le renvoie, le sceau ouvre la porte, la roche l'arrête. Le trait
+## affiché est celui qui a été lancé — les deux ne peuvent plus diverger.
 func _recompute() -> void:
 	if _mirrors.is_empty():
 		return
 
-	# Tous éteints, puis on rallume ce que le rayon atteint réellement. Sans ce
-	# reset, un miroir resté allumé d'un coup précédent continuerait d'émettre
-	# dans le vide.
 	for m in _mirrors:
 		m.set_incoming(Vector3.ZERO, false)
 
+	var space: PhysicsDirectSpaceState3D = _mirrors[0].get_world_3d().direct_space_state
 	# La lune arrive de biais et vers le bas ; le premier miroir la redresse.
 	var direction: Vector3 = _moon_direction()
 	var current: MoonMirror = _mirrors[0]
 	var lit: int = 0
 	var visited: Array[MoonMirror] = []
 
-	# Bornée au nombre de miroirs : deux miroirs qui se renvoient l'un l'autre
-	# feraient sinon une boucle infinie, et c'est une configuration que le
-	# joueur trouvera en cinq minutes.
-	for _hop in _mirrors.size() + 1:
+	# Bornée : deux miroirs qui se renverraient l'un l'autre feraient une
+	# boucle infinie, et c'est une configuration que le joueur trouvera en
+	# cinq minutes.
+	for _hop in _mirrors.size() + 2:
 		if current == null or visited.has(current):
 			break
 		visited.append(current)
@@ -90,20 +102,56 @@ func _recompute() -> void:
 		if reflected.length_squared() < 0.0001:
 			break
 
-		# Le sceau d'abord : s'il est sur la trajectoire, c'est gagné, même si
-		# un miroir se trouve plus loin dans le même axe.
-		if _castle != null and not _castle.is_open():
-			if _hits_target(origin, reflected, _castle.get_gate_target()):
-				_solve()
-				break
+		var query := PhysicsRayQueryParameters3D.create(
+			origin + reflected * 1.6, origin + reflected * segment_length)
+		# Décor ET optiques. Le décor arrête ; les optiques renvoient ou
+		# ouvrent.
+		query.collision_mask = WORLD_LAYER | MoonMirror.OPTICS_LAYER
+		var hit: Dictionary = space.intersect_ray(query)
 
-		var next: MoonMirror = _first_mirror_along(origin, reflected, visited)
-		if next == null:
+		if hit.is_empty():
+			# Rien devant : le rayon part à l'infini.
+			current.draw_segment(reflected, segment_length)
 			break
-		direction = reflected
-		current = next
+
+		var distance: float = origin.distance_to(hit["position"])
+		current.draw_segment(reflected, distance)
+
+		var collider: Node = hit.get("collider") as Node
+		var next: MoonMirror = _mirror_of(collider)
+		if next != null:
+			direction = reflected
+			current = next
+			continue
+
+		if _is_gate_target(collider):
+			_solve()
+		break
 
 	beam_progress.emit(lit, _mirrors.size())
+
+
+## Le miroir auquel appartient un collider touché. On remonte les parents :
+## la surface optique est un enfant du miroir.
+func _mirror_of(collider: Node) -> MoonMirror:
+	var node: Node = collider
+	while node != null:
+		var mirror: MoonMirror = node as MoonMirror
+		if mirror != null:
+			return mirror
+		node = node.get_parent()
+	return null
+
+
+func _is_gate_target(collider: Node) -> bool:
+	if _castle == null or _castle.is_open():
+		return false
+	var node: Node = collider
+	while node != null:
+		if node == _castle:
+			return true
+		node = node.get_parent()
+	return false
 
 
 ## D'où vient la lune. Une seule source de vérité : si l'éclairage change son
@@ -112,44 +160,6 @@ func _moon_direction() -> Vector3:
 	if _lighting != null and _lighting.has_method("get_moon_direction"):
 		return (_lighting.get_moon_direction() as Vector3).normalized()
 	return Vector3(0.0, -0.34, -0.94).normalized()
-
-
-## Le premier miroir rencontré le long du rayon, dans la tolérance de visée.
-func _first_mirror_along(origin: Vector3, direction: Vector3,
-		visited: Array[MoonMirror]) -> MoonMirror:
-	var best: MoonMirror = null
-	var best_distance: float = INF
-	for m in _mirrors:
-		if visited.has(m):
-			continue
-		var to_mirror: Vector3 = m.get_focus() - origin
-		var along: float = to_mirror.dot(direction)
-		if along <= 1.0 or along > segment_length:
-			continue
-		# Distance HORIZONTALE à l'axe : les miroirs renvoient à plat (cf
-		# `MoonMirror.get_reflection`), donc comparer en trois dimensions
-		# ferait rater toute cible qui n'est pas exactement à la même hauteur.
-		var offset: float = _flat(to_mirror - direction * along).length()
-		if offset > target_radius:
-			continue
-		if along < best_distance:
-			best_distance = along
-			best = m
-	return best
-
-
-func _hits_target(origin: Vector3, direction: Vector3, target: Vector3) -> bool:
-	var to_target: Vector3 = target - origin
-	var along: float = to_target.dot(direction)
-	if along <= 1.0 or along > segment_length:
-		return false
-	# Horizontale, pour la même raison : le sceau est à sept mètres du sol et
-	# le rayon voyage à hauteur de miroir.
-	return _flat(to_target - direction * along).length() <= target_radius
-
-
-func _flat(v: Vector3) -> Vector3:
-	return Vector3(v.x, 0.0, v.z)
 
 
 func _solve() -> void:

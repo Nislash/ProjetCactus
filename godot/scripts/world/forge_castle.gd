@@ -197,6 +197,27 @@ func _build_gate() -> void:
 	_gate.add_child(panel)
 	_add_collider(panel, mesh.size, _gate.position + panel.position)
 
+	# LA CIBLE OPTIQUE. Un collider sur la couche des miroirs, plus large que
+	# le battant : c'est lui que le rayon de lune doit toucher.
+	#
+	# Il est distinct du collider physique parce qu'ils ne servent pas à la
+	# même chose — l'un arrête les joueurs, l'autre reçoit la lumière — et
+	# parce que le premier disparaît quand la porte s'ouvre.
+	#
+	# Beaucoup plus HAUT que le battant : les miroirs portent leur plan optique
+	# à quatorze mètres, et une cible à hauteur de porte serait survolée.
+	var optic := StaticBody3D.new()
+	optic.name = "CibleOptique"
+	optic.collision_layer = MoonMirror.OPTICS_LAYER
+	optic.collision_mask = 0
+	var optic_shape := CollisionShape3D.new()
+	var plate := BoxShape3D.new()
+	plate.size = Vector3(11.0, 22.0, 0.6)
+	optic_shape.shape = plate
+	optic.add_child(optic_shape)
+	optic.position = Vector3(0.0, 5.0, 0.4)
+	_gate.add_child(optic)
+
 	var glow := OmniLight3D.new()
 	glow.name = "LueurDuSceau"
 	glow.light_color = SEAL
