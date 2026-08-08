@@ -292,6 +292,48 @@ static func is_in_lake_footprint(terrain: CavernTerrainData, p: Vector2) -> bool
 	return Vector2(d.x / rx, d.y / rz).length() <= 1.0
 
 
+## Ramène un point sur le BORD des ouvertures s'il est à l'intérieur.
+##
+## Sans cela, le contour du trou suit la grille d'échantillonnage : à 1,5 m de
+## pas, on obtient un escalier de 1,5 m de marche, et une ouverture censée être
+## ronde se lit comme un polygone taillé à la hache.
+##
+## En poussant les sommets intérieurs sur l'ellipse, le bord épouse exactement
+## la forme voulue quelle que soit la résolution du terrain — et le trou peut
+## même être plus petit qu'une maille.
+##
+## Itéré : projeter hors d'une ellipse peut faire tomber dans une voisine, et
+## les ouvertures se recouvrent exprès pour composer un contour irrégulier.
+static func project_out_of_openings(terrain: CavernTerrainData, p: Vector2) -> Vector2:
+	var point: Vector2 = p
+	for _pass in 4:
+		var deepest: CavernSkyOpening = null
+		var deepest_norm: float = 1.0
+		for opening in terrain.sky_openings:
+			var rx: float = maxf(opening.radii.x, 0.001)
+			var rz: float = maxf(opening.radii.y, 0.001)
+			var local: Vector2 = (point - opening.center).rotated(-deg_to_rad(opening.rotation_degrees))
+			var norm: float = Vector2(local.x / rx, local.y / rz).length()
+			if norm < deepest_norm:
+				deepest_norm = norm
+				deepest = opening
+		if deepest == null:
+			return point
+
+		var rx2: float = maxf(deepest.radii.x, 0.001)
+		var rz2: float = maxf(deepest.radii.y, 0.001)
+		var angle: float = deg_to_rad(deepest.rotation_degrees)
+		var local2: Vector2 = (point - deepest.center).rotated(-angle)
+		var norm2: float = Vector2(local2.x / rx2, local2.y / rz2).length()
+		if norm2 < 0.0001:
+			# Pile au centre : aucune direction de sortie, on en choisit une.
+			local2 = Vector2(rx2, 0.0)
+		else:
+			local2 /= norm2
+		point = deepest.center + local2.rotated(angle)
+	return point
+
+
 static func is_in_sky_opening(terrain: CavernTerrainData, p: Vector2) -> bool:
 	for opening in terrain.sky_openings:
 		var local: Vector2 = (p - opening.center).rotated(-deg_to_rad(opening.rotation_degrees))
@@ -479,6 +521,15 @@ func _build_chunk_mesh(
 			if punch_openings and is_in_sky_opening(data, p00) and is_in_sky_opening(data, p10) \
 					and is_in_sky_opening(data, p01) and is_in_sky_opening(data, p11):
 				continue
+
+			# Sur les quads du BORD du trou, les sommets intérieurs sont poussés
+			# sur l'ellipse : le contour épouse la forme voulue au lieu de suivre
+			# la grille. L'altitude est conservée, seul le plan (X, Z) bouge.
+			if punch_openings:
+				p00 = project_out_of_openings(data, p00)
+				p10 = project_out_of_openings(data, p10)
+				p01 = project_out_of_openings(data, p01)
+				p11 = project_out_of_openings(data, p11)
 
 			var v00 := Vector3(p00.x, h00, p00.y)
 			var v10 := Vector3(p10.x, h10, p10.y)

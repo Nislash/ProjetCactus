@@ -32,6 +32,14 @@ extends Node3D
 ## Rayon du fût des Piliers.
 @export var pillar_radius: float = 2.0
 
+## Nombre de colonnes tentées autour du lac. Certaines sont écartées parce
+## qu'elles tomberaient sur la Chaussée, l'Îlot ou dans la roche.
+@export var colonnade_count: int = 10
+
+## Position de la couronne, en fraction des rayons du lac. Au-delà de 1, les
+## fûts sont sur la rive plutôt que dans la glace.
+@export var colonnade_radius_factor: float = 1.06
+
 var _rock: Material
 var _crystal: Material
 
@@ -63,9 +71,15 @@ func _ready() -> void:
 	# L'ÎLOT — le socle du Pilier Nord, et le seul accès à K1.
 	_build_slab("Ilot", Vector2(4.0, 28.0), bed, 3.4, 0.3, 9)
 
-	# LES DEUX PILIERS — du lit du lac à la voûte.
-	_build_pillar("PilierSud", Vector2(-6.0, 40.0), bed, terrain)
-	_build_pillar("PilierNord", Vector2(4.0, 28.0), bed, terrain)
+	# LE PILIER DE L'ÎLOT — celui qui garde K1.
+	_build_pillar("PilierIlot", Vector2(4.0, 28.0), bed, terrain)
+
+	# LA COLONNADE — une couronne de fûts autour du lac, qui SOUTIENNENT la
+	# voûte. C'est ce qui explique visuellement pourquoi le plafond tient
+	# encore ailleurs alors qu'il s'est effondré au centre : là où les colonnes
+	# manquaient, il est tombé. La Brèche devient une conséquence, pas un décor.
+
+	_build_colonnade(bed, terrain)
 
 
 ## Bloc d'éboulis à sommet plat : un cylindre à faible nombre de segments, donc
@@ -106,6 +120,55 @@ func _build_slab(node_name: String, at: Vector2, bed: float, radius: float,
 	collision.position = Vector3(0.0, centre, 0.0)
 	body.add_child(collision)
 	collision.owner = owner
+
+
+## Dispose la colonnade autour du lac.
+##
+## Les fûts sont posés sur la RIVE (juste au-delà du bord de la nappe) et non
+## dans l'eau : une colonne plantée au milieu de la glace bloquerait la
+## traversée et masquerait la Brèche, qui est le repère principal du niveau.
+##
+## Deux emplacements sont écartés : la Chaussée (on doit pouvoir la parcourir)
+## et l'Îlot (il a déjà son pilier).
+func _build_colonnade(bed: float, terrain: CavernTerrainData) -> void:
+	var lake: CavernLake = terrain.lake
+	if lake == null:
+		return
+
+	# Les positions à laisser libres, avec leur rayon d'exclusion.
+	var forbidden: Array = [
+		[Vector2(-9.0, 55.0), 9.0], [Vector2(-8.0, 49.0), 9.0],
+		[Vector2(-6.0, 43.0), 9.0], [Vector2(-4.0, 37.0), 9.0],
+		[Vector2(4.0, 28.0), 10.0],
+		[Vector2(-10.0, 58.0), 8.0],
+	]
+
+	var placed: int = 0
+	for i in colonnade_count:
+		# Décalage d'un demi-pas : sans lui, la première colonne tomberait pile
+		# sur l'axe et la couronne se lirait comme une grille.
+		var angle: float = TAU * (float(i) + 0.5) / float(colonnade_count)
+		var at := Vector2(
+			lake.center.x + cos(angle) * lake.radii.x * colonnade_radius_factor,
+			lake.center.y + sin(angle) * lake.radii.y * colonnade_radius_factor)
+
+		var blocked: bool = false
+		for zone in forbidden:
+			if at.distance_to(zone[0]) < zone[1]:
+				blocked = true
+				break
+		if blocked:
+			continue
+
+		# Une colonne hors du volume creusé serait dans la roche pleine.
+		if CavernTerrainBuilder.chamber_mask(terrain, at) < 0.4:
+			continue
+
+		_build_pillar("Colonne_%d" % i, at, bed, terrain)
+		placed += 1
+
+	if placed < 3:
+		push_warning("CavernLakeStructures : seulement %d colonnes posées." % placed)
 
 
 ## Colonne survivante de la voûte : elle monte du lit jusqu'au plafond réel,
