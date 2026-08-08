@@ -1,11 +1,12 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dkv06g0ld2ajb"]
 
-[ext_resource type="Script" path="res://scripts/world/cavern_terrain_builder.gd" id="1_yaq6u"]
-[ext_resource type="Script" path="res://scripts/world/cavern_navigation.gd" id="2_kfaml"]
-[ext_resource type="Script" path="res://scripts/world/cavern_environment.gd" id="3_isknd"]
-[ext_resource type="Script" path="res://scripts/world/cavern_lighting.gd" id="4_jsewr"]
-[ext_resource type="Script" path="res://scripts/world/cavern_marker_snapper.gd" id="5_s8vc5"]
-[ext_resource type="Script" path="res://scripts/world/cavern_lake_structures.gd" id="6_x3kyt"]
+[ext_resource type="Script" uid="uid://bl8eqw121kq6k" path="res://scripts/world/cavern_terrain_builder.gd" id="1_yaq6u"]
+[ext_resource type="Script" uid="uid://l4t1uowcqn03" path="res://scripts/world/cavern_navigation.gd" id="2_kfaml"]
+[ext_resource type="Script" uid="uid://bk8sulr4bcqss" path="res://scripts/world/cavern_environment.gd" id="3_isknd"]
+[ext_resource type="Script" uid="uid://c15yho3bfnbi2" path="res://scripts/world/cavern_lighting.gd" id="4_jsewr"]
+[ext_resource type="Script" uid="uid://dsvuqgsm70x4p" path="res://scripts/world/cavern_marker_snapper.gd" id="5_s8vc5"]
+[ext_resource type="Script" uid="uid://00exj5fq6ye6" path="res://scripts/world/cavern_lake_structures.gd" id="6_x3kyt"]
+[ext_resource type="Script" uid="uid://drsbv6uwuvoxd" path="res://scripts/world/cavern_gameplay.gd" id="7_ujktn"]
 
 [node name="Level01Cavern" type="Node3D" unique_id=1001146890]
 
@@ -135,3 +136,6 @@ script = ExtResource("5_s8vc5")
 
 [node name="LakeStructures" type="Node3D" parent="World" unique_id=1243101600]
 script = ExtResource("6_x3kyt")
+
+[node name="Gameplay" type="Node" parent="World" unique_id=603893354]
+script = ExtResource("7_ujktn")

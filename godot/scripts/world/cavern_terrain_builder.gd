@@ -447,7 +447,7 @@ func _chunk_has_volume(
 
 func _build_chunk(
 	parent: Node3D,
-	surface_name: String,
+	_surface_name: String,
 	cx: int,
 	cz: int,
 	heights: PackedFloat32Array,
