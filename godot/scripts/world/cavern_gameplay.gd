@@ -121,6 +121,7 @@ func _spawn_secret_mechanism() -> void:
 	_world.add_child(_boss_puzzle)
 	_boss_puzzle.progress_changed.connect(_on_puzzle_progress)
 	_boss_puzzle.solved.connect(func() -> void:
+		_awaken_the_lake(gate)
 		if gate != null:
 			gate.collapse()
 		if door != null:
@@ -130,6 +131,19 @@ func _spawn_secret_mechanism() -> void:
 
 func _on_puzzle_progress(lit: int, total: int) -> void:
 	print("[CavernGameplay] verrou du boss : %d/%d lettres." % [lit, total])
+
+
+## La récompense du puzzle : le Pilier de l'Îlot se charge, puis tire un trait
+## de lumière vers la Brèche, qui retombe sur la salle du boss et l'éclaire.
+##
+## C'est le seul moment du niveau où quelque chose relie les deux extrémités de
+## la caverne à l'écran. Sans lui, résoudre l'énigme ne se voyait que par une
+## porte qui tombe à deux cents mètres de là — donc pas du tout.
+func _awaken_the_lake(gate: Node) -> void:
+	var beam := LakeBeam.new()
+	beam.name = "RayonDuVerrou"
+	_world.add_child(beam)
+	beam.fire(_world, gate)
 
 
 # ---------------------------------------------------------------------------
@@ -159,4 +173,36 @@ func _spawn_boss() -> void:
 	else:
 		push_warning("CavernGameplay : BossAI/set_arena introuvable — pas de laisse d'arène.")
 
+	_build_arena_lock(boss)
 	print("[CavernGameplay] boss posé en %v (laisse %.0f m)." % [boss.global_position, boss_leash_radius])
+
+
+## LE VERROU D'ARÈNE — ce qui réveille le Golem.
+##
+## Il manquait purement et simplement : le nœud `BossArena` de la scène n'est
+## qu'un porte-marqueurs sans script, donc **rien n'appelait jamais
+## `engage()`** et le boss dormait indéfiniment. On construit ici la zone que
+## la scène ne portait pas.
+##
+## La zone couvre le bol : franchir la crête réveille. On ne peut pas exiger
+## que TOUS les joueurs soient entrés — en coop, un traînard laisserait le
+## boss inerte pendant que les autres lui tournent autour.
+func _build_arena_lock(boss: Node3D) -> void:
+	var zone := Area3D.new()
+	zone.name = "ReveilDuGolem"
+	var shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = boss_leash_radius
+	shape.shape = sphere
+	zone.add_child(shape)
+	_world.add_child(zone)
+	zone.global_position = boss.global_position
+
+	zone.body_entered.connect(func(body: Node) -> void:
+		if not (body is PlayerController):
+			return
+		if boss.has_method("is_engaged") and bool(boss.call("is_engaged")):
+			return
+		if boss.has_method("engage"):
+			boss.call("engage")
+			print("[CavernGameplay] le Golem s'éveille."))
