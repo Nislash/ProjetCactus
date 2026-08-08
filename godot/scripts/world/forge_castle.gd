@@ -41,6 +41,13 @@ signal gate_opened()
 
 @export_file("*.tres") var terrain_data_path: String = "res://data/levels/level02_forge_terrain.tres"
 
+## Le basalte taillé, généré par Meshy et projeté en triplanaire — cf
+## `tools/build_forge_materials.gd` pour le pourquoi de cette voie plutôt que
+## du « retexture-first » habituel.
+const MASONRY_PATH := "res://assets/level02/materials/forge_masonry.tres"
+
+## Teinte de repli, si la matière manque. Un château invisible serait pire
+## qu'un château gris : le repli garde la silhouette lisible.
 const STONE := Color(0.055, 0.045, 0.050)
 const STONE_DARK := Color(0.030, 0.024, 0.028)
 const SEAL := Color(1.000, 0.478, 0.184)
@@ -62,6 +69,23 @@ func _ready() -> void:
 	_build()
 
 
+## La maçonnerie, éventuellement assombrie. Retombe sur une couleur plate si
+## la matière n'a pas été construite — le niveau reste jouable sans elle.
+func _masonry(brightness: float) -> Material:
+	var base: StandardMaterial3D = load(MASONRY_PATH) as StandardMaterial3D
+	if base == null:
+		push_warning("ForgeCastle : maçonnerie absente — repli sur une teinte plate.")
+		var flat := StandardMaterial3D.new()
+		flat.albedo_color = STONE if brightness >= 1.0 else STONE_DARK
+		flat.roughness = 0.9
+		return flat
+	if is_equal_approx(brightness, 1.0):
+		return base
+	var shade: StandardMaterial3D = base.duplicate() as StandardMaterial3D
+	shade.albedo_color = Color(brightness, brightness, brightness, 1.0)
+	return shade
+
+
 func _ground(at: Vector2) -> float:
 	return CavernTerrainBuilder.sample_point(_terrain.floor_field, at, _noise)
 
@@ -70,14 +94,11 @@ func _build() -> void:
 	var base: float = _ground(footprint_center)
 	global_position = Vector3(footprint_center.x, base, footprint_center.y)
 
-	var stone := StandardMaterial3D.new()
-	stone.albedo_color = STONE
-	stone.roughness = 0.88
-	stone.metallic = 0.0
-
-	var stone_dark := StandardMaterial3D.new()
-	stone_dark.albedo_color = STONE_DARK
-	stone_dark.roughness = 0.92
+	var stone: Material = _masonry(1.0)
+	# La terrasse est assombrie plutôt que changée de matière : c'est le MÊME
+	# appareillage, posé à l'ombre du donjon. Deux matières différentes se
+	# liraient comme deux bâtiments.
+	var stone_dark: Material = _masonry(0.55)
 
 	_build_terrace(stone_dark)
 	_build_keep(stone)
@@ -190,7 +211,10 @@ func _build_gate() -> void:
 	_gate_material.albedo_color = SEAL.darkened(0.55)
 	_gate_material.emission_enabled = true
 	_gate_material.emission = SEAL
-	_gate_material.emission_energy_multiplier = 2.2
+	# 0,9 et pas 2,2 : à 2,2, le sceau saturait en blanc et son halo effaçait la
+	# moitié du cadre — y compris la maçonnerie qu'il est censé mettre en
+	# valeur. Un point d'accroche qui aveugle n'accroche plus rien.
+	_gate_material.emission_energy_multiplier = 0.9
 	_gate_material.roughness = 0.35
 	panel.material_override = _gate_material
 	panel.position = Vector3(0.0, 5.0, 0.0)
@@ -221,7 +245,7 @@ func _build_gate() -> void:
 	var glow := OmniLight3D.new()
 	glow.name = "LueurDuSceau"
 	glow.light_color = SEAL
-	glow.light_energy = 2.4
+	glow.light_energy = 1.5
 	glow.omni_range = 22.0
 	glow.shadow_enabled = false
 	glow.position = Vector3(0.0, 5.0, 2.0)

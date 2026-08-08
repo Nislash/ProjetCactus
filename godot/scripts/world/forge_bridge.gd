@@ -39,6 +39,12 @@ extends Node3D
 @export var segments: int = 14
 @export var sag: float = 1.4
 
+## Le dallage du tablier et la maçonnerie des pylônes d'ancrage. Deux matières
+## distinctes parce qu'elles ne racontent pas la même chose : on MARCHE sur
+## l'une, l'autre soutient. Cf `tools/build_forge_materials.gd`.
+const DECK_PATH := "res://assets/level02/materials/forge_deck.tres"
+const MASONRY_PATH := "res://assets/level02/materials/forge_masonry.tres"
+
 const STONE := Color(0.075, 0.062, 0.068)
 const CHAIN := Color(0.145, 0.118, 0.110)
 
@@ -59,9 +65,8 @@ func _build() -> void:
 	var length: float = span.length()
 	var heading: float = atan2(span.x, span.z)
 
-	var stone := StandardMaterial3D.new()
-	stone.albedo_color = STONE
-	stone.roughness = 0.85
+	var deck_material: Material = _stone(DECK_PATH)
+	var stone: Material = _stone(MASONRY_PATH)
 
 	var chain_material := StandardMaterial3D.new()
 	chain_material.albedo_color = CHAIN
@@ -85,7 +90,7 @@ func _build() -> void:
 		var mesh := BoxMesh.new()
 		mesh.size = Vector3(deck_width, 0.55, seg.length() + 0.25)
 		plank.mesh = mesh
-		plank.material_override = stone
+		plank.material_override = deck_material
 		add_child(plank)
 		plank.global_position = mid
 		plank.rotation.y = heading
@@ -96,6 +101,18 @@ func _build() -> void:
 
 	_build_rails(start, end, heading, chain_material)
 	_build_pylons(start, end, heading, stone)
+
+
+## Charge une matière de pierre, avec repli sur une teinte plate.
+func _stone(path: String) -> Material:
+	var material: StandardMaterial3D = load(path) as StandardMaterial3D
+	if material != null:
+		return material
+	push_warning("ForgeBridge : matière absente (%s) — repli sur une teinte plate." % path)
+	var flat := StandardMaterial3D.new()
+	flat.albedo_color = STONE
+	flat.roughness = 0.85
+	return flat
 
 
 ## La flèche du tablier à l'abscisse `t`, en mètres.

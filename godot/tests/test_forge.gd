@@ -57,6 +57,7 @@ func _run() -> void:
 	failed += _test_the_moon_puzzle_is_solvable()
 	failed += _test_the_boss_waits_behind_the_gate()
 	failed += _test_the_castle_can_be_reached()
+	failed += _test_the_stone_is_textured()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -109,8 +110,35 @@ func _test_the_lava_is_at_the_bottom() -> int:
 	if not flat_enough:
 		print("[FAIL] lave : aucun bassin à fond plat — la nappe sera une flaque")
 		return 1
-	print("[OK] the_lava_is_at_the_bottom (%.1f m, crête à %.1f m)"
-		% [lava.surface_altitude, rim])
+	# ET SURTOUT : la nappe doit ÉMERGER du lit.
+	#
+	# C'est le contrôle qui manquait. La nappe était à -2,2 alors que le lit ne
+	# descend jamais sous +1,18 : elle était enterrée de trois mètres, donc
+	# invisible. Aucun test ne l'a vu parce qu'ils regardaient tous la nappe
+	# par rapport à la CRÊTE, jamais par rapport au FOND. Une coulée qu'on ne
+	# voit pas n'est pas une coulée.
+	var wet: int = 0
+	var samples: int = 0
+	var deepest: float = 0.0
+	for i in 61:
+		var x: float = -60.0 + float(i) * 2.0
+		var bed: float = _ground(Vector2(x, lava.center.y))
+		samples += 1
+		if bed < lava.surface_altitude:
+			wet += 1
+			deepest = maxf(deepest, lava.surface_altitude - bed)
+	var wet_ratio: float = float(wet) / float(samples)
+	if wet_ratio < 0.35:
+		print("[FAIL] lave : seulement %.0f %% de l'axe est immergé — la coulée est enterrée"
+			% (wet_ratio * 100.0))
+		return 1
+	if deepest < lava.minimum_depth:
+		print("[FAIL] lave : %.2f m au plus profond, sous le minimum de %.2f m"
+			% [deepest, lava.minimum_depth])
+		return 1
+
+	print("[OK] the_lava_is_at_the_bottom (%.1f m, crête à %.1f m, %.0f %% de l'axe immergé, %.2f m au plus profond)"
+		% [lava.surface_altitude, rim, wet_ratio * 100.0, deepest])
 	return 0
 
 
@@ -494,3 +522,52 @@ func _in_lava(at: Vector2, lava: CavernLake) -> bool:
 	var local: Vector2 = at - lava.center
 	return Vector2(local.x / maxf(lava.radii.x, 0.001),
 		local.y / maxf(lava.radii.y, 0.001)).length() <= 1.0
+
+
+## LA PIERRE EST DE LA PIERRE, PAS UNE COULEUR.
+##
+## Le repli est silencieux par conception : si la matière manque, le château se
+## bâtit quand même en gris plat et le niveau reste jouable. C'est le bon
+## comportement en jeu, et exactement ce qui ferait passer une régression
+## inaperçue — d'où ce test.
+func _test_the_stone_is_textured() -> int:
+	var subjects: Array = [
+		["château", _world.get_node_or_null("Chateau"), ["Donjon", "Terrasse", "Tour_0"]],
+		["pont", _world.get_node_or_null("PontSuspendu"), ["Tablier_0", "Tablier_7"]],
+	]
+	for subject in subjects:
+		var owner: Node = subject[1]
+		if owner == null:
+			print("[FAIL] matière : « %s » absent" % subject[0])
+			return 1
+		for part_name in subject[2]:
+			var part: MeshInstance3D = owner.get_node_or_null(part_name) as MeshInstance3D
+			if part == null:
+				print("[FAIL] matière : %s/%s introuvable" % [subject[0], part_name])
+				return 1
+			var material: StandardMaterial3D = part.material_override as StandardMaterial3D
+			if material == null or material.albedo_texture == null:
+				print("[FAIL] matière : %s/%s est une couleur plate" % [subject[0], part_name])
+				return 1
+			# Sans triplanaire, des UV de boîte étireraient la texture sur les
+			# faces et laisseraient une couture à chaque arête.
+			if not material.uv1_triplanar:
+				print("[FAIL] matière : %s/%s n'est pas en triplanaire" % [subject[0], part_name])
+				return 1
+			if material.normal_texture == null or material.roughness_texture == null:
+				print("[FAIL] matière : %s/%s n'a pas ses cartes PBR" % [subject[0], part_name])
+				return 1
+
+	# Le tablier et les murs ne portent PAS la même matière : on marche sur
+	# l'un, l'autre soutient.
+	var deck: MeshInstance3D = (_world.get_node_or_null("PontSuspendu") as Node) \
+		.get_node_or_null("Tablier_0") as MeshInstance3D
+	var wall: MeshInstance3D = (_world.get_node_or_null("Chateau") as Node) \
+		.get_node_or_null("Donjon") as MeshInstance3D
+	if (deck.material_override as StandardMaterial3D).albedo_texture \
+			== (wall.material_override as StandardMaterial3D).albedo_texture:
+		print("[FAIL] matière : le tablier et les murs partagent la même pierre")
+		return 1
+
+	print("[OK] the_stone_is_textured (maçonnerie + dallage, triplanaires, PBR complet)")
+	return 0
