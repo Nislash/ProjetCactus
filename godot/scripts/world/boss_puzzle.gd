@@ -152,6 +152,10 @@ func _engrave_pylons() -> void:
 		pylon.glyph_face = rng.randi_range(0, LetterPylon.SHAFT_FACES - 1)
 		pylon.glyph_height = bands[i]
 		_measure_shaft_for(column, pylon)
+		# Le sol local, et non la base de la colonne : les fûts plongent
+		# jusqu'au lit du lac, plusieurs mètres sous la rive où l'on marche.
+		var at := Vector2(column.global_position.x, column.global_position.z)
+		pylon.ground_offset = maxf(_ground(at).y - column.global_position.y, 0.0)
 		column.add_child(pylon)
 		pylon.position = Vector3.ZERO
 		pylon.shard_placed.connect(_on_shard_placed)

@@ -50,6 +50,14 @@ const NICHE_RIM_CHUNKS := 9
 ## ceinture régulière autour du lac et se cherchaient toutes au même niveau.
 @export var glyph_height: float = 3.2
 
+## Hauteur du SOL au-dessus de la base du fût, en mètres.
+##
+## Les colonnes plongent jusqu'au lit du lac, plusieurs mètres sous la rive.
+## Sans cette correction, une gravure « à 2,2 m » était comptée depuis le lit
+## et se retrouvait donc **enterrée** sous le sol où marche le joueur — c'est
+## ce qui est arrivé au O.
+@export var ground_offset: float = 0.0
+
 ## Cotes du fût, renseignées par [BossPuzzle] depuis la colonne réelle. Sans
 ## elles, la gravure était posée sur l'AXE du poteau — c'est-à-dire à
 ## l'intérieur de la pierre, invisible.
@@ -100,7 +108,7 @@ func _build() -> void:
 	_build_glyph()
 
 	var facing: Vector3 = _face_normal()
-	var reach: float = _face_distance(ALTAR_HEIGHT)
+	var reach: float = _face_distance(_altar_y())
 
 	# LA NICHE — un trou creusé à même le fût.
 	#
@@ -129,7 +137,7 @@ func _build() -> void:
 	dark.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	cavity.material_override = dark
 	cavity.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	cavity.position = facing * (reach + 0.015) + Vector3(0.0, ALTAR_HEIGHT, 0.0)
+	cavity.position = facing * (reach + 0.015) + Vector3(0.0, _altar_y(), 0.0)
 	cavity.rotation.y = _face_angle()
 	add_child(cavity)
 
@@ -158,7 +166,7 @@ func _build() -> void:
 			cos(a) * (NICHE_WIDTH * 0.5 + rim_rng.randf_range(0.02, 0.12)),
 			sin(a) * (NICHE_HEIGHT * 0.5 + rim_rng.randf_range(0.02, 0.12)),
 			rim_rng.randf_range(0.02, 0.14))
-		chunk.position = facing * reach + Vector3(0.0, ALTAR_HEIGHT, 0.0) \
+		chunk.position = facing * reach + Vector3(0.0, _altar_y(), 0.0) \
 			+ Basis(Vector3.UP, _face_angle()) * local
 		chunk.rotation = Vector3(
 			rim_rng.randf_range(-0.5, 0.5),
@@ -186,7 +194,7 @@ func _build() -> void:
 	# son origine.
 	# Devant le fond noir : c'est ce détachement qui donne la profondeur.
 	altar.position = facing * (reach + 0.30) \
-		+ Vector3(0.0, ALTAR_HEIGHT + NICHE_HEIGHT * 0.44, 0.0)
+		+ Vector3(0.0, _altar_y() + NICHE_HEIGHT * 0.44, 0.0)
 	add_child(altar)
 
 	# L'éclat posé, qui vient combler l'empreinte.
@@ -200,7 +208,7 @@ func _build() -> void:
 	_socket_mesh.scale = Vector3.ONE * 0.42
 	# Logé dans la niche, pointe en haut : il vient combler l'empreinte.
 	_socket_mesh.position = facing * (reach + 0.30) \
-		+ Vector3(0.0, ALTAR_HEIGHT - NICHE_HEIGHT * 0.42, 0.0)
+		+ Vector3(0.0, _altar_y() - NICHE_HEIGHT * 0.42, 0.0)
 	add_child(_socket_mesh)
 
 	_glow = CrystalGrammar.make_glow(CrystalGrammar.COLOR_BOSS_LOCK, 0.0, 8.0)
@@ -270,11 +278,17 @@ func _build_glyph() -> void:
 	# épaisseur : sa face avant reste sous la surface, seules les arêtes
 	# ressortent. Sorti complètement, on obtiendrait une lettre pleine et
 	# lumineuse — lisible de partout, donc plus une énigme.
-	glyph.position = _face_normal() * (_face_distance(glyph_height) - GLYPH_DEPTH * GLYPH_SINK) \
-		+ Vector3(0.0, glyph_height, 0.0)
+	var glyph_y: float = ground_offset + glyph_height
+	glyph.position = _face_normal() * (_face_distance(glyph_y) - GLYPH_DEPTH * GLYPH_SINK) \
+		+ Vector3(0.0, glyph_y, 0.0)
 	glyph.rotation.y = _face_angle()
 	add_child(glyph)
 	_glyph = glyph
+
+
+## Altitude de la niche, comptée DEPUIS LE SOL et non depuis la base du fût.
+func _altar_y() -> float:
+	return ground_offset + ALTAR_HEIGHT
 
 
 ## L'angle du milieu du pan choisi. Décalé d'un demi-pas pour viser le centre

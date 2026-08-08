@@ -17,7 +17,13 @@ signal opened(weapon_kind: StringName, spell_name: String)
 
 ## Resources tirees au sort. Edition possible dans l'inspector si on veut
 ## restreindre le pool sur un niveau (ex tutoriel = pistol+fire fixe).
-@export var weapon_kinds: Array[StringName] = [&"pistol", &"melee"]
+## L'épée est retirée du tirage : le niveau 1 se joue au pistolet.
+##
+## Le combat du Golem se lit à distance — telegraphs au sol, tir ami, point
+## faible en face avant. Une arme de mêlée y colle le joueur au boss, où rien
+## de tout cela ne se voit. La garder dans le tirage revenait à distribuer une
+## main perdante une fois sur deux, au hasard, dès l'ouverture du coffre.
+@export var weapon_kinds: Array[StringName] = [&"pistol"]
 ## Liste de paires (spell_name, projectile_scene_path). On stocke des paths
 ## plutot que PackedScene pour rester ext_resource-free (le path est resolu
 ## a l'ouverture du coffre).

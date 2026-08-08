@@ -304,6 +304,55 @@ static func is_in_lake_footprint(terrain: CavernTerrainData, p: Vector2) -> bool
 ##
 ## Itéré : projeter hors d'une ellipse peut faire tomber dans une voisine, et
 ## les ouvertures se recouvrent exprès pour composer un contour irrégulier.
+## Ramène un point ÉMERGÉ jusqu'à la ligne d'eau, en le rapprochant du centre
+## du lac par dichotomie.
+##
+## C'est ce qui donne au lac une rive continue. Le contour n'est pas décidé par
+## l'emprise elliptique — qu'aucun sommet n'atteint — mais par la profondeur du
+## lit : là où le fond remonte au-dessus du seuil, l'eau s'arrête. Découper ce
+## contour à la maille de 1,5 m le transformait en escalier.
+##
+## Huit itérations : à 1,5 m de maille, cela place la berge à moins d'un
+## centimètre près, bien en dessous de ce que l'œil distingue.
+static func snap_to_lake_shore(terrain: CavernTerrainData, p: Vector2,
+		noise: FastNoiseLite) -> Vector2:
+	if terrain.lake == null:
+		return p
+	var level: float = terrain.lake.surface_altitude
+	var depth: float = level - sample_point(terrain.floor_field, p, noise)
+	if depth >= terrain.lake.minimum_depth:
+		return p  # déjà sous l'eau
+
+	var wet: Vector2 = terrain.lake.center
+	var dry: Vector2 = p
+	for _i in 8:
+		var mid: Vector2 = (wet + dry) * 0.5
+		var d: float = level - sample_point(terrain.floor_field, mid, noise)
+		if d >= terrain.lake.minimum_depth and is_in_lake_footprint(terrain, mid):
+			wet = mid
+		else:
+			dry = mid
+	return wet
+
+
+## Ramène un point sur l'ellipse d'emprise du lac s'il la dépasse.
+##
+## La nappe est bâtie quad par quad et chaque quad est gardé ou rejeté en
+## bloc : son contour épouse donc la grille, pas l'ellipse, et la rive se lit
+## en escalier. Projeter les sommets débordants sur l'ellipse suffit à rendre
+## le bord continu, sans changer la géométrie du lit.
+static func snap_to_lake_edge(terrain: CavernTerrainData, p: Vector2) -> Vector2:
+	if terrain.lake == null:
+		return p
+	var rx: float = maxf(terrain.lake.radii.x, 0.001)
+	var rz: float = maxf(terrain.lake.radii.y, 0.001)
+	var local: Vector2 = p - terrain.lake.center
+	var norm: float = Vector2(local.x / rx, local.y / rz).length()
+	if norm <= 1.0 or norm < 0.0001:
+		return p
+	return terrain.lake.center + local / norm
+
+
 static func project_out_of_openings(terrain: CavernTerrainData, p: Vector2) -> Vector2:
 	var point: Vector2 = p
 	for _pass in 4:
@@ -596,6 +645,7 @@ func _build_lake(floor_heights: PackedFloat32Array, dims: Vector2i) -> void:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var level: float = data.lake.surface_altitude
+	var lake_noise: FastNoiseLite = make_noise(data.floor_field)
 	var emitted: int = 0
 
 	for iz in dims.y - 1:
@@ -603,13 +653,16 @@ func _build_lake(floor_heights: PackedFloat32Array, dims: Vector2i) -> void:
 			var corners := [
 				Vector2i(ix, iz), Vector2i(ix + 1, iz), Vector2i(ix, iz + 1), Vector2i(ix + 1, iz + 1),
 			]
-			var submerged: bool = true
+			# On garde le quad dès qu'UN coin est sous l'eau, au lieu d'exiger
+			# les quatre. Exiger les quatre découpait le contour à la maille :
+			# la rive se lisait en dents de scie. Les coins émergés seront
+			# ramenés sur la ligne d'eau juste après.
+			var wet_corners: int = 0
 			for c in corners:
 				var h: float = floor_heights[c.y * dims.x + c.x]
-				if level - h < data.lake.minimum_depth:
-					submerged = false
-					break
-			if not submerged:
+				if level - h >= data.lake.minimum_depth:
+					wet_corners += 1
+			if wet_corners == 0:
 				continue
 			var p: Vector2 = sample_position(data, ix, iz)
 			if chamber_mask(data, p) <= 0.0:
@@ -617,11 +670,19 @@ func _build_lake(floor_heights: PackedFloat32Array, dims: Vector2i) -> void:
 			if not is_in_lake_footprint(data, p):
 				continue
 
-			var v00 := Vector3(p.x, level, p.y)
+
+			# Chaque sommet émergé est ramené SUR la ligne d'eau. C'est ce qui
+			# rend le contour continu : il suit la berge réelle au lieu de la
+			# grille. Les sommets déjà sous l'eau ne bougent pas.
 			var p11: Vector2 = sample_position(data, ix + 1, iz + 1)
-			var v10 := Vector3(p11.x, level, p.y)
-			var v01 := Vector3(p.x, level, p11.y)
-			var v11 := Vector3(p11.x, level, p11.y)
+			var c00: Vector2 = snap_to_lake_shore(data, p, lake_noise)
+			var c10: Vector2 = snap_to_lake_shore(data, Vector2(p11.x, p.y), lake_noise)
+			var c01: Vector2 = snap_to_lake_shore(data, Vector2(p.x, p11.y), lake_noise)
+			var c11: Vector2 = snap_to_lake_shore(data, p11, lake_noise)
+			var v00 := Vector3(c00.x, level, c00.y)
+			var v10 := Vector3(c10.x, level, c10.y)
+			var v01 := Vector3(c01.x, level, c01.y)
+			var v11 := Vector3(c11.x, level, c11.y)
 			_add_triangle(st, v00, v10, v11)
 			_add_triangle(st, v00, v11, v01)
 			emitted += 1
