@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b77g3ydf0teti"]
+
+[ext_resource type="Script" uid="uid://bkyijlp1d52qv" path="res://tools/shrine_preview.gd" id="1_lyo02"]
+
+[node name="ShrinePreview" type="Node3D" unique_id=1259359660]
+script = ExtResource("1_lyo02")
