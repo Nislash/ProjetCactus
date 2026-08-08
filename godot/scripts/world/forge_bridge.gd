@@ -51,10 +51,13 @@ const MAX_STEP_UP: float = 0.25
 ## parfaitement droit se lit comme une planche posée.
 @export var segments: int = 14
 
-## La flèche du tablier, en mètres. Modeste : elle plonge au-dessus de la
-## coulée, et chaque centimètre de flèche est un centimètre de garde en moins
-## au-dessus de la lave.
-@export var sag: float = 0.7
+## La flèche du tablier, en mètres.
+##
+## Ramenée de 0,7 à 0,3 : chaque centimètre de flèche est un centimètre de
+## moins entre le tablier et la corniche qui passe dessous, et la corniche est
+## elle-même coincée entre la lave et le pont. La courbure reste perceptible de
+## profil — c'est tout ce qu'on lui demandait.
+@export var sag: float = 0.3
 
 ## Le dallage du tablier et la maçonnerie des pylônes d'ancrage. Deux matières
 ## distinctes parce qu'elles ne racontent pas la même chose : on MARCHE sur

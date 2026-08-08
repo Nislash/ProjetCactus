@@ -96,7 +96,13 @@ func _build_chambers() -> Array[CavernChamber]:
 	chambers.append(_room("F4 Souffleries", Vector2(-58.0, -40.0), Vector2(24.0, 19.0), 35.0, 12.0, 10.0))
 
 	# Les goulets qui les relient au Puits.
-	chambers.append(_corridor("G1 Descente Nord", Vector2(-4.0, 56.0), Vector2(-2.0, 34.0), 7.0, 10.0, 6.0))
+	# G1 ÉLARGIE : 13 m de demi-largeur au lieu de 7.
+	#
+	# Signalé en jeu : deux masses rocheuses pinçaient l'échancrure par laquelle
+	# les joueurs descendent de leur point d'apparition. À quatre, un goulet de
+	# quatorze mètres se franchit en file indienne — c'est le premier mouvement
+	# du niveau, et il ne doit pas commencer par une file d'attente.
+	chambers.append(_corridor("G1 Descente Nord", Vector2(-4.0, 56.0), Vector2(-2.0, 34.0), 13.0, 10.0, 7.5))
 	chambers.append(_corridor("G2 Descente Est", Vector2(56.0, -10.0), Vector2(34.0, -6.0), 6.5, 10.0, 6.0))
 	chambers.append(_corridor("G3 Descente Ouest", Vector2(-52.0, -36.0), Vector2(-32.0, -22.0), 6.5, 10.0, 6.0))
 
@@ -203,6 +209,23 @@ func _build_floor() -> CavernHeightfieldSpec:
 	# passe dessous et le joueur, lui, longe la berge.
 	plateaus.append(_plateau("Chenal de la Coulée", Vector2(42.0, -14.0), Vector2(17.0, 7.0), 0.9, 17.0, true, 4.6))
 	plateaus.append(_plateau("Lèvre de la Chute", Vector2(76.0, -14.0), Vector2(12.0, 11.0), -4.0, 24.0, true, 3.0))
+
+	# LA CORNICHE. Une banquette étroite le long de la rive sud, sous le pont.
+	#
+	# POSÉE EN DERNIER, et c'est ce qui la fait exister : les plateaux se
+	# blendent dans l'ordre de la liste. Placée avant les chenaux, elle se
+	# faisait raboter par eux et le sol restait à 0,7 m — sous la lave.
+	#
+	# Demandé en jeu : « le joueur peut passer à droite et à gauche du pont pour
+	# explorer en dessous ». Ça n'était pas possible — la coulée allait d'une
+	# berge à l'autre, et sous le tablier il n'y avait que de la lave mortelle.
+	#
+	# Un mètre au-dessus de la nappe, quatre mètres de large : assez pour y
+	# marcher, trop peu pour s'y sentir en sécurité. C'est l'endroit le plus
+	# dangereux du niveau qu'on ne soit pas obligé de traverser, et c'est
+	# exactement ce qu'on veut d'un espace optionnel.
+	plateaus.append(_plateau("Corniche des Douves", Vector2(0.0, -3.8), Vector2(30.0, 4.2), 4.05, 6.0, true, 2.2))
+
 	spec.plateaus = plateaus
 
 	var basins: Array[CavernBasin] = []
