@@ -32,10 +32,18 @@ var _opened: bool = false
 @onready var _base_mesh: MeshInstance3D = $Base/BaseMesh if has_node("Base/BaseMesh") else null
 @onready var _lid: Node3D = $Lid if has_node("Lid") else null
 
+## Forme diégétique cristalline (niveau 1) : un sanctuaire de cristal plutôt
+## qu'un coffre de bois — dans une caverne cristalline, un coffre n'a rien à y
+## faire. Ces nœuds sont OPTIONNELS : une scène qui ne les déclare pas garde
+## l'animation de couvercle historique.
+@onready var _crystal: Node3D = $Crystal if has_node("Crystal") else null
+@onready var _crystal_glow: OmniLight3D = $Crystal/Glow if has_node("Crystal/Glow") else null
+
 
 func _ready() -> void:
 	super._ready()
-	prompt_text = "Ouvrir le coffre"
+	# Forme diégétique du niveau 1 : un sanctuaire de cristal, pas un coffre.
+	prompt_text = "Briser le cristal"
 	hold_duration = 1.0
 	interaction_range = 2.5
 	selection_priority = 10  ## convention CLAUDE.md : coffre = +10
@@ -84,6 +92,14 @@ func try_interact(by_player: Node) -> bool:
 
 
 func _play_open_anim() -> void:
+	# Forme cristalline : le cristal S'ÉTEINT. C'est le retour visuel qui a du
+	# sens ici — un cristal n'a pas de couvercle, et la lueur qui meurt dit
+	# « consommé » sans un mot. Elle raconte aussi quelque chose à distance : la
+	# caverne compte ses sanctuaires encore vivants.
+	if _crystal != null:
+		_play_crystal_extinction()
+		return
+
 	# Anim minimaliste : le lid pivote vers l'arrière en 0.4 s.
 	if _lid != null:
 		var tween: Tween = create_tween()
@@ -98,3 +114,36 @@ func _play_open_anim() -> void:
 			mat.albedo_color = mat.albedo_color.darkened(0.4)
 			mat.emission_energy_multiplier = 0.0
 			_base_mesh.material_override = mat
+
+
+## Extinction du sanctuaire : un éclat bref, puis la lueur meurt.
+##
+## Le sursaut avant l'extinction n'est pas décoratif — il confirme au joueur
+## que SON action a été prise en compte, à l'instant précis où elle l'est. Une
+## lumière qui décroît seulement pourrait passer pour un effet d'ambiance.
+func _play_crystal_extinction() -> void:
+	var tween: Tween = create_tween()
+	tween.set_parallel(false)
+
+	if _crystal_glow != null:
+		var base_energy: float = _crystal_glow.light_energy
+		tween.tween_property(_crystal_glow, "light_energy", base_energy * 2.2, 0.12) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(_crystal_glow, "light_energy", 0.0, 0.9) \
+			.set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN)
+
+	# L'émission du matériau suit la lumière, sinon le cristal resterait
+	# lumineux alors qu'il n'éclaire plus rien.
+	var mesh_instance: MeshInstance3D = _crystal.get_node_or_null("Mesh") as MeshInstance3D
+	if mesh_instance == null:
+		return
+	var material: BaseMaterial3D = mesh_instance.material_override as BaseMaterial3D
+	if material == null:
+		return
+	# Duplique : le matériau est partagé entre toutes les instances du prop,
+	# éteindre l'original éteindrait TOUS les sanctuaires du niveau d'un coup.
+	material = material.duplicate() as BaseMaterial3D
+	mesh_instance.material_override = material
+	tween.parallel().tween_property(material, "emission_energy_multiplier", 0.0, 0.9) \
+		.set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(material, "albedo_color", Color(0.28, 0.33, 0.40), 0.9)

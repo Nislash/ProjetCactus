@@ -36,7 +36,8 @@ var _opened: bool = false
 
 func _ready() -> void:
 	super._ready()
-	prompt_text = "Ouvrir le coffre"
+	# Le cristal d'armes : c'est lui qui tire la classe et l'arme de départ.
+	prompt_text = "Éveiller le cristal d'armes"
 	hold_duration = 0.6
 	interaction_range = 3.0
 	# Priorite haute : le coffre passe avant un weapon pickup colle (s'il y

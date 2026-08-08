@@ -1,61 +1,53 @@
-[gd_scene load_steps=9 format=3 uid="uid://relic_chest_m2"]
+[gd_scene format=3 uid="uid://cfn8xgi5malp1"]
 
-[ext_resource type="Script" path="res://scripts/core/relic_chest.gd" id="1_chest"]
+[ext_resource type="Script" uid="uid://c4asfvcu3urro" path="res://scripts/core/relic_chest.gd" id="1_chest"]
+[ext_resource type="Material" path="res://assets/level01/materials/crystal_spire_b.tres" id="2_5k4e2"]
+[ext_resource type="ArrayMesh" path="res://assets/level01/meshes/crystal_spire_b.res" id="2_6f2qb"]
+[ext_resource type="Material" path="res://data/levels/cavern_wall_material.tres" id="2_vawsk"]
 
-; Socle (coffre fermé, doré)
-[sub_resource type="BoxShape3D" id="Shape_base"]
-size = Vector3(1.2, 0.7, 0.8)
-[sub_resource type="BoxMesh" id="Mesh_base"]
-size = Vector3(1.2, 0.7, 0.8)
-[sub_resource type="StandardMaterial3D" id="Mat_base"]
-albedo_color = Color(0.55, 0.42, 0.18, 1)
-metallic = 0.7
-roughness = 0.35
-emission_enabled = true
-emission = Color(0.45, 0.32, 0.12, 1)
-emission_energy_multiplier = 0.6
-
-; Couvercle (pivot à l'arrière, tourne en _play_open_anim)
-[sub_resource type="BoxMesh" id="Mesh_lid"]
-size = Vector3(1.2, 0.2, 0.8)
-[sub_resource type="StandardMaterial3D" id="Mat_lid"]
-albedo_color = Color(0.7, 0.55, 0.22, 1)
-metallic = 0.8
-roughness = 0.25
-emission_enabled = true
-emission = Color(0.8, 0.6, 0.2, 1)
-emission_energy_multiplier = 1.2
-
-; Zone d'interaction
 [sub_resource type="SphereShape3D" id="Shape_area"]
 radius = 2.0
 
-[node name="RelicChest" type="Area3D"]
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_vawsk"]
+height = 1.7
+radius = 0.52
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_vawsk"]
+top_radius = 0.55
+bottom_radius = 0.72
+height = 0.4
+radial_segments = 7
+
+[node name="RelicChest" type="Area3D" unique_id=725986901]
 collision_layer = 0
 collision_mask = 0
 monitoring = false
 monitorable = false
 script = ExtResource("1_chest")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=928454809]
 shape = SubResource("Shape_area")
 
-[node name="Base" type="StaticBody3D" parent="."]
+[node name="Base" type="StaticBody3D" parent="." unique_id=1146984698]
 
-[node name="Shape" type="CollisionShape3D" parent="Base"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
-shape = SubResource("Shape_base")
+[node name="Shape" type="CollisionShape3D" parent="Base" unique_id=65769608]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("CylinderShape3D_vawsk")
 
-[node name="BaseMesh" type="MeshInstance3D" parent="Base"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
-mesh = SubResource("Mesh_base")
-material_override = SubResource("Mat_base")
+[node name="BaseMesh" type="MeshInstance3D" parent="Base" unique_id=201559160]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+material_override = ExtResource("2_vawsk")
+mesh = SubResource("CylinderMesh_vawsk")
 
-; Pivot du lid à l'arrière (z négatif = derrière), pour qu'il bascule vers l'arrière
-[node name="Lid" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.4)
+[node name="Crystal" type="Node3D" parent="." unique_id=36761130]
 
-[node name="LidMesh" type="MeshInstance3D" parent="Lid"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.4)
-mesh = SubResource("Mesh_lid")
-material_override = SubResource("Mat_lid")
+[node name="Mesh" type="MeshInstance3D" parent="Crystal" unique_id=956331980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+material_override = ExtResource("2_5k4e2")
+mesh = ExtResource("2_6f2qb")
+
+[node name="Glow" type="OmniLight3D" parent="Crystal" unique_id=2003979879]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+light_energy = 3.4
+light_volumetric_fog_energy = 2.0
+omni_range = 12.0
