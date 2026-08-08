@@ -1,53 +1,77 @@
 ## Données du terrain de la caverne (niveau 1) — DATA UNIQUEMENT, aucune logique.
 ##
-## Décrit un volume clos par deux champs de hauteurs : le sol et la voûte. Chacun
-## est composé de primitives qui parlent la même langue que la spec créative
-## (`docs/design/level01_topography.md`) : des **plateaux**, des **rampes** et des
-## **cuvettes bordées**. Itérer sur la topographie = éditer ce `.tres`, pas
-## resculpter un mesh (cf ADR `docs/tech/level01_terrain.md`).
+## Le volume est décrit par trois choses :
 ##
-## Le générateur qui consomme ces données est `cavern_terrain_builder.gd`.
+## 1. UNE SILHOUETTE — l'union de [member chambers]. La caverne existe là où une
+##    poche la déclare, et nulle part ailleurs. C'est ce qui remplace l'emprise
+##    rectangulaire de la première version, incapable de produire une forme
+##    organique.
+##
+## 2. UN SOL — champ de hauteurs composé de plateaux, rampes et cuvettes bordées.
+##
+## 3. UNE HAUTEUR LIBRE — et non une voûte en altitude absolue. La voûte vaut
+##    `sol + hauteur libre`, ce qui rend la contrainte « 10-15 m au-dessus du sol »
+##    structurelle plutôt que réglée à la main.
+##
+## Aux abords de la silhouette, la hauteur libre tend vers ZÉRO : le sol rejoint
+## la voûte et le volume SE REFERME TOUT SEUL. Il n'y a donc ni jupe de parois à
+## générer, ni jonction à surveiller — l'étanchéité est une propriété de la
+## construction, pas un résultat à vérifier.
+##
+## Itérer sur la topographie = éditer ce `.tres` (cf ADR `docs/tech/level01_terrain.md`).
 
 class_name CavernTerrainData
 extends Resource
 
-## Coin minimum de l'emprise, en mètres (X, Z). Topo §2 : (-45, -28).
-@export var bounds_min: Vector2 = Vector2(-45.0, -28.0)
+## Coin minimum de la zone échantillonnée, en mètres (X, Z). C'est une simple
+## fenêtre de calcul : la forme réelle vient des chambres.
+@export var bounds_min: Vector2 = Vector2(-150.0, -100.0)
 
-## Coin maximum de l'emprise, en mètres (X, Z). Topo §2 : (+48, +26).
-@export var bounds_max: Vector2 = Vector2(48.0, 26.0)
+## Coin maximum de la zone échantillonnée, en mètres (X, Z).
+@export var bounds_max: Vector2 = Vector2(150.0, 100.0)
 
-## Pas d'échantillonnage en mètres. 1 m donne ~5 000 points sur l'emprise du
-## niveau 1 : assez fin pour des pentes propres, assez grossier pour rester
-## gratuit. Le mesh ET la collision utilisent cette valeur (le builder les garde
-## synchronisés — ne pas la changer d'un côté seulement).
-@export_range(0.25, 4.0, 0.25) var cell_size: float = 1.0
+## Pas d'échantillonnage en mètres.
+##
+## Sur une emprise de 300 × 200 m, 1,0 m donnerait 60 000 points par champ et
+## 120 000 triangles par surface. 1,5 m divise cela par plus de deux tout en
+## gardant un relief lisible : le grain fin vient du matériau, pas de la
+## géométrie.
+@export_range(0.5, 4.0, 0.25) var cell_size: float = 1.5
+
+## Poches qui composent la silhouette du volume. Vide = aucune caverne.
+@export var chambers: Array[CavernChamber] = []
 
 ## Champ de hauteurs du sol praticable.
 @export var floor_field: CavernHeightfieldSpec
 
-## Champ de **hauteur libre** de la voûte, PAS une altitude absolue : la voûte
-## finale vaut `sol + hauteur libre`, bornée à [member min_headroom] /
-## [member max_headroom].
-##
-## C'est ce qui rend la contrainte dure « voûte à 10-15 m du sol praticable »
-## **structurelle** plutôt que le résultat d'un réglage : une voûte cotée en
-## absolu se désynchronise du sol dès qu'on retouche le relief, et la violation
-## ne se voit pas. Ici elle est impossible.
-##
-## Son maillage visuel est troué aux `sky_wells`, mais sa collision reste
-## pleine : on voit le ciel, on ne sort jamais.
-@export var vault_field: CavernHeightfieldSpec
+## Modulation de la hauteur libre, ajoutée à celle déclarée par les chambres.
+## Facultatif : sert à creuser une nef ou à écraser un passage sans redéfinir
+## les poches.
+@export var headroom_field: CavernHeightfieldSpec
 
-## Puits de ciel : ouvertures percées dans le MAILLAGE de la voûte uniquement.
-@export var sky_wells: Array[CavernSkyWell] = []
+## Ouvertures percées dans le MAILLAGE de la voûte (sa collision reste pleine).
+@export var sky_openings: Array[CavernSkyOpening] = []
 
-## Hauteur libre minimale exigée entre sol et voûte (contrainte dure du plan).
+## Nappe d'eau ou de glace. Nulle = pas de lac.
+@export var lake: CavernLake
+
+## Hauteur libre minimale dans les zones jouables (contrainte dure du plan).
 @export var min_headroom: float = 10.0
 
-## Hauteur libre maximale exigée entre sol et voûte (contrainte dure du plan).
+## Hauteur libre maximale (contrainte dure du plan).
 @export var max_headroom: float = 15.0
 
-## Pente maximale tolérée sur le sol, en degrés. Au-delà, le terrain est
-## considéré comme non praticable et les tests échouent.
-@export var max_slope_degrees: float = 25.0
+## En deçà de cette hauteur libre, on considère qu'on n'est plus dans le volume
+## jouable mais dans la paroi qui le referme. Sert aux tests et à la cuisson du
+## navmesh, pour qu'ils ne jugent pas la roche comme du sol.
+@export var playable_headroom_threshold: float = 2.5
+
+## Pente maximale tolérée sur le sol JOUABLE, en degrés.
+@export var max_slope_degrees: float = 36.0
+
+## Côté d'une tuile de maillage, en mètres.
+##
+## À cette échelle, un maillage unique serait toujours dessiné en entier : on
+## perdrait tout le culling et les quelques draw calls par viewport deviendraient
+## un mur. Le découpage en tuiles rend le frustum culling efficace.
+@export_range(16.0, 128.0, 8.0) var chunk_size: float = 48.0

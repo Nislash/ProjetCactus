@@ -77,7 +77,7 @@ func _build_fill_light() -> void:
 # ---------------------------------------------------------------------------
 
 func _build_sky_shafts(terrain: CavernTerrainData) -> void:
-	for well in terrain.sky_wells:
+	for well in terrain.sky_openings:
 		var ground: float = CavernTerrainBuilder.sample_point(
 			terrain.floor_field, well.center, _floor_noise(terrain))
 
@@ -96,7 +96,9 @@ func _build_sky_shafts(terrain: CavernTerrainData) -> void:
 		# L'ouverture du cône suit le DIAMÈTRE du puits : un puits large fait une
 		# flaque large, sans qu'on ait à régler quoi que ce soit à la main.
 		light.spot_range = terrain.max_headroom + 6.0
-		light.spot_angle = clampf(rad_to_deg(atan(well.diameter * 0.5 / 6.0)), 12.0, 45.0)
+		# L'ouverture du cone suit le plus GRAND demi-axe : une fente allongee
+		# doit eclairer sur toute sa longueur, pas seulement en son centre.
+		light.spot_angle = clampf(rad_to_deg(atan(maxf(well.radii.x, well.radii.y) / 6.0)), 12.0, 48.0)
 		light.spot_attenuation = 0.6
 		# Ombres portées : réservées aux sources majeures (budget art bible §5).
 		# Les deux puits en font partie — ce sont eux qui sculptent le volume.

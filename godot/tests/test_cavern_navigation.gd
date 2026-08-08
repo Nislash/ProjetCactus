@@ -117,13 +117,13 @@ func _test_every_poi_reachable_from_every_spawn() -> int:
 ## parcours nominal s'enchaîne, pas seulement que les points sont accessibles.
 func _test_full_traversal_spawn_to_boss() -> int:
 	var legs: Array = [
-		["spawn", Vector3(-41.0, 6.0, 0.0)],
-		["lac", Vector3(0.0, 0.0, 0.0)],
-		["K3 cuvette", Vector3(-20.0, 1.6, 6.0)],
-		["K1 nid", Vector3(22.0, 4.0, 20.0)],
-		["K2 lanterne", Vector3(10.0, 3.0, -22.0)],
-		["crête du seuil", Vector3(27.0, 3.2, 0.0)],
-		["arène (boss)", Vector3(42.0, -3.3, 0.0)],
+		["spawn", Vector3(-104.0, 9.0, -38.0)],
+		["poche du loot", Vector3(-126.0, 9.0, 6.0)],
+		["anse sud-ouest", Vector3(-84.0, 3.0, 30.0)],
+		["lac gelé", Vector3(-6.0, -1.0, 36.0)],
+		["nef centre", Vector3(-16.0, 4.5, -38.0)],
+		["crête du seuil", Vector3(42.0, 6.0, -47.0)],
+		["arène (boss)", Vector3(100.0, -3.0, -52.0)],
 	]
 	var total: float = 0.0
 	for i in legs.size() - 1:
@@ -180,10 +180,10 @@ func _path_report(from: Vector3, to: Vector3) -> Dictionary:
 
 func _spawns() -> Array:
 	return [
-		["Spawn0", Vector3(-41.0, 6.0, -4.5)],
-		["Spawn1", Vector3(-41.0, 6.0, -1.5)],
-		["Spawn2", Vector3(-41.0, 6.0, 1.5)],
-		["Spawn3", Vector3(-41.0, 6.0, 4.5)],
+		["Spawn0", Vector3(-104.0, 9.0, -44.0)],
+		["Spawn1", Vector3(-100.0, 9.0, -38.0)],
+		["Spawn2", Vector3(-104.0, 9.0, -32.0)],
+		["Spawn3", Vector3(-108.0, 9.0, -38.0)],
 	]
 
 
@@ -191,10 +191,10 @@ func _spawns() -> Array:
 ## docs/design/level01_topography.md §8.
 func _points_of_interest() -> Array:
 	return [
-		["Z3 lac", Vector3(0.0, 0.0, 0.0)],
-		["K1 nid", Vector3(22.0, 4.0, 20.0)],
-		["K2 lanterne", Vector3(10.0, 3.0, -22.0)],
-		["K3 cuvette", Vector3(-20.0, 1.6, 6.0)],
-		["CH2 relique", Vector3(20.0, 3.0, -24.0)],
-		["arène (boss)", Vector3(42.0, -3.3, 0.0)],
+		["Lac gelé", Vector3(-6.0, -1.0, 36.0)],
+		["Poche du Loot", Vector3(-126.0, 9.0, 6.0)],
+		["Anse Sud-Ouest", Vector3(-84.0, 3.0, 30.0)],
+		["Nef centre", Vector3(-16.0, 4.5, -38.0)],
+		["Crête du Seuil", Vector3(42.0, 6.0, -47.0)],
+		["Arène (boss)", Vector3(100.0, -3.0, -52.0)],
 	]

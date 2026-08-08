@@ -1,55 +1,54 @@
 ## Générateur du terrain de la caverne (niveau 1).
 ##
-## Consomme une [CavernTerrainData] et produit la géométrie du volume clos :
-## sol vallonné, voûte percée de puits de ciel, et ceinture de parois qui
-## referme le périmètre. Cf ADR `docs/tech/level01_terrain.md`.
+## Consomme une [CavernTerrainData] et produit un volume clos de forme
+## organique. Cf ADR `docs/tech/level01_terrain.md`.
+##
+## LE PRINCIPE, EN UNE PHRASE : la caverne est creusée dans de la roche pleine.
+## Le masque des chambres dit où elle existe ; partout ailleurs la hauteur libre
+## vaut zéro, donc la voûte descend au contact du sol et le volume SE REFERME
+## TOUT SEUL. Il n'y a ni parois à générer séparément, ni jonction à surveiller :
+## l'étanchéité est une propriété de la construction.
 ##
 ## Structure produite sous ce nœud :
-##   CavernTerrain (ce nœud)
-##   ├── Floor   : MeshInstance3D + StaticBody3D/CollisionShape3D (HeightMapShape3D)
-##   ├── Vault   : MeshInstance3D (TROUÉ) + StaticBody3D/CollisionShape3D (PLEIN)
-##   └── Walls   : MeshInstance3D + StaticBody3D/CollisionShape3D (trimesh)
+##   CavernTerrain
+##   ├── Floor/Chunk_x_z   MeshInstance3D + StaticBody3D (HeightMapShape3D)
+##   ├── Vault/Chunk_x_z   idem, maillage TROUÉ aux ouvertures, collision PLEINE
+##   └── Lake              nappe plane, sans collision
 ##
-## Le maillage de la voûte est troué aux puits de ciel mais sa collision ne
-## l'est pas : c'est ce qui garantit « on voit le ciel, on ne sort jamais » sans
-## poser un seul bouchon invisible à la main.
+## Le découpage en tuiles n'est pas cosmétique : à cette échelle, un maillage
+## unique serait toujours dessiné en entier et le frustum culling ne servirait
+## plus à rien.
 ##
-## Les fonctions de calcul du champ de hauteurs sont **statiques et pures** pour
-## que les tests puissent les appeler sans construire de scène
-## (cf `godot/tests/test_cavern_terrain.gd`).
+## Les fonctions d'échantillonnage sont STATIQUES ET PURES, pour que les tests
+## les appellent sans construire de scène.
 
 class_name CavernTerrainBuilder
 extends Node3D
 
-## Chemin par défaut de la ressource de terrain, produite par
-## `tools/build_cavern_terrain.gd`.
+## Couche physique du monde.
+const WORLD_COLLISION_LAYER: int = 1
+
+## Bit porté UNIQUEMENT par le sol praticable, pour que la cuisson du navmesh
+## sache quoi parser. Godot avertit que parser des maillages VISUELS exige un
+## readback GPU — coûteux, et inopérant en headless donc intestable en CI.
+## Parser les collisions est la voie recommandée, et le masque de collision en
+## est le seul filtre.
+const NAVMESH_SOURCE_LAYER: int = 128
+
 const DEFAULT_DATA_PATH := "res://data/levels/level01_cavern_terrain.tres"
 
-## Données de terrain à matérialiser. Laissé vide, [member data_path] est chargé.
 @export var data: CavernTerrainData
-
-## Chemin de secours, chargé si [member data] n'est pas assigné.
-##
-## La ressource de terrain est un ARTEFACT régénéré par un script d'outillage à
-## chaque itération sur la topographie. La référencer par chemin plutôt que de
-## l'embarquer dans la scène évite de recoller scène et artefact à chaque
-## régénération — et la review créative #15 va en demander plusieurs.
 @export_file("*.tres") var data_path: String = DEFAULT_DATA_PATH
 
-## Matériaux du terrain. Laissés vides, les chemins ci-dessous sont chargés
-## (même contournement que [member data_path] : le MCP Godot n'assigne pas les
-## propriétés typées `Resource`, cf docs/tech/godot_mcp_setup.md).
 @export var floor_material: Material
-@export var wall_material: Material
 @export var vault_material: Material
-
 @export_file("*.tres") var floor_material_path: String = "res://data/levels/cavern_floor_material.tres"
-@export_file("*.tres") var wall_material_path: String = "res://data/levels/cavern_wall_material.tres"
 @export_file("*.tres") var vault_material_path: String = "res://data/levels/cavern_vault_material.tres"
 
-## Reconstruit le terrain au `_ready`. Laisser vrai : le terrain est dérivé de
-## la donnée, il n'a pas à être sérialisé dans la scène.
 @export var build_on_ready: bool = true
+
+## Émis quand la construction est terminée, avec le nombre de tuiles produites.
+signal terrain_built(chunk_count: int)
 
 
 func _ready() -> void:
@@ -57,33 +56,20 @@ func _ready() -> void:
 		build()
 
 
-## Charge [member data_path] si aucune donnée n'a été assignée directement.
 func _resolve_data() -> void:
-	if data != null or data_path.is_empty():
-		return
-	data = load(data_path) as CavernTerrainData
-	if data == null:
-		push_error("CavernTerrainBuilder : impossible de charger « %s »." % data_path)
-
-
-func _resolve_materials() -> void:
+	if data == null and not data_path.is_empty():
+		data = load(data_path) as CavernTerrainData
 	if floor_material == null:
 		floor_material = load(floor_material_path) as Material
-	if wall_material == null:
-		wall_material = load(wall_material_path) as Material
 	if vault_material == null:
 		vault_material = load(vault_material_path) as Material
 
 
-## Reconstruit intégralement le terrain. Idempotent : purge d'abord ce qui a été
-## généré précédemment, pour qu'une réitération sur les données ne laisse aucun
-## résidu.
+## Reconstruit intégralement le terrain. Idempotent.
 func build() -> void:
 	_resolve_data()
-	_resolve_materials()
 	assert(data != null, "CavernTerrainBuilder : aucune CavernTerrainData assignée.")
 	assert(data.floor_field != null, "CavernTerrainBuilder : floor_field manquant.")
-	assert(data.vault_field != null, "CavernTerrainBuilder : vault_field manquant.")
 
 	for child in get_children():
 		child.queue_free()
@@ -92,85 +78,147 @@ func build() -> void:
 	var floor_heights: PackedFloat32Array = sample_field(data, data.floor_field)
 	var vault_heights: PackedFloat32Array = compose_vault(data, floor_heights)
 
-	# Seul le sol alimente le navmesh. La voûte est un plafond horizontal, donc
-	# « marchable » du point de vue du baker, qui ne raisonne qu'en pentes : sans
-	# ce filtrage, la navigation se cuit AUSSI à 12 m au-dessus du sol et les
-	# points de départ se retrouvent projetés au plafond.
-	_build_surface("Floor", floor_heights, dims, floor_material, false, true,
-		WORLD_COLLISION_LAYER | NAVMESH_SOURCE_LAYER)
-	# La voûte est retournée (faces vers le bas) et trouée visuellement.
-	_build_surface("Vault", vault_heights, dims, vault_material, true, false, WORLD_COLLISION_LAYER)
-	_build_walls(floor_heights, vault_heights, dims)
+	var chunks := Vector2i(
+		maxi(int(ceil((data.bounds_max.x - data.bounds_min.x) / data.chunk_size)), 1),
+		maxi(int(ceil((data.bounds_max.y - data.bounds_min.y) / data.chunk_size)), 1))
 
+	var floor_root := _make_root("Floor")
+	var vault_root := _make_root("Vault")
+	var built: int = 0
 
-## Couche physique du monde : tout le décor solide y est, joueurs et projectiles
-## s'y appuient.
-const WORLD_COLLISION_LAYER: int = 1
+	for cz in chunks.y:
+		for cx in chunks.x:
+			var range_x := _chunk_range(cx, chunks.x, dims.x)
+			var range_z := _chunk_range(cz, chunks.y, dims.y)
+			if range_x.y <= range_x.x or range_z.y <= range_z.x:
+				continue
+			# Une tuile entièrement dans la roche pleine n'a aucune surface
+			# jouable : la générer coûterait de la géométrie pour rien.
+			if not _chunk_has_volume(floor_heights, vault_heights, dims, range_x, range_z):
+				continue
+			_build_chunk(floor_root, "Floor", cx, cz, floor_heights, dims, range_x, range_z,
+				floor_material, false, WORLD_COLLISION_LAYER | NAVMESH_SOURCE_LAYER, false)
+			_build_chunk(vault_root, "Vault", cx, cz, vault_heights, dims, range_x, range_z,
+				vault_material, true, WORLD_COLLISION_LAYER, true)
+			built += 1
 
-## Bit supplémentaire porté UNIQUEMENT par le sol praticable, pour que la cuisson
-## du navmesh sache quoi parser.
-##
-## Pourquoi un bit plutôt qu'un groupe de nœuds : Godot avertit explicitement que
-## parser des maillages VISUELS pour cuire un navmesh exige un readback GPU —
-## coûteux en runtime, et purement et simplement inopérant en headless (donc
-## intestable en CI). Parser les collisions est la voie recommandée, et le
-## masque de collision est le seul filtre qu'elle accepte.
-const NAVMESH_SOURCE_LAYER: int = 128
+	_build_lake(floor_heights, dims)
+	terrain_built.emit(built)
 
 
 # ---------------------------------------------------------------------------
-# Échantillonnage du champ de hauteurs — statique et pur (testable)
+# Silhouette : le masque des chambres
 # ---------------------------------------------------------------------------
+
+## Appartenance au volume en un point : 1 au cœur d'une chambre, 0 dans la roche
+## pleine, dégradé sur `edge_softness` entre les deux. Les chambres s'unissent
+## par le MAXIMUM — deux poches qui se recouvrent forment une seule salle, sans
+## sur-creusement à leur intersection.
+static func chamber_mask(terrain: CavernTerrainData, p: Vector2) -> float:
+	var best: float = 0.0
+	for chamber in terrain.chambers:
+		best = maxf(best, _chamber_weight(chamber, p))
+		if best >= 1.0:
+			return 1.0
+	return best
+
+
+## Hauteur libre visée par les chambres en un point, pondérée par leur
+## appartenance. Une salle basse voisine d'une nef haute donne une transition
+## continue plutôt qu'une marche.
+static func chamber_headroom(terrain: CavernTerrainData, p: Vector2) -> float:
+	var total_weight: float = 0.0
+	var total_headroom: float = 0.0
+	for chamber in terrain.chambers:
+		var w: float = _chamber_weight(chamber, p)
+		if w <= 0.0:
+			continue
+		total_weight += w
+		total_headroom += chamber.headroom * w
+	if total_weight <= 0.0:
+		return 0.0
+	return total_headroom / total_weight
+
+
+static func _chamber_weight(chamber: CavernChamber, p: Vector2) -> float:
+	var outside: float = _chamber_distance_outside(chamber, p)
+	if outside <= 0.0:
+		return 1.0
+	if chamber.edge_softness <= 0.0:
+		return 0.0
+	return smoothstep(1.0, 0.0, clampf(outside / chamber.edge_softness, 0.0, 1.0))
+
+
+## Distance en mètres entre le point et le bord de la chambre (0 à l'intérieur).
+static func _chamber_distance_outside(chamber: CavernChamber, p: Vector2) -> float:
+	var rx: float = maxf(chamber.radii.x, 0.001)
+
+	if chamber.is_corridor:
+		# Capsule : distance au segment, moins la demi-largeur.
+		var axis: Vector2 = chamber.to_center - chamber.center
+		var length_sq: float = axis.length_squared()
+		var closest: Vector2 = chamber.center
+		if length_sq > 0.0001:
+			closest = chamber.center + axis * clampf((p - chamber.center).dot(axis) / length_sq, 0.0, 1.0)
+		return maxf(p.distance_to(closest) - rx, 0.0)
+
+	# Ellipse orientée : on ramène le point dans le repère de l'ellipse, on
+	# normalise par les rayons, puis on reconvertit l'écart en mètres via le
+	# plus PETIT rayon — sinon l'adoucissement changerait de largeur selon la
+	# direction, et une ellipse allongée aurait des bords incohérents.
+	var rz: float = maxf(chamber.radii.y, 0.001)
+	var local: Vector2 = (p - chamber.center).rotated(-deg_to_rad(chamber.rotation_degrees))
+	var norm: float = Vector2(local.x / rx, local.y / rz).length()
+	if norm <= 1.0:
+		return 0.0
+	return (norm - 1.0) * minf(rx, rz)
+
+
+# ---------------------------------------------------------------------------
+# Champs de hauteurs
+# ---------------------------------------------------------------------------
+
+static func grid_dimensions(terrain: CavernTerrainData) -> Vector2i:
+	var span: Vector2 = terrain.bounds_max - terrain.bounds_min
+	return Vector2i(
+		int(round(span.x / terrain.cell_size)) + 1,
+		int(round(span.y / terrain.cell_size)) + 1)
+
+
+static func sample_position(terrain: CavernTerrainData, ix: int, iz: int) -> Vector2:
+	return terrain.bounds_min + Vector2(float(ix), float(iz)) * terrain.cell_size
+
 
 ## Adoucissement MINIMAL pour qu'une transition d'altitude reste praticable.
 ##
 ## Le fondu des primitives utilise un `smoothstep`, dont la pente maximale vaut
-## **1,5 fois** la pente moyenne (dérivée de 3x²-2x³, maximale au milieu du
-## fondu). Dimensionner à l'œil sur `delta / falloff` sous-estime donc la pente
-## réelle de 50 % : c'est le piège que le test de pente a levé. Utiliser cette
-## fonction pour dimensionner les `falloff`, `rim_width` et largeurs de rampe.
+## 1,5 fois la pente moyenne. Dimensionner à l'œil sur `delta / falloff`
+## sous-estime donc la pente réelle de 50 %.
 static func min_falloff_for(delta_altitude: float, max_slope_degrees: float) -> float:
 	var slope: float = tan(deg_to_rad(clampf(max_slope_degrees, 1.0, 89.0)))
 	return 1.5 * absf(delta_altitude) / maxf(slope, 0.001)
 
 
-## Nombre d'échantillons en X et en Z, bornes comprises.
-static func grid_dimensions(terrain: CavernTerrainData) -> Vector2i:
-	var span: Vector2 = terrain.bounds_max - terrain.bounds_min
-	return Vector2i(
-		int(round(span.x / terrain.cell_size)) + 1,
-		int(round(span.y / terrain.cell_size)) + 1
-	)
-
-
-## Position monde (X, Z) de l'échantillon (ix, iz).
-static func sample_position(terrain: CavernTerrainData, ix: int, iz: int) -> Vector2:
-	return terrain.bounds_min + Vector2(float(ix), float(iz)) * terrain.cell_size
-
-
-## Évalue un champ complet. Retourne les altitudes en ligne, indexées
-## `iz * width + ix`.
 static func sample_field(terrain: CavernTerrainData, spec: CavernHeightfieldSpec) -> PackedFloat32Array:
 	var dims: Vector2i = grid_dimensions(terrain)
 	var heights: PackedFloat32Array = PackedFloat32Array()
 	heights.resize(dims.x * dims.y)
-
-	var noise: FastNoiseLite = null
-	if spec.noise_amplitude > 0.0:
-		noise = FastNoiseLite.new()
-		noise.seed = spec.noise_seed
-		noise.frequency = 1.0 / maxf(spec.noise_scale, 0.001)
-
+	var noise: FastNoiseLite = make_noise(spec)
 	for iz in dims.y:
 		for ix in dims.x:
-			var p: Vector2 = sample_position(terrain, ix, iz)
-			heights[iz * dims.x + ix] = sample_point(spec, p, noise)
+			heights[iz * dims.x + ix] = sample_point(spec, sample_position(terrain, ix, iz), noise)
 	return heights
 
 
-## Évalue l'altitude en un point. Les primitives s'appliquent dans l'ordre
-## plateaux → rampes → cuvettes ; chacune mélange sa contribution selon son
-## adoucissement, de sorte qu'aucune ne produit de marche franche.
+static func make_noise(spec: CavernHeightfieldSpec) -> FastNoiseLite:
+	if spec == null or spec.noise_amplitude <= 0.0:
+		return null
+	var noise := FastNoiseLite.new()
+	noise.seed = spec.noise_seed
+	noise.frequency = 1.0 / maxf(spec.noise_scale, 0.001)
+	return noise
+
+
 static func sample_point(spec: CavernHeightfieldSpec, p: Vector2, noise: FastNoiseLite) -> float:
 	var height: float = spec.base_altitude
 
@@ -181,13 +229,11 @@ static func sample_point(spec: CavernHeightfieldSpec, p: Vector2, noise: FastNoi
 
 	for ramp in spec.ramps:
 		var result: Array = _ramp_weight_and_altitude(ramp, p)
-		var w: float = result[0]
-		if w > 0.0:
-			height = lerpf(height, result[1], w)
+		if result[0] > 0.0:
+			height = lerpf(height, result[1], result[0])
 
 	# Le bruit est appliqué AVANT les cuvettes : les margelles doivent rester
-	# des bordures nettes et fiables, sinon la garantie anti-chute devient
-	# statistique au lieu d'être structurelle.
+	# des bordures nettes, sinon la garantie anti-chute devient statistique.
 	if noise != null:
 		height += noise.get_noise_2d(p.x, p.y) * spec.noise_amplitude
 
@@ -197,24 +243,80 @@ static func sample_point(spec: CavernHeightfieldSpec, p: Vector2, noise: FastNoi
 	return height
 
 
-## Poids d'appartenance à un plateau : 1 à l'intérieur, décroissant sur le
-## `falloff`, 0 au-delà.
+## Compose la voûte : `sol + hauteur libre`, la hauteur libre étant celle des
+## chambres, modulée puis bornée, et RAMENÉE À ZÉRO hors de la silhouette.
+##
+## C'est ici que le volume se referme. Là où le masque vaut 0, voûte = sol : il
+## n'y a plus d'espace, donc plus de caverne, donc rien à sceller.
+static func compose_vault(terrain: CavernTerrainData, floor_heights: PackedFloat32Array) -> PackedFloat32Array:
+	var dims: Vector2i = grid_dimensions(terrain)
+	var modulation: PackedFloat32Array = PackedFloat32Array()
+	if terrain.headroom_field != null:
+		modulation = sample_field(terrain, terrain.headroom_field)
+
+	var vault: PackedFloat32Array = PackedFloat32Array()
+	vault.resize(floor_heights.size())
+	for iz in dims.y:
+		for ix in dims.x:
+			var i: int = iz * dims.x + ix
+			var p: Vector2 = sample_position(terrain, ix, iz)
+			var mask: float = chamber_mask(terrain, p)
+			if mask <= 0.0:
+				vault[i] = floor_heights[i]
+				continue
+			var target: float = chamber_headroom(terrain, p)
+			if not modulation.is_empty():
+				target += modulation[i]
+			target = clampf(target, terrain.min_headroom, terrain.max_headroom)
+			# Le masque multiplie APRÈS le bornage : la hauteur libre décroît
+			# donc continûment de sa valeur intérieure à zéro sur la largeur de
+			# l'adoucissement, ce qui dessine la paroi.
+			vault[i] = floor_heights[i] + target * mask
+	return vault
+
+
+## Vrai si le point appartient au volume JOUABLE (assez de hauteur libre pour
+## s'y tenir), par opposition à la paroi qui le referme.
+static func is_playable(terrain: CavernTerrainData, floor_height: float, vault_height: float) -> bool:
+	return (vault_height - floor_height) >= terrain.playable_headroom_threshold
+
+
+## Vrai si le point est dans l'emprise du lac. Sans ce filtre, tout point bas de
+## la caverne se retrouverait sous l'eau.
+static func is_in_lake_footprint(terrain: CavernTerrainData, p: Vector2) -> bool:
+	if terrain.lake == null:
+		return false
+	var rx: float = maxf(terrain.lake.radii.x, 0.001)
+	var rz: float = maxf(terrain.lake.radii.y, 0.001)
+	var d: Vector2 = p - terrain.lake.center
+	return Vector2(d.x / rx, d.y / rz).length() <= 1.0
+
+
+static func is_in_sky_opening(terrain: CavernTerrainData, p: Vector2) -> bool:
+	for opening in terrain.sky_openings:
+		var local: Vector2 = (p - opening.center).rotated(-deg_to_rad(opening.rotation_degrees))
+		var rx: float = maxf(opening.radii.x, 0.001)
+		var rz: float = maxf(opening.radii.y, 0.001)
+		if Vector2(local.x / rx, local.y / rz).length() <= 1.0:
+			return true
+	return false
+
+
+# ---------------------------------------------------------------------------
+# Primitives de relief
+# ---------------------------------------------------------------------------
+
 static func _plateau_weight(plateau: CavernPlateau, p: Vector2) -> float:
 	var d: Vector2 = (p - plateau.center).abs()
 	var outside: float
 	if plateau.is_ellipse:
 		var rx: float = maxf(plateau.half_extent.x, 0.001)
 		var rz: float = maxf(plateau.half_extent.y, 0.001)
-		# Distance normalisée puis remise à l'échelle du plus petit rayon, pour
-		# que le falloff soit exprimé en mètres et pas en unités d'ellipse.
-		var norm: float = Vector2(d.x / rx, d.y / rz).length()
-		outside = (norm - 1.0) * minf(rx, rz)
+		outside = (Vector2(d.x / rx, d.y / rz).length() - 1.0) * minf(rx, rz)
 	else:
 		outside = Vector2(
 			maxf(d.x - plateau.half_extent.x, 0.0),
-			maxf(d.y - plateau.half_extent.y, 0.0)
-		).length()
-
+			maxf(d.y - plateau.half_extent.y, 0.0)).length()
 	if outside <= 0.0:
 		return 1.0
 	if plateau.falloff <= 0.0:
@@ -222,177 +324,189 @@ static func _plateau_weight(plateau: CavernPlateau, p: Vector2) -> float:
 	return smoothstep(1.0, 0.0, clampf(outside / plateau.falloff, 0.0, 1.0))
 
 
-## Poids et altitude interpolée d'une rampe. Retourne `[poids, altitude]`.
 static func _ramp_weight_and_altitude(ramp: CavernRamp, p: Vector2) -> Array:
 	var axis: Vector2 = ramp.to_point - ramp.from_point
 	var length_sq: float = axis.length_squared()
 	if length_sq < 0.0001:
 		return [0.0, ramp.from_altitude]
 
-	var rel: Vector2 = p - ramp.from_point
-	var t: float = clampf(rel.dot(axis) / length_sq, 0.0, 1.0)
+	var t: float = clampf((p - ramp.from_point).dot(axis) / length_sq, 0.0, 1.0)
 	var altitude: float = lerpf(ramp.from_altitude, ramp.to_altitude, t)
-
-	var closest: Vector2 = ramp.from_point + axis * t
-	var lateral: float = p.distance_to(closest)
+	var lateral: float = p.distance_to(ramp.from_point + axis * t)
 	var half_width: float = ramp.width * 0.5
 
 	if lateral <= half_width:
 		return [1.0, altitude]
 	if ramp.falloff <= 0.0:
 		return [0.0, altitude]
-	var w: float = smoothstep(1.0, 0.0, clampf((lateral - half_width) / ramp.falloff, 0.0, 1.0))
-	return [w, altitude]
+	return [smoothstep(1.0, 0.0, clampf((lateral - half_width) / ramp.falloff, 0.0, 1.0)), altitude]
 
 
-## Décalage d'altitude dû à une cuvette : négatif au fond, POSITIF sur la
-## margelle. C'est ce bourrelet qui interdit la chute.
+## Décalage dû à une cuvette : négatif au fond, POSITIF sur la margelle. C'est
+## ce bourrelet qui interdit la chute. La crête de la margelle EST le bord :
+## sans ça, l'offset sauterait de 0 à `rim_height` d'un échantillon à l'autre.
 static func _basin_offset(basin: CavernBasin, p: Vector2) -> float:
 	var rx: float = maxf(basin.radii.x, 0.001)
 	var rz: float = maxf(basin.radii.y, 0.001)
 	var norm: float = Vector2((p.x - basin.center.x) / rx, (p.y - basin.center.y) / rz).length()
 
 	if norm <= 1.0:
-		# Intérieur : du fond (-depth) jusqu'à la CRÊTE de la margelle (+rim_height),
-		# atteinte exactement au bord. La crête est le bord : sans ça, l'offset
-		# saute de 0 à rim_height d'un échantillon à l'autre et crée une falaise
-		# invisible dans la donnée (bug levé par le test de pente).
-		return lerpf(-basin.depth, basin.rim_height, smoothstep(0.0, 1.0, norm))
-
+		# Fond plat au centre, puis remontée vers la crête de la margelle. La
+		# crête EST le bord : sans ça, l'offset sauterait de 0 à `rim_height`
+		# d'un échantillon à l'autre et créerait une falaise invisible.
+		if norm <= basin.flat_bottom:
+			return -basin.depth
+		var t: float = inverse_lerp(basin.flat_bottom, 1.0, norm)
+		return lerpf(-basin.depth, basin.rim_height, smoothstep(0.0, 1.0, t))
 	if basin.rim_width <= 0.0 or basin.rim_height <= 0.0:
 		return 0.0
-
-	# Extérieur : le bourrelet culmine juste au bord et retombe sur `rim_width`.
 	var outside_m: float = (norm - 1.0) * minf(rx, rz)
 	if outside_m >= basin.rim_width:
 		return 0.0
 	return basin.rim_height * smoothstep(1.0, 0.0, clampf(outside_m / basin.rim_width, 0.0, 1.0))
 
 
-## Compose la voûte : `sol + hauteur libre`, la hauteur libre étant bornée aux
-## limites déclarées. Le bornage n'est pas une sécurité décorative : c'est ce qui
-## rend la contrainte « voûte à 10-15 m du sol » **impossible à violer**, quelle
-## que soit la retouche apportée au relief ensuite.
-static func compose_vault(terrain: CavernTerrainData, floor_heights: PackedFloat32Array) -> PackedFloat32Array:
-	var headroom: PackedFloat32Array = sample_field(terrain, terrain.vault_field)
-	var vault: PackedFloat32Array = PackedFloat32Array()
-	vault.resize(floor_heights.size())
-	for i in floor_heights.size():
-		var clearance: float = clampf(headroom[i], terrain.min_headroom, terrain.max_headroom)
-		vault[i] = floor_heights[i] + clearance
-	return vault
-
-
-## Vrai si le point tombe dans un puits de ciel (utilisé pour trouer la voûte).
-static func is_in_sky_well(terrain: CavernTerrainData, p: Vector2) -> bool:
-	for well in terrain.sky_wells:
-		if p.distance_to(well.center) <= well.diameter * 0.5:
-			return true
-	return false
-
-
 # ---------------------------------------------------------------------------
 # Construction de la géométrie
 # ---------------------------------------------------------------------------
 
-func _build_surface(
-	surface_name: String,
-	heights: PackedFloat32Array,
-	dims: Vector2i,
-	material: Material,
-	flip_faces: bool,
-	solid_mesh: bool,
-	collision_layer: int
-) -> void:
-	var root: Node3D = Node3D.new()
+func _make_root(surface_name: String) -> Node3D:
+	var root := Node3D.new()
 	root.name = surface_name
 	add_child(root)
 	root.owner = owner
+	return root
 
-	var mesh_instance: MeshInstance3D = MeshInstance3D.new()
+
+## Bornes d'index d'une tuile, avec UN échantillon de recouvrement sur la
+## dernière colonne/ligne : sans lui, deux tuiles voisines laisseraient une
+## fente d'un pas entre elles.
+func _chunk_range(chunk_index: int, chunk_count: int, sample_count: int) -> Vector2i:
+	var per_chunk: int = maxi(int(ceil(float(sample_count - 1) / float(chunk_count))), 1)
+	var start: int = chunk_index * per_chunk
+	var end: int = mini(start + per_chunk, sample_count - 1)
+	return Vector2i(start, end)
+
+
+func _chunk_has_volume(
+	floor_heights: PackedFloat32Array,
+	vault_heights: PackedFloat32Array,
+	dims: Vector2i,
+	range_x: Vector2i,
+	range_z: Vector2i
+) -> bool:
+	for iz in range(range_z.x, range_z.y + 1):
+		for ix in range(range_x.x, range_x.y + 1):
+			var i: int = iz * dims.x + ix
+			if vault_heights[i] - floor_heights[i] > 0.05:
+				return true
+	return false
+
+
+func _build_chunk(
+	parent: Node3D,
+	surface_name: String,
+	cx: int,
+	cz: int,
+	heights: PackedFloat32Array,
+	dims: Vector2i,
+	range_x: Vector2i,
+	range_z: Vector2i,
+	material: Material,
+	flip_faces: bool,
+	collision_layer: int,
+	punch_openings: bool
+) -> void:
+	var chunk := Node3D.new()
+	chunk.name = "Chunk_%d_%d" % [cx, cz]
+	parent.add_child(chunk)
+	chunk.owner = owner
+
+	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.name = "Mesh"
-	# `solid_mesh` distingue le sol (maillage plein) de la voûte (maillage troué
-	# aux puits de ciel). La collision, elle, est toujours pleine.
-	mesh_instance.mesh = _build_heightfield_mesh(heights, dims, flip_faces, not solid_mesh)
+	mesh_instance.mesh = _build_chunk_mesh(heights, dims, range_x, range_z, flip_faces, punch_openings)
 	if material != null:
 		mesh_instance.material_override = material
-	root.add_child(mesh_instance)
+	chunk.add_child(mesh_instance)
 	mesh_instance.owner = owner
 
-	var body: StaticBody3D = StaticBody3D.new()
+	var body := StaticBody3D.new()
 	body.name = "Body"
 	body.collision_layer = collision_layer
-	root.add_child(body)
+	chunk.add_child(body)
 	body.owner = owner
 
-	var collision: CollisionShape3D = CollisionShape3D.new()
+	var collision := CollisionShape3D.new()
 	collision.name = "Shape"
-	collision.shape = _build_heightmap_shape(heights, dims)
+	collision.shape = _build_chunk_shape(heights, dims, range_x, range_z)
 	# HeightMapShape3D échantillonne à 1 unité et se centre sur son origine :
-	# on le remet à l'échelle et on le recentre sur l'emprise réelle.
+	# on le remet à l'échelle et on le recentre sur l'emprise de la tuile.
 	collision.scale = Vector3(data.cell_size, 1.0, data.cell_size)
-	var center: Vector2 = (data.bounds_min + data.bounds_max) * 0.5
+	var corner_min: Vector2 = sample_position(data, range_x.x, range_z.x)
+	var corner_max: Vector2 = sample_position(data, range_x.y, range_z.y)
+	var center: Vector2 = (corner_min + corner_max) * 0.5
 	collision.position = Vector3(center.x, 0.0, center.y)
 	body.add_child(collision)
 	collision.owner = owner
 
 
-func _build_heightfield_mesh(
+func _build_chunk_mesh(
 	heights: PackedFloat32Array,
 	dims: Vector2i,
+	range_x: Vector2i,
+	range_z: Vector2i,
 	flip_faces: bool,
-	punch_sky_wells: bool
+	punch_openings: bool
 ) -> ArrayMesh:
-	var st: SurfaceTool = SurfaceTool.new()
+	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var emitted: int = 0
 
-	for iz in dims.y - 1:
-		for ix in dims.x - 1:
+	for iz in range(range_z.x, range_z.y):
+		for ix in range(range_x.x, range_x.y):
 			var p00: Vector2 = sample_position(data, ix, iz)
 			var p10: Vector2 = sample_position(data, ix + 1, iz)
 			var p01: Vector2 = sample_position(data, ix, iz + 1)
 			var p11: Vector2 = sample_position(data, ix + 1, iz + 1)
 
-			# Un quad n'est percé que si ses QUATRE coins sont dans le puits :
+			var h00: float = heights[iz * dims.x + ix]
+			var h10: float = heights[iz * dims.x + ix + 1]
+			var h01: float = heights[(iz + 1) * dims.x + ix]
+			var h11: float = heights[(iz + 1) * dims.x + ix + 1]
+
+			# Un quad n'est percé que si ses QUATRE coins sont dans l'ouverture :
 			# le bord du trou reste ainsi net et fermé.
-			if punch_sky_wells and (
-				is_in_sky_well(data, p00) and is_in_sky_well(data, p10)
-				and is_in_sky_well(data, p01) and is_in_sky_well(data, p11)
-			):
+			if punch_openings and is_in_sky_opening(data, p00) and is_in_sky_opening(data, p10) \
+					and is_in_sky_opening(data, p01) and is_in_sky_opening(data, p11):
 				continue
 
-			var v00 := Vector3(p00.x, heights[iz * dims.x + ix], p00.y)
-			var v10 := Vector3(p10.x, heights[iz * dims.x + ix + 1], p10.y)
-			var v01 := Vector3(p01.x, heights[(iz + 1) * dims.x + ix], p01.y)
-			var v11 := Vector3(p11.x, heights[(iz + 1) * dims.x + ix + 1], p11.y)
+			var v00 := Vector3(p00.x, h00, p00.y)
+			var v10 := Vector3(p10.x, h10, p10.y)
+			var v01 := Vector3(p01.x, h01, p01.y)
+			var v11 := Vector3(p11.x, h11, p11.y)
 
-			# ORDRE DES SOMMETS : Godot considere comme face AVANT celle dont
-			# les sommets tournent dans le SENS HORAIRE vus de face. Vu du
-			# dessus (+X a droite, +Z vers le bas de l'ecran), l'ordre horaire
-			# est v00 -> v10 -> v11 -> v01.
-			#
-			# Ces deux branches etaient INVERSEES : le sol etait genere faces
-			# vers le BAS, donc entierement cule quand on le regardait d'en
-			# haut — on voyait le ciel A TRAVERS le sol. Rien ne le signalait,
-			# car la collision (HeightMapShape3D) est independante du maillage
-			# et tous les tests de geometrie passaient.
+			# ORDRE DES SOMMETS : Godot considère comme face AVANT celle dont
+			# les sommets tournent dans le SENS HORAIRE vus de face. Inverser
+			# ces branches rend la surface invisible sans qu'aucune erreur ne
+			# soit signalée — on voit alors le fond à travers.
 			if flip_faces:
-				# Faces vers le BAS : la voute, qu'on regarde par en dessous.
 				_add_triangle(st, v00, v11, v10)
 				_add_triangle(st, v00, v01, v11)
 			else:
-				# Faces vers le HAUT : le sol, qu'on regarde d'en haut.
 				_add_triangle(st, v00, v10, v11)
 				_add_triangle(st, v00, v11, v01)
+			emitted += 1
 
+	if emitted == 0:
+		return ArrayMesh.new()
 	st.generate_normals()
 	st.generate_tangents()
 	return st.commit()
 
 
 func _add_triangle(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
-	# UV planaires : suffisant au blockout ; E3 passera en tri-planaire, seul
-	# procédé qui tienne sur du vallonné sans étirement visible sur les pentes.
+	# UV planaires : le shader de roche est tri-planaire et n'en dépend pas,
+	# mais les tangentes en ont besoin pour le micro-relief.
 	st.set_uv(Vector2(a.x, a.z) * 0.1)
 	st.add_vertex(a)
 	st.set_uv(Vector2(b.x, b.z) * 0.1)
@@ -401,89 +515,75 @@ func _add_triangle(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
 	st.add_vertex(c)
 
 
-func _build_heightmap_shape(heights: PackedFloat32Array, dims: Vector2i) -> HeightMapShape3D:
-	var shape: HeightMapShape3D = HeightMapShape3D.new()
-	shape.map_width = dims.x
-	shape.map_depth = dims.y
-	shape.map_data = heights
+func _build_chunk_shape(
+	heights: PackedFloat32Array,
+	dims: Vector2i,
+	range_x: Vector2i,
+	range_z: Vector2i
+) -> HeightMapShape3D:
+	var width: int = range_x.y - range_x.x + 1
+	var depth: int = range_z.y - range_z.x + 1
+	var slice: PackedFloat32Array = PackedFloat32Array()
+	slice.resize(width * depth)
+	for iz in depth:
+		for ix in width:
+			slice[iz * width + ix] = heights[(range_z.x + iz) * dims.x + range_x.x + ix]
+
+	var shape := HeightMapShape3D.new()
+	shape.map_width = width
+	shape.map_depth = depth
+	shape.map_data = slice
 	return shape
 
 
-## Ceinture de parois entre le contour du sol et celui de la voûte. Générée
-## depuis les mêmes champs : le périmètre est scellé par construction, il n'y a
-## pas de jonction à surveiller.
-func _build_walls(
-	floor_heights: PackedFloat32Array,
-	vault_heights: PackedFloat32Array,
-	dims: Vector2i
-) -> void:
-	var st: SurfaceTool = SurfaceTool.new()
+## Nappe du lac : une surface plane, dessinée là où le sol passe sous elle ET où
+## la caverne existe. Sans collision — le fond du lac reste le sol praticable.
+func _build_lake(floor_heights: PackedFloat32Array, dims: Vector2i) -> void:
+	if data.lake == null:
+		return
+
+	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var level: float = data.lake.surface_altitude
+	var emitted: int = 0
 
-	for edge_index in 4:
-		var count: int = dims.x if edge_index < 2 else dims.y
-		for i in count - 1:
-			var a: Vector2i = _edge_sample(edge_index, i, dims)
-			var b: Vector2i = _edge_sample(edge_index, i + 1, dims)
-			var pa: Vector2 = sample_position(data, a.x, a.y)
-			var pb: Vector2 = sample_position(data, b.x, b.y)
-			var fa: float = floor_heights[a.y * dims.x + a.x]
-			var fb: float = floor_heights[b.y * dims.x + b.x]
-			var va: float = vault_heights[a.y * dims.x + a.x]
-			var vb: float = vault_heights[b.y * dims.x + b.x]
+	for iz in dims.y - 1:
+		for ix in dims.x - 1:
+			var corners := [
+				Vector2i(ix, iz), Vector2i(ix + 1, iz), Vector2i(ix, iz + 1), Vector2i(ix + 1, iz + 1),
+			]
+			var submerged: bool = true
+			for c in corners:
+				var h: float = floor_heights[c.y * dims.x + c.x]
+				if level - h < data.lake.minimum_depth:
+					submerged = false
+					break
+			if not submerged:
+				continue
+			var p: Vector2 = sample_position(data, ix, iz)
+			if chamber_mask(data, p) <= 0.0:
+				continue
+			if not is_in_lake_footprint(data, p):
+				continue
 
-			var bottom_a := Vector3(pa.x, fa, pa.y)
-			var bottom_b := Vector3(pb.x, fb, pb.y)
-			var top_a := Vector3(pa.x, va, pa.y)
-			var top_b := Vector3(pb.x, vb, pb.y)
+			var v00 := Vector3(p.x, level, p.y)
+			var p11: Vector2 = sample_position(data, ix + 1, iz + 1)
+			var v10 := Vector3(p11.x, level, p.y)
+			var v01 := Vector3(p.x, level, p11.y)
+			var v11 := Vector3(p11.x, level, p11.y)
+			_add_triangle(st, v00, v10, v11)
+			_add_triangle(st, v00, v11, v01)
+			emitted += 1
 
-			# Faces tournées vers l'intérieur du volume.
-			if edge_index == 0 or edge_index == 3:
-				_add_triangle(st, bottom_a, top_a, top_b)
-				_add_triangle(st, bottom_a, top_b, bottom_b)
-			else:
-				_add_triangle(st, bottom_a, top_b, top_a)
-				_add_triangle(st, bottom_a, bottom_b, top_b)
+	if emitted == 0:
+		return
 
 	st.generate_normals()
 	st.generate_tangents()
-	var mesh: ArrayMesh = st.commit()
-
-	var root: Node3D = Node3D.new()
-	root.name = "Walls"
-	add_child(root)
-	root.owner = owner
-
-	var mesh_instance: MeshInstance3D = MeshInstance3D.new()
-	mesh_instance.name = "Mesh"
-	mesh_instance.mesh = mesh
-	if wall_material != null:
-		mesh_instance.material_override = wall_material
-	root.add_child(mesh_instance)
-	mesh_instance.owner = owner
-
-	var body: StaticBody3D = StaticBody3D.new()
-	body.name = "Body"
-	body.collision_layer = WORLD_COLLISION_LAYER
-	root.add_child(body)
-	body.owner = owner
-
-	var collision: CollisionShape3D = CollisionShape3D.new()
-	collision.name = "Shape"
-	collision.shape = mesh.create_trimesh_shape()
-	body.add_child(collision)
-	collision.owner = owner
-
-
-## Coordonnées de grille du i-ème échantillon du bord `edge_index`
-## (0 = nord, 1 = sud, 2 = ouest, 3 = est).
-static func _edge_sample(edge_index: int, i: int, dims: Vector2i) -> Vector2i:
-	match edge_index:
-		0:
-			return Vector2i(i, 0)
-		1:
-			return Vector2i(i, dims.y - 1)
-		2:
-			return Vector2i(0, i)
-		_:
-			return Vector2i(dims.x - 1, i)
+	var lake_instance := MeshInstance3D.new()
+	lake_instance.name = "Lake"
+	lake_instance.mesh = st.commit()
+	if not data.lake.material_path.is_empty():
+		lake_instance.material_override = load(data.lake.material_path) as Material
+	add_child(lake_instance)
+	lake_instance.owner = owner

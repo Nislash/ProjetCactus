@@ -1,139 +1,187 @@
-# ADR — Technique du terrain vallonné (niveau 1)
+# ADR — Technique du terrain de la caverne (niveau 1)
 
-> **Statut : décidé, 2026-08-08.** Tâche E2 #9. Concerne uniquement le niveau 1 « Caverne Cristalline »,
-> qui est un cas fait main (cf `docs/design/levels.md`) ; les niveaux 2-8 restent sur
+> **Statut : décidé (2026-08-08), révisé le même jour pour la caverne ×7.**
+> Tâches E2 #9 puis E2bis #38. Concerne uniquement le niveau 1, qui est un cas
+> fait main (cf `docs/design/levels.md`) ; les niveaux 2-8 restent sur
 > `tools/dungeon_pipeline/`.
-> Spec spatiale à matérialiser : [`docs/design/level01_topography.md`](../design/level01_topography.md).
 
 ## Contexte
 
-Il faut matérialiser dans Godot 4.6 un **volume clos** : sol vallonné praticable partout (pentes douces,
-bosses, cuvettes bordées), voûte à 10-15 m percée de deux puits de ciel, parois qui referment le tout.
-Contraintes qui pèsent sur le choix :
+Il faut matérialiser dans Godot 4.6 un **volume clos de forme organique** :
+~35 000 m² jouables sur une emprise d'environ 300 × 200 m, au sol vallonné
+praticable partout, voûte à 10-15 m percée d'ouvertures sur le ciel, et un lac
+en son centre. Contraintes qui pèsent sur le choix :
 
-1. **Itérabilité.** Une review créative post-blockout est planifiée (tâche #15) : la topographie *va*
-   changer après playtest. Ce qui coûte cher à modifier sera modifié à contrecœur, donc mal.
-2. **Édition via MCP Godot.** `CLAUDE.md` interdit l'édition `.tscn` à la main.
-3. **Navmesh sur relief.** Le navmesh doit se régénérer sur la géométrie sans intervention manuelle.
-4. **Budget repo.** Un mesh sculpté de 93 × 54 m en LFS, réimporté à chaque itération, gonfle
-   l'historique — on vient déjà de se prendre 185 Mo sur trois props.
-5. **Anti-chute prouvable.** La contrainte « aucune chute possible » doit être *vérifiable
-   automatiquement*, pas constatée à l'œil.
+1. **Itérabilité.** Des allers-retours créatifs sont prévus : la topographie
+   *va* changer. Ce qui coûte cher à modifier sera modifié à contrecœur, donc mal.
+2. **Édition via MCP Godot** — `CLAUDE.md` interdit l'édition `.tscn` à la main.
+3. **Navmesh sur relief**, régénéré sans intervention manuelle.
+4. **Budget dépôt** — un mesh sculpté de cette taille, réimporté à chaque passe,
+   gonfle l'historique LFS.
+5. **Anti-chute et étanchéité prouvables** automatiquement, pas constatées à l'œil.
+6. **Forme non rectangulaire** — la contrainte qui a fait tomber la v1.
 
 ## Options
 
 | Option | Verdict |
 |---|---|
-| **(a) Mesh sculpté externe** (Blender) + collision trimesh | ❌ Itération hors moteur, binaire lourd en LFS à chaque passe, incompatible avec « édition via MCP ». Le meilleur contrôle artistique, au pire coût d'itération. |
-| **(b) GridMap** | ❌ Rejeté d'emblée : pas de pentes douces. C'est la raison même pour laquelle le niveau 1 sort de la pipeline. |
-| **(c) CSG puis bake** | ❌ Coûteux en runtime, difficile à contrôler finement, et le bake casse l'itérabilité qu'on cherche. |
-| **(d) Double champ de hauteurs généré par script** | ✅ **Retenu.** |
+| **Mesh sculpté externe** (Blender) + collision trimesh | ❌ Itération hors moteur, binaire lourd à chaque passe, incompatible avec l'édition MCP. Meilleur contrôle artistique, pire coût d'itération. |
+| **GridMap** | ❌ Pas de pentes douces. C'est la raison même pour laquelle le N1 sort de la pipeline. |
+| **CSG puis bake** | ❌ Coûteux en runtime, difficile à contrôler finement, et le bake casse l'itérabilité recherchée. |
+| **Champs de hauteurs générés depuis de la donnée** | ✅ **Retenu.** |
 
 ## Décision
 
-**Deux champs de hauteurs (sol + voûte) générés par script depuis une `Resource` de données, plus une
-ceinture de parois qui referme le périmètre.**
+**Deux champs de hauteurs — sol et hauteur libre — générés depuis une
+`Resource`, et une silhouette définie par l'union de chambres.**
 
 ```
-       ╭──────────── voûte (heightfield #2, trouée visuellement) ────────────╮
-       │   ○ P1                                    ○ P2                      │
-  parois                                                                 parois
-       │                                                                     │
-       ╰────────── sol (heightfield #1) : plateaux · rampes · cuvettes ───────╯
+        roche pleine                                    roche pleine
+   ═════════════════╗                                 ╔═══════════════
+                    ╚═══╗   ← la voûte descend    ╔═══╝
+                        ╚═══╗                 ╔═══╝
+                            ╰───  caverne  ───╯
+   ─────────────────────────────────────────────────────────────────
+                      sol (champ de hauteurs)
 ```
 
-- **Le sol** : `CavernHeightfieldSpec` → grille de hauteurs → `ArrayMesh` (visuel) +
-  `HeightMapShape3D` (collision). Le heightfield est *exactement* le bon outil : le sol de la topo est
-  une fonction de (X, Z), sans surplomb.
-- **La voûte** : un second heightfield, inversé. Son **maillage visuel est troué** aux puits P1/P2,
-  mais sa **collision reste pleine** — on voit le ciel, on ne sort jamais. La contrainte dure la plus
-  délicate du plan tombe ainsi par construction, sans collision invisible à poser à la main.
-- **Les parois** : une jupe extrudée entre le contour du sol et celui de la voûte, générée en même
-  temps. Le périmètre est donc scellé par construction, pas par vigilance.
+### 1. La silhouette vient des chambres
+
+Une `CavernChamber` est une **poche** (ellipse orientée) ou un **goulet**
+(capsule entre deux points). Leur **union** dessine le volume ; partout ailleurs,
+c'est de la roche pleine.
+
+C'est ainsi que se lit un plan de caverne dessiné à la main — des salles reliées
+par des couloirs — donc c'est le vocabulaire dans lequel la conception créative
+peut écrire directement, sans traduction.
+
+> **Ce qui a été abandonné :** la v1 échantillonnait une **emprise rectangulaire**
+> et posait une jupe de parois sur ses 4 bords. Elle ne savait produire qu'une
+> boîte. Aucun réglage n'en aurait tiré la forme des croquis.
+
+### 2. Le volume se referme tout seul
+
+La voûte n'est pas cotée en altitude absolue : elle vaut **`sol + hauteur libre`**,
+et la hauteur libre est **multipliée par le masque des chambres**. Hors de la
+silhouette, elle vaut zéro : la voûte descend au contact du sol, et il n'y a
+plus d'espace où passer.
+
+Conséquences, et c'est tout l'intérêt :
+
+- **Plus de ceinture de parois à générer**, donc plus de jonction à surveiller.
+- **L'étanchéité devient une propriété de la construction**, pas un résultat à
+  vérifier après coup.
+- La **contrainte « voûte à 10-15 m »** est structurelle : elle ne peut pas
+  dériver quand on retouche le relief.
+- La **largeur de la fermeture** (`edge_softness`) devient un paramètre de design :
+  court = falaise, long = évasement.
+
+### 3. Découpage en tuiles
+
+Le maillage est découpé en tuiles de `chunk_size` mètres. À cette échelle, un
+maillage unique serait **toujours dessiné en entier** et le frustum culling ne
+servirait plus à rien. Les tuiles entièrement dans la roche pleine ne sont pas
+générées du tout.
+
+### 4. Le lac est une surface distincte
+
+Un champ de hauteurs n'a qu'une surface par point ; un lac **est** une seconde
+surface au-dessus du fond. La nappe est donc un maillage plan à part, dessiné là
+où le sol passe sous son altitude **et** dans l'emprise déclarée du lac.
+
+> L'emprise n'est pas un luxe : sans elle, la nappe se dessinait aussi au fond
+> du bol de l'arène, qui se retrouvait **inondé**. Un lac occupe une cuvette
+> précise, pas tous les points bas de la caverne.
 
 ### Le format de données
 
-La spec de Fable parle en **plateaux, rampes et cuvettes** — le générateur parle la même langue :
+| Primitive | Rôle |
+|---|---|
+| `CavernChamber` | **où la caverne existe** — poche ou goulet, avec sa hauteur libre |
+| `CavernPlateau` | une zone d'altitude |
+| `CavernRamp` | une liaison pentue |
+| `CavernBasin` | un creux **bordé**, avec fond plat optionnel |
+| `CavernSkyOpening` | une ouverture elliptique orientée dans le maillage de voûte |
+| `CavernLake` | la nappe, son altitude et son emprise |
 
-| Primitive | Champs | Correspond à |
-|---|---|---|
-| `CavernPlateau` | centre, demi-étendue (rect ou ellipse), altitude, adoucissement | une zone d'altitude (Z1 corniche, Z3 lac, terrasses du nid) |
-| `CavernRamp` | départ→arrivée, altitudes, largeur, adoucissement | les liaisons pentues (rampes de Z2, montée du seuil, rampes d'arène) |
-| `CavernBasin` | centre, rayons, profondeur, **hauteur de margelle** | les cuvettes bordées (C1, le lac, le bol d'arène) |
+## Règles d'authoring (apprises en construisant, pas déduites)
 
-Les primitives s'appliquent dans l'ordre, chacune mélangée par son adoucissement. La margelle des
-cuvettes n'est pas décorative : c'est **le mécanisme qui rend la chute impossible**, et il est dans la
-donnée, pas dans la main du level designer.
-
-Un bruit de faible amplitude (graine fixe) ajoute les ondulations demandées sans jamais créer de pente
-supérieure au plafond configuré.
-
-### Ce que ça donne concrètement
-
-- **Itérer** = éditer un `.tres` (quelques dizaines de lignes de données) et relancer le générateur.
-  La review créative #15 se traduit en patch de données, pas en resculptage.
-- **Le repo** ne stocke que la donnée : ni mesh ni heightmap binaire. Zéro LFS pour le terrain.
-- **Vérifier** devient possible : le champ de hauteurs est un tableau de flottants, donc « aucune pente
-  > 25° » et « aucun creux non bordé » sont des assertions sur des nombres (tâche #11).
-- **Le navmesh** se régénère sur un `ArrayMesh` standard, sans cas particulier (tâche #12).
-
-## Règles d'authoring (découvertes en validant le prototype)
-
-Trois pièges se sont révélés en écrivant les tests. Ils ne sont pas théoriques : le premier était un
-**bug**, les deux autres produisent des falaises que rien ne signale à l'œil sur un blockout gris.
+Chacune vient d'un défaut réel, dont plusieurs invisibles à l'œil sur un
+blockout gris.
 
 ### 1. Dimensionner un fondu « à l'œil » sous-estime la pente de 50 %
 
-Le fondu des primitives est un `smoothstep`, dont la pente maximale vaut **1,5 fois** la pente moyenne
-(dérivée de 3x²−2x³, maximale au milieu du fondu). Une transition de 6 m sur 8 m de fondu ne fait pas
+Le fondu des primitives est un `smoothstep`, dont la pente **maximale** vaut
+**1,5 fois** la pente moyenne. Une transition de 6 m sur 8 m de fondu ne fait pas
 37°, elle fait **50°**.
 
-→ Toujours dimensionner via `CavernTerrainBuilder.min_falloff_for(delta_altitude, pente_visée)`.
+→ Toujours passer par `CavernTerrainBuilder.min_falloff_for(delta, pente_visée)`.
 Jamais un nombre écrit à la main.
 
 ### 2. La crête de la margelle EST le bord de la cuvette
 
-Première version de `_basin_offset` : l'intérieur remontait vers 0 au bord, l'extérieur démarrait à
-`rim_height`. Résultat, un **saut de `rim_height` d'un échantillon à l'autre** — une falaise invisible
-dans la donnée, que seul le test de pente a attrapée. Le profil correct d'un bol bordé va de `−depth`
-au centre à **`+rim_height` au bord exactement**, puis redescend à l'extérieur.
+Première version : l'intérieur remontait vers 0 au bord, l'extérieur démarrait à
+`rim_height` — soit un **saut** d'un échantillon à l'autre, une falaise
+invisible dans la donnée. Le profil correct va de `−depth` au centre à
+**`+rim_height` au bord exactement**.
 
 → Le rayon d'une cuvette doit couvrir `depth + rim_height`, pas seulement `depth`.
 
-### 3. Les cuvettes s'ajoutent, les plateaux et les rampes se fondent
+### 3. Les cuvettes s'ajoutent, les plateaux et rampes se fondent
 
-Plateaux et rampes appliquent un `lerp` **vers une altitude cible** : les superposer ne cumule pas
-leurs pentes. Les cuvettes, elles, ajoutent un **décalage** au relief existant. Poser une cuvette sur
-une rampe additionne donc les deux pentes.
+Plateaux et rampes appliquent un `lerp` **vers une altitude cible** : les
+superposer ne cumule pas leurs pentes. Les cuvettes ajoutent un **décalage**.
 
-→ Éloigner les cuvettes des rampes, ou budgéter la somme des deux.
+→ Ne pas faire chevaucher le bourrelet d'une cuvette et le fondu d'un plateau :
+constaté à 49° au bord du bol d'arène, au-delà de l'angle où le joueur glisse.
+Et une rampe creusée **dans** une cuvette se cote en altitude *avant* creusement,
+sinon on soustrait deux fois.
 
 ### 4. Réserver de la marge de pente pour les ondulations
 
-Le bruit de surface ajoute son propre gradient par-dessus tout le reste. Dimensionner les transitions
-pile au plafond de praticabilité garantit de le dépasser une fois le bruit posé.
+Le bruit de surface ajoute son propre gradient par-dessus tout le reste.
 
-→ Viser **~16°** sur les transitions quand le plafond est 25°. Le prototype validé sort à 22,5° de
-pente maximale avec ce réglage.
+→ Viser **~16°** sur les transitions quand le plafond est 36°.
+
+### 5. L'influence d'une rampe est une capsule
+
+Elle déborde au-delà de ses extrémités. Une rampe large posée pour « la descente
+d'ensemble » lavait les terrasses situées 60 m plus loin.
+
+→ Préférer le fondu d'un plateau pour un mouvement d'ensemble ; garder les
+rampes pour des liaisons courtes et locales.
+
+### 6. Un lac exige un fond PLAT
+
+Sans `flat_bottom`, la cuvette descend en pointe : le fond n'est qu'un point et
+la nappe se réduit à une flaque. Un lit plat donne aussi une glace praticable au
+lieu d'un entonnoir où l'on glisse.
 
 ## Conséquences et limites acceptées
 
-- **Pas de surplombs, pas d'arches, pas de tunnels superposés.** Un heightfield est une fonction de
-  (X, Z). La topo de Fable n'en demande aucun — c'est une combe, pas un réseau. Si un surplomb devient
-  nécessaire plus tard, il sera **ajouté comme mesh séparé** posé sur le terrain, sans remettre en
-  cause le socle.
-- **`HeightMapShape3D` échantillonne à 1 unité.** Le nœud de collision est mis à l'échelle de
-  `cell_size` ; toute modification de `cell_size` doit rester synchronisée entre le mesh et la forme —
-  c'est fait dans le builder, un seul endroit.
-- **Le coût mémoire du champ** croît en 1/cell_size². À `cell_size = 1 m` sur 93 × 54 m : ~5 000
-  échantillons par champ, négligeable.
-- **Le grain fin du relief** (micro-relief de roche) ne vient pas de là : c'est le travail des
-  matériaux et des normal maps en E3, pas de la géométrie.
+- **Pas de surplombs, pas d'arches, pas de tunnels superposés.** Un champ de
+  hauteurs est une fonction de (X, Z). Si un surplomb devient nécessaire, il sera
+  **ajouté comme mesh séparé** posé sur le terrain, sans remettre en cause le socle.
+- **`HeightMapShape3D` échantillonne à 1 unité** : le nœud de collision est mis à
+  l'échelle de `cell_size`. Toute modification doit rester synchronisée entre le
+  mesh et la forme — c'est fait dans le builder, un seul endroit.
+- **Le grain fin du relief** ne vient pas de la géométrie mais du matériau
+  tri-planaire (cf `shaders/cavern_rock.gdshader`).
+- **Les faces ont un sens.** Godot considère comme face avant l'ordre **horaire**
+  vu de face. Les inverser rend la surface invisible **sans aucune erreur** : le
+  sol l'a été, et on voyait le ciel à travers. Vérifié par
+  `test_cavern_terrain.gd::surfaces_face_the_right_way`.
 
 ## Fichiers
 
 | Rôle | Chemin |
 |---|---|
-| Données (primitives, un `.tres` par niveau) | `godot/scripts/world/cavern_terrain_data.gd` |
-| Générateur (mesh + collision + parois) | `godot/scripts/world/cavern_terrain_builder.gd` |
-| Tests (pentes, bordures, étanchéité) | `godot/tests/test_cavern_terrain.gd` |
+| Silhouette | `godot/scripts/world/cavern_chamber.gd` |
+| Relief | `cavern_plateau.gd`, `cavern_ramp.gd`, `cavern_basin.gd` |
+| Voûte et lac | `cavern_sky_opening.gd`, `cavern_lake.gd` |
+| Données | `cavern_terrain_data.gd`, `cavern_heightfield_spec.gd` |
+| Générateur | `cavern_terrain_builder.gd` |
+| Recalage des marqueurs | `cavern_marker_snapper.gd` |
+| Layout du niveau | `godot/tools/build_cavern_terrain.gd` |
+| Carte vue de dessus | `godot/tools/render_cavern_map.gd` |
+| Tests | `godot/tests/test_cavern_terrain.gd`, `test_cavern_sealing.gd`, `test_cavern_navigation.gd` |
