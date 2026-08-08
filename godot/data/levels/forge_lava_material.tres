@@ -11,3 +11,7 @@ shader_parameter/core_color = Color(1, 0.902, 0.596, 1)
 shader_parameter/flow_speed = 0.035
 shader_parameter/crust_scale = 0.055
 shader_parameter/emission_strength = 5.5
+; La coulée descend d'ouest en est, comme le lit qui la porte.
+shader_parameter/flow_direction = Vector2(1, 0)
+shader_parameter/current_speed = 0.9
+shader_parameter/flow_stretch = 2.6

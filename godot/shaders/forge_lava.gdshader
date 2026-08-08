@@ -20,6 +20,32 @@ uniform vec3 hot_color : source_color = vec3(1.000, 0.478, 0.184);
 uniform vec3 core_color : source_color = vec3(1.000, 0.902, 0.596);
 uniform float flow_speed = 0.035;
 uniform float crust_scale = 0.055;
+
+// LE SENS DU COURANT, en repère monde (XZ). La coulée descend d'ouest en est.
+//
+// Le motif dérivait auparavant dans deux directions contraires : ça vivait,
+// mais ça ne COULAIT pas — une nappe qui bouillonne sur place se lit comme un
+// lac, pas comme une rivière. On échantillonne donc le bruit en le décalant
+// À CONTRE-COURANT, ce qui fait avancer la matière dans le sens voulu.
+uniform vec2 flow_direction = vec2(1.0, 0.0);
+
+// Vitesse du courant, distincte de `flow_speed` qui règle la vie interne des
+// plaques. Les deux se règlent séparément parce qu'elles ne racontent pas la
+// même chose : l'une est le débit, l'autre le refroidissement.
+uniform float current_speed = 0.9;
+
+// Étirement des plaques DANS le sens du courant. Une croûte charriée
+// s'allonge ; des plaques rondes qui glissent ressemblent à un tapis roulant.
+uniform float flow_stretch : hint_range(1.0, 6.0) = 2.6;
+
+// 0 = nappe horizontale, 1 = CHUTE verticale.
+//
+// Le même shader sert aux deux parce que c'est la même matière ; seule change
+// la coordonnée le long de laquelle elle s'écoule. Sur une chute, projeter en
+// XZ comme sur une nappe donnerait des bandes horizontales figées : le plan
+// vertical n'a presque pas d'étendue en XZ, donc le motif ne varierait pas sur
+// la hauteur — exactement là où l'œil cherche le mouvement.
+uniform int flow_plane : hint_range(0, 1) = 0;
 uniform float emission_strength : hint_range(0.0, 12.0) = 5.5;
 
 float hash21(vec2 p) {
@@ -54,8 +80,25 @@ void fragment() {
 	// Projection MONDE et non UV : la nappe est bâtie quad par quad, ses UV
 	// sont donc discontinus d'un quad à l'autre et le motif se briserait à
 	// chaque maille.
-	vec2 world = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz;
-	vec2 p = world * crust_scale;
+	vec3 wpos = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	vec2 world = wpos.xz;
+
+	// Repère aligné sur le courant : X le long de l'écoulement, Y en travers.
+	// C'est ce qui permet d'étirer les croûtes dans le bon sens quel que soit
+	// l'azimut de la rivière — sans ça, l'étirement serait figé sur l'axe X du
+	// monde et se verrait faux dès que la coulée tourne.
+	vec2 dir = normalize(flow_direction);
+	vec2 side = vec2(-dir.y, dir.x);
+	vec2 along = vec2(dot(world, dir), dot(world, side));
+	if (flow_plane == 1) {
+		// Sur une chute, l'écoulement est la VERTICALE, descendante. La
+		// coordonnée transversale reste la largeur de la nappe.
+		along = vec2(-wpos.y, dot(world, side));
+	}
+
+	vec2 p = along * crust_scale * vec2(1.0 / flow_stretch, 1.0);
+	// Décalage À CONTRE-COURANT : la matière avance donc vers l'aval.
+	p.x -= TIME * current_speed * crust_scale;
 	float t = TIME * flow_speed;
 
 	// 1. Les plaques de croûte. Deux dérives contraires : elles se déforment

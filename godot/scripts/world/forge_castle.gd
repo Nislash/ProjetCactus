@@ -46,6 +46,11 @@ signal gate_opened()
 ## du « retexture-first » habituel.
 const MASONRY_PATH := "res://assets/level02/materials/forge_masonry.tres"
 
+## La terrasse : de combien elle est soulevée au-dessus de la base, et son
+## épaisseur. Nommées parce que le pont doit arriver EXACTEMENT sur son dessus.
+const TERRACE_LIFT: float = 1.0
+const TERRACE_THICKNESS: float = 3.0
+
 ## Teinte de repli, si la matière manque. Un château invisible serait pire
 ## qu'un château gris : le repli garde la silhouette lisible.
 const STONE := Color(0.055, 0.045, 0.050)
@@ -55,6 +60,7 @@ const SEAL := Color(1.000, 0.478, 0.184)
 var _terrain: CavernTerrainData
 var _noise: FastNoiseLite
 var _gate: Node3D
+var _terrace_top: float = 0.0
 var _gate_material: StandardMaterial3D
 var _open: bool = false
 
@@ -100,6 +106,7 @@ func _build() -> void:
 	# liraient comme deux bâtiments.
 	var stone_dark: Material = _masonry(0.55)
 
+	_terrace_top = base + TERRACE_LIFT + TERRACE_THICKNESS * 0.5
 	_build_terrace(stone_dark)
 	_build_keep(stone)
 	_build_towers(stone)
@@ -113,12 +120,17 @@ func _build_terrace(material: Material) -> void:
 	var slab := MeshInstance3D.new()
 	slab.name = "Terrasse"
 	var mesh := BoxMesh.new()
-	mesh.size = Vector3(keep_width * 2.1, 3.0, keep_width * 1.7)
+	mesh.size = Vector3(keep_width * 2.1, TERRACE_THICKNESS, keep_width * 1.7)
 	slab.mesh = mesh
 	slab.material_override = material
-	slab.position = Vector3(0.0, 1.0, 0.0)
+	slab.position = Vector3(0.0, TERRACE_LIFT, 0.0)
 	add_child(slab)
-	_add_collider(slab, mesh.size, slab.position)
+	# SOURCE DE NAVMESH, contrairement au reste de la forteresse : c'est la
+	# seule surface sur laquelle on MARCHE. Sans ce bit, les joueurs y montaient
+	# — la couche physique suffit pour ça — mais aucun ennemi ne pouvait les y
+	# suivre, et le chemin du navmesh s'arrêtait au pied de la terrasse.
+	_add_collider(slab, mesh.size, slab.position,
+		CavernTerrainBuilder.WORLD_COLLISION_LAYER | CavernTerrainBuilder.NAVMESH_SOURCE_LAYER)
 
 
 ## LE DONJON. Un tronc de pyramide : plus large en bas, comme une forteresse
@@ -284,6 +296,30 @@ func open_gate() -> void:
 	tween.tween_callback(func() -> void: gate_opened.emit())
 
 
+## L'altitude du dessus de la terrasse — le seuil que le pont doit rejoindre.
+##
+## Exposée plutôt que recalculée ailleurs : deux formules pour une même hauteur
+## finissent toujours par diverger, et l'écart se voit comme une marche.
+##
+## Calculée À LA DEMANDE si la forteresse n'est pas encore bâtie. Elle se bâtit
+## une frame après son `_ready`, et le pont a besoin de ce chiffre AVANT — le
+## faire dépendre de l'ordre des frames serait précisément le genre de couplage
+## qui casse en silence le jour où l'un des deux gagne une frame d'attente.
+func get_threshold_altitude() -> float:
+	if _terrace_top > 0.0:
+		return _terrace_top
+	if _terrain == null:
+		return 0.0
+	if _noise == null:
+		_noise = CavernTerrainBuilder.make_noise(_terrain.floor_field)
+	return _ground(footprint_center) + TERRACE_LIFT + TERRACE_THICKNESS * 0.5
+
+
+## Le bord SUD de la terrasse, en Z. C'est là que le pont doit accoster.
+func get_threshold_edge_z() -> float:
+	return footprint_center.y + keep_width * 1.7 * 0.5
+
+
 func is_open() -> bool:
 	return _open
 
@@ -295,9 +331,11 @@ func get_gate_target() -> Vector3:
 	return _gate.global_position + Vector3(0.0, 5.0, 0.0)
 
 
-func _add_collider(source: MeshInstance3D, size: Vector3, at: Vector3) -> void:
+func _add_collider(source: MeshInstance3D, size: Vector3, at: Vector3,
+		layer: int = CavernTerrainBuilder.WORLD_COLLISION_LAYER) -> void:
 	var body := StaticBody3D.new()
 	body.name = "Col_%s" % source.name
+	body.collision_layer = layer
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = size

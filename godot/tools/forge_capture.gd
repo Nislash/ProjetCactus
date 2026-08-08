@@ -19,19 +19,19 @@ const OUT_DIR := "user://forge_capture"
 const SHOTS: Array = [
 	{
 		"name": "01_pont_vers_chateau",
-		"from": Vector3(0.0, 8.6, 16.0), "look": Vector3(0.0, 10.0, -44.0),
+		"from": Vector3(0.0, 8.6, 18.0), "look": Vector3(0.0, 10.0, -44.0),
 	},
 	{
-		"name": "02_tablier_au_ras",
-		"from": Vector3(1.6, 6.4, -6.0), "look": Vector3(0.0, 5.4, -30.0),
+		"name": "02_cascade_amont",
+		"from": Vector3(-34.0, 12.0, 6.0), "look": Vector3(-70.0, 10.0, -14.0),
 	},
 	{
-		"name": "03_mur_de_pres",
-		"from": Vector3(6.0, 7.0, -30.0), "look": Vector3(0.0, 9.0, -44.0),
+		"name": "03_chute_aval",
+		"from": Vector3(44.0, 14.0, 12.0), "look": Vector3(72.0, -2.0, -14.0),
 	},
 	{
 		"name": "04_ensemble_depuis_la_crete",
-		"from": Vector3(-46.0, 34.0, 44.0), "look": Vector3(0.0, 8.0, -40.0),
+		"from": Vector3(-46.0, 40.0, 48.0), "look": Vector3(0.0, 6.0, -30.0),
 	},
 ]
 
