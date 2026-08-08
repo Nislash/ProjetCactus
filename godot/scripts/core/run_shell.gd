@@ -54,6 +54,17 @@ func _load_level(path: String) -> void:
 	var instance: Node = scene.instantiate()
 	_world.add_child(instance)
 
+	# Les joueurs ont déjà été spawnés par SplitScreenManager, aux positions de
+	# repli ou à des marqueurs pas encore recalés sur le terrain. Sur un niveau à
+	# terrain généré, le sol n'existe pas encore à cet instant : sans ce
+	# repositionnement, ils apparaissent DANS la roche et ne peuvent plus bouger.
+	#
+	# Deux frames : une pour que le terrain se construise, une pour que le
+	# CavernMarkerSnapper recale les marqueurs dessus.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_relocate_players_to_dungeon_spawns()
+
 
 func _load_generated_level(path: String) -> void:
 	var layout_res: LevelLayout = load(path) as LevelLayout
