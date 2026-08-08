@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://bba3fxag20a1x"]
+
+[ext_resource type="Script" uid="uid://bl8eqw121kq6k" path="res://scripts/world/cavern_terrain_builder.gd" id="1_2ucg2"]
+[ext_resource type="Script" uid="uid://bk8sulr4bcqss" path="res://scripts/world/cavern_environment.gd" id="2_7l56q"]
+[ext_resource type="Script" uid="uid://7rbdrnmvemyk" path="res://scripts/world/antechamber_director.gd" id="2_rjrfn"]
+
+[node name="Antechamber" type="Node3D" unique_id=760779159]
+
+[node name="World" type="Node3D" parent="." unique_id=704897773]
+
+[node name="AntechamberTerrain" type="Node3D" parent="World" unique_id=1213850405]
+script = ExtResource("1_2ucg2")
+data_path = "res://data/levels/antechamber_terrain.tres"
+
+[node name="Environment" type="WorldEnvironment" parent="World" unique_id=317710648]
+script = ExtResource("2_7l56q")
+
+[node name="Director" type="Node" parent="World" unique_id=1029129628]
+script = ExtResource("2_rjrfn")

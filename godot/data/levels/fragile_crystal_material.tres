@@ -1,0 +1,14 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/fragile_crystal.gdshader" id="1_fragile"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_fragile")
+shader_parameter/body_color = Color(0.72, 0.82, 0.88, 1)
+shader_parameter/crack_color = Color(0.09, 0.16, 0.24, 1)
+shader_parameter/flash_color = Color(0.4, 0.85, 1, 1)
+shader_parameter/fracture = 0.0
+shader_parameter/crack_scale = 5.0
+shader_parameter/crack_width = 0.11
+shader_parameter/body_alpha = 0.88

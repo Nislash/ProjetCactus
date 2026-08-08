@@ -20,6 +20,11 @@ extends SceneTree
 const TERRAIN_PATH := "res://data/levels/level01_cavern_terrain.tres"
 const OUTPUT_PATH := "res://addons/godot_mcp/cache/screenshots/cavern_map.png"
 
+## Le rendu sert aussi à l'antichambre. `--terrain=<res://...>` et
+## `--map-out=<res://...>` changent la cible sans dupliquer l'outil : juger un
+## layout par une vue de dessus vaut mieux que par la 3D, quel que soit le
+## layout.
+
 ## Pixels par mètre. 3 donne ~930 × 630 px sur l'emprise : assez pour lire les
 ## goulets, assez petit pour tenir à l'écran.
 const PIXELS_PER_METER := 3
@@ -34,7 +39,9 @@ const COLOR_MARK := Color(1.0, 0.72, 0.36)
 
 
 func _init() -> void:
-	var terrain: CavernTerrainData = load(TERRAIN_PATH) as CavernTerrainData
+	var terrain_path: String = _arg("--terrain=", TERRAIN_PATH)
+	var output_path: String = _arg("--map-out=", OUTPUT_PATH)
+	var terrain: CavernTerrainData = load(terrain_path) as CavernTerrainData
 	if terrain == null:
 		push_error("Terrain introuvable : %s" % TERRAIN_PATH)
 		quit(1)
@@ -69,12 +76,12 @@ func _init() -> void:
 	_draw_openings(image, terrain, width, height)
 	_draw_chamber_marks(image, terrain, width, height)
 
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUTPUT_PATH).get_base_dir())
-	if image.save_png(ProjectSettings.globalize_path(OUTPUT_PATH)) != OK:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output_path).get_base_dir())
+	if image.save_png(ProjectSettings.globalize_path(output_path)) != OK:
 		push_error("Échec d'écriture de la carte")
 		quit(1)
 		return
-	print("[carte] écrite : %s (%d × %d px, %.0f × %.0f m)" % [OUTPUT_PATH, width, height, span.x, span.y])
+	print("[carte] écrite : %s (%d × %d px, %.0f × %.0f m)" % [output_path, width, height, span.x, span.y])
 	print("[carte] altitudes jouables : %.1f → %.1f m" % [low, high])
 	quit(0)
 
@@ -144,3 +151,14 @@ func _plot(image: Image, px: int, py: int, width: int, height: int) -> void:
 	if px < 0 or py < 0 or px >= width or py >= height:
 		return
 	image.set_pixel(px, py, COLOR_MARK)
+
+
+## Lit une option de ligne de commande, ou retourne la valeur par défaut.
+func _arg(prefix: String, fallback: String) -> String:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with(prefix):
+			return a.substr(prefix.length())
+	for a in OS.get_cmdline_args():
+		if a.begins_with(prefix):
+			return a.substr(prefix.length())
+	return fallback

@@ -116,3 +116,44 @@ l'exige. Le skip est un chemin, pas un menu.
   proche « toussote » des particules. Jamais de texte, jamais de voix off.
 - **Chrono cible** : première fois ~3 min 40 ; skip < 40 s ; aucune étape ne peut durer indéfiniment
   sans signal environnemental de relance.
+
+
+---
+
+## État d'exécution (● Opus, tâche #25, 2026-08-08)
+
+**Ce qui est construit.** Le lieu (`tools/build_antechamber.gd` → `antechamber_terrain.tres`), la
+scène (`scenes/levels/antechamber/antechamber.tscn`), la machine des 7 beats vécus
+(`scripts/world/antechamber_director.gd`), le cristal fragile (`fragile_crystal.gd` + son shader
+d'opale fissurée), le glyphe manette (`frost_glyph.gd`) et le skip par manette
+(`onboarding_skip.gd`).
+
+**Trois décisions d'exécution qui méritent d'être connues.**
+
+*L'emprise n'est pas 25 × 15 m.* Le document demande sept beats en enfilade et, pour le seul B6, un
+chapelet « à ~8 m les uns des autres » : le chemin fait au bas mot 70 m, qui ne rentrent pas dans
+25 × 15. L'antichambre fait **52 × 72 m, voûte 5→8 m** — soit 1/25e de la caverne en surface, et une
+voûte deux fois plus basse. L'intention (« un étui avant la révélation d'échelle ») est tenue ; la
+cote littérale ne l'est pas.
+
+*Rien n'est posé dans la scène.* Les positions des 21 objets de beat sont des constantes du director,
+et chaque objet est recalé sur le sol réellement généré. Déplacer un beat, c'est changer deux nombres.
+Le test vérifie que chacune tombe dans le volume creusé — une coordonnée hors chambre donnerait un
+objet **enterré dans la roche, invisible et silencieux**.
+
+*Le skip est un ET, pas un OU.* L'antichambre n'apparaît éveillée que si **toutes** les manettes
+présentes l'ont déjà vue. Un seul nouveau venu et l'équipe rejoue les trois minutes — ensemble.
+L'inverse laisserait un vétéran priver un débutant de son apprentissage.
+
+**Ce qui manque encore.**
+
+| Manque | Pourquoi |
+|---|---|
+| L'audio des beats — notes de join, accord à quatre, grondement du Golem | attend #31 ; quatre `TODO(audio)` marquent les points d'appel |
+| L'écho gelé du B5 en solo | le drill fonctionne en multi ; en solo, le filet « la glace fond en 6 s » s'applique. La silhouette de givre reste à modéliser |
+| Le tirage en cartes de givre du B7 | le coffre de départ existe et fait le tirage ; sa mise en scène diégétique reste à faire |
+| La vista V1 en contre-jour derrière la porte | demande de raccorder l'antichambre à la caverne (une seule scène ou un fondu) |
+| Le join tardif pendant B2–B7 | le cristal s'allume, mais le respawn au dernier checkpoint de beat n'est pas câblé |
+
+**Vérification** : `godot --headless --path godot --script tests/test_antechamber.gd` (6 cas). La carte
+vue de dessus : `tools/render_cavern_map.gd --terrain=res://data/levels/antechamber_terrain.tres`.

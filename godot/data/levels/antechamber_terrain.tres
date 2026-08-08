@@ -1,0 +1,108 @@
+[gd_resource type="Resource" script_class="CavernTerrainData" format=3]
+
+[ext_resource type="Script" path="res://scripts/world/cavern_chamber.gd" id="1_kibk1"]
+[ext_resource type="Script" path="res://scripts/world/cavern_basin.gd" id="2_6of3p"]
+[ext_resource type="Script" path="res://scripts/world/cavern_plateau.gd" id="3_cofl3"]
+[ext_resource type="Script" path="res://scripts/world/cavern_ramp.gd" id="4_gerj2"]
+[ext_resource type="Script" path="res://scripts/world/cavern_heightfield_spec.gd" id="5_xddi3"]
+[ext_resource type="Script" path="res://scripts/world/cavern_terrain_data.gd" id="6_ak51u"]
+[ext_resource type="Script" path="res://scripts/world/cavern_sky_opening.gd" id="7_p1l22"]
+
+[sub_resource type="Resource" id="Resource_80vnj"]
+script = ExtResource("1_kibk1")
+label = "A1 Chambre du Réveil"
+radii = Vector2(9, 7)
+edge_softness = 5.0
+headroom = 8.0
+
+[sub_resource type="Resource" id="Resource_qb1uv"]
+script = ExtResource("1_kibk1")
+label = "G1 Veine de Givre"
+center = Vector2(0, -4)
+to_center = Vector2(0, -18)
+is_corridor = true
+radii = Vector2(3.5, 3.5)
+edge_softness = 3.5
+headroom = 6.0
+
+[sub_resource type="Resource" id="Resource_b7hag"]
+script = ExtResource("1_kibk1")
+label = "A2 Premier Coude"
+center = Vector2(0, -18)
+radii = Vector2(6, 6)
+edge_softness = 4.0
+headroom = 7.0
+
+[sub_resource type="Resource" id="Resource_2co78"]
+script = ExtResource("1_kibk1")
+label = "G2 Passage Barré"
+center = Vector2(0, -18)
+to_center = Vector2(20, -18)
+is_corridor = true
+radii = Vector2(3.5, 3.5)
+edge_softness = 3.5
+headroom = 6.0
+
+[sub_resource type="Resource" id="Resource_cmop8"]
+script = ExtResource("1_kibk1")
+label = "A3 Alcôve du Parchemin"
+center = Vector2(24, -18)
+radii = Vector2(7.5, 6.5)
+edge_softness = 4.5
+headroom = 7.0
+
+[sub_resource type="Resource" id="Resource_ivgsh"]
+script = ExtResource("1_kibk1")
+label = "G3 Remontée"
+center = Vector2(24, -14)
+to_center = Vector2(24, 4)
+is_corridor = true
+radii = Vector2(3.5, 3.5)
+edge_softness = 3.5
+headroom = 6.0
+
+[sub_resource type="Resource" id="Resource_2wrld"]
+script = ExtResource("1_kibk1")
+label = "A4 Coude du Piège"
+center = Vector2(24, 4)
+radii = Vector2(6, 6)
+edge_softness = 4.0
+headroom = 6.0
+
+[sub_resource type="Resource" id="Resource_nh4bk"]
+script = ExtResource("1_kibk1")
+label = "G4 Chapelet"
+center = Vector2(24, 4)
+to_center = Vector2(24, 27)
+is_corridor = true
+radii = Vector2(3.5, 3.5)
+edge_softness = 3.5
+headroom = 6.0
+
+[sub_resource type="Resource" id="Resource_uhwcr"]
+script = ExtResource("1_kibk1")
+label = "A5 Dais du Coffre"
+center = Vector2(24, 32)
+radii = Vector2(8, 7)
+edge_softness = 5.0
+headroom = 8.0
+
+[sub_resource type="Resource" id="Resource_4bop3"]
+script = ExtResource("5_xddi3")
+noise_amplitude = 0.12
+noise_scale = 6.0
+
+[sub_resource type="Resource" id="Resource_cvmbn"]
+script = ExtResource("5_xddi3")
+
+[resource]
+script = ExtResource("6_ak51u")
+bounds_min = Vector2(-16, -30)
+bounds_max = Vector2(36, 42)
+cell_size = 1.0
+chambers = Array[ExtResource("1_kibk1")]([SubResource("Resource_80vnj"), SubResource("Resource_qb1uv"), SubResource("Resource_b7hag"), SubResource("Resource_2co78"), SubResource("Resource_cmop8"), SubResource("Resource_ivgsh"), SubResource("Resource_2wrld"), SubResource("Resource_nh4bk"), SubResource("Resource_uhwcr")])
+floor_field = SubResource("Resource_4bop3")
+headroom_field = SubResource("Resource_cvmbn")
+min_headroom = 5.0
+max_headroom = 8.0
+chunk_size = 24.0
