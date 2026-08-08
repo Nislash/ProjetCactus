@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://cu2ocw3k3sy8l"]
+
+[ext_resource type="Script" uid="uid://b27088imoymm3" path="res://scripts/core/puzzle_crystal.gd" id="1_cvxrc"]
+[ext_resource type="ArrayMesh" path="res://assets/level01/meshes/crystal_spire_b.res" id="2_fj8ur"]
+[ext_resource type="Material" path="res://assets/level01/materials/crystal_spire_b.tres" id="2_ydhmd"]
+[ext_resource type="Material" path="res://data/levels/cavern_wall_material.tres" id="4_g4mpb"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_g4mpb"]
+radius = 3.5
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_g4mpb"]
+height = 2.2
+radius = 0.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ydhmd"]
+top_radius = 0.7
+bottom_radius = 0.95
+height = 0.45
+radial_segments = 7
+
+[node name="PuzzleCrystal" type="Area3D" unique_id=2055032118]
+script = ExtResource("1_cvxrc")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=3683464]
+shape = SubResource("SphereShape3D_g4mpb")
+
+[node name="Crystal" type="Node3D" parent="." unique_id=602535185]
+
+[node name="Mesh" type="MeshInstance3D" parent="Crystal" unique_id=1042734844]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0)
+material_override = ExtResource("2_ydhmd")
+mesh = ExtResource("2_fj8ur")
+
+[node name="Glow" type="OmniLight3D" parent="Crystal" unique_id=824079733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+light_volumetric_fog_energy = 2.0
+
+[node name="Base" type="StaticBody3D" parent="." unique_id=1917473881]
+
+[node name="Shape" type="CollisionShape3D" parent="Base" unique_id=876519402]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+shape = SubResource("CylinderShape3D_g4mpb")
+
+[node name="BaseMesh" type="MeshInstance3D" parent="Base" unique_id=1817153584]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, 0)
+material_override = ExtResource("4_g4mpb")
+mesh = SubResource("CylinderMesh_ydhmd")

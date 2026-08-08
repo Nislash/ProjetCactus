@@ -64,7 +64,7 @@ func snap_now() -> int:
 		return 0
 
 	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
-	var snapped: int = 0
+	var moved: int = 0
 	var outside: int = 0
 
 	for marker in _all_markers(root):
@@ -84,12 +84,12 @@ func snap_now() -> int:
 		if marker.is_in_group(GROUP_SPAWN_ABOVE_GROUND):
 			offset += spawn_clearance
 		marker.global_position = Vector3(position.x, ground + offset, position.z)
-		snapped += 1
+		moved += 1
 
 	if outside > 0:
 		push_warning("CavernMarkerSnapper : %d marqueur(s) hors de la caverne." % outside)
-	markers_snapped.emit(snapped)
-	return snapped
+	markers_snapped.emit(moved)
+	return moved
 
 
 func _all_markers(root: Node) -> Array[Marker3D]:
