@@ -1,10 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://cr8bg6vwe157r"]
+[gd_scene format=3 uid="uid://cr8bg6vwe157r"]
 
 [ext_resource type="Script" uid="uid://crwsy3umlcte4" path="res://scripts/core/boss_golem.gd" id="1_8ggej"]
 [ext_resource type="Script" uid="uid://duufd13mvbexe" path="res://scripts/core/health_component.gd" id="2_p0orm"]
-[ext_resource type="Script" path="res://scripts/core/character_visual.gd" id="3_visual"]
-[ext_resource type="Script" path="res://scripts/core/character_animator.gd" id="4_animator"]
-[ext_resource type="Resource" uid="uid://char_anim_sentinel" path="res://resources/characters/sentinel.tres" id="5_animset"]
+[ext_resource type="Script" uid="uid://dbqydtfqdroo7" path="res://scripts/core/character_visual.gd" id="3_visual"]
+[ext_resource type="Script" uid="uid://juyef4cwfbnn" path="res://scripts/core/character_animator.gd" id="4_animator"]
+[ext_resource type="Resource" path="res://resources/characters/sentinel.tres" id="5_animset"]
+[ext_resource type="Material" path="res://data/bosses/golem_shard_material.tres" id="5_i54yi"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8ggej"]
 radius = 2.0
@@ -19,27 +20,19 @@ roughness = 0.35
 radius = 2.0
 height = 6.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p0orm"]
-albedo_color = Color(0.45, 0.85, 1, 1)
-metallic = 0.3
-roughness = 0.2
-emission_enabled = true
-emission = Color(0.2, 0.6, 0.9, 1)
-emission_energy_multiplier = 2.0
+[sub_resource type="CylinderMesh" id="CylinderMesh_ywr6b"]
+top_radius = 0.0
+bottom_radius = 0.34
+height = 1.5
+radial_segments = 6
+rings = 1
 
-[sub_resource type="BoxMesh" id="BoxMesh_8ggej"]
-size = Vector3(1.2, 2, 0.8)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_170uf"]
-albedo_color = Color(0.45, 0.85, 1, 1)
-metallic = 0.3
-roughness = 0.2
-emission_enabled = true
-emission = Color(0.2, 0.6, 0.9, 1)
-emission_energy_multiplier = 2.0
-
-[sub_resource type="BoxMesh" id="BoxMesh_p0orm"]
-size = Vector3(1.2, 2, 0.8)
+[sub_resource type="CylinderMesh" id="CylinderMesh_i54yi"]
+top_radius = 0.0
+bottom_radius = 0.36
+height = 1.1
+radial_segments = 6
+rings = 1
 
 [node name="BossGolem" type="CharacterBody3D" unique_id=1932997227]
 script = ExtResource("1_8ggej")
@@ -54,25 +47,24 @@ visible = false
 material_override = SubResource("StandardMaterial3D_8ggej")
 mesh = SubResource("CapsuleMesh_8ggej")
 
-[node name="Visual" type="Node3D" parent="."]
+[node name="Visual" type="Node3D" parent="." unique_id=1138961017]
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
 script = ExtResource("3_visual")
 anim_set = ExtResource("5_animset")
 
-[node name="Animator" type="Node" parent="."]
+[node name="Animator" type="Node" parent="." unique_id=644915980]
 script = ExtResource("4_animator")
-visual_path = NodePath("../Visual")
 
 [node name="CrystalBack" type="MeshInstance3D" parent="." unique_id=988232664]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -1.8)
-material_override = SubResource("StandardMaterial3D_p0orm")
-mesh = SubResource("BoxMesh_8ggej")
+transform = Transform3D(1, 0, 0, 0, 0.8192, -0.5736, 0, 0.5736, 0.8192, 0, 3.7, -1.05)
+material_override = ExtResource("5_i54yi")
+mesh = SubResource("CylinderMesh_ywr6b")
 
 [node name="CrystalChest" type="MeshInstance3D" parent="." unique_id=864210091]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 1.8)
+transform = Transform3D(1, 0, 0, 0, 0.309, 0.9511, 0, -0.9511, 0.309, 0, 3.3, 1.05)
 visible = false
-material_override = SubResource("StandardMaterial3D_170uf")
-mesh = SubResource("BoxMesh_p0orm")
+material_override = ExtResource("5_i54yi")
+mesh = SubResource("CylinderMesh_i54yi")
 
 [node name="Health" type="Node" parent="." unique_id=552139802]
 script = ExtResource("2_p0orm")

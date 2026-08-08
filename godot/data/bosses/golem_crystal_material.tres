@@ -1,0 +1,19 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://shaders/golem_crystal.gdshader" id="1_golem"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_golem")
+shader_parameter/deep_color = Color(0.04, 0.055, 0.082, 1)
+shader_parameter/rock_color = Color(0.118, 0.169, 0.243, 1)
+shader_parameter/rock_highlight = Color(0.227, 0.29, 0.376, 1)
+shader_parameter/vein_color = Color(0.4, 0.851, 1, 1)
+shader_parameter/danger_color = Color(0.949, 0.706, 0.361, 1)
+shader_parameter/heat = 0.0
+shader_parameter/pulse = 0.0
+shader_parameter/vein_scale = 9.0
+shader_parameter/vein_width = 0.022
+shader_parameter/vein_energy = 2.8
+shader_parameter/rock_scale = 14.0
+shader_parameter/rock_roughness = 0.82

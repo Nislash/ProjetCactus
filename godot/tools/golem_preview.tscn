@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dbtlpv0fx8e4k"]
+
+[ext_resource type="Script" uid="uid://dybdcdo2f3po4" path="res://tools/golem_preview.gd" id="1_dh23b"]
+[ext_resource type="PackedScene" uid="uid://cr8bg6vwe157r" path="res://scenes/boss/boss_golem.tscn" id="1_jepae"]
+
+[node name="GolemPreview" type="Node3D" unique_id=1646085837]
+script = ExtResource("1_dh23b")
+
+[node name="Golem" parent="." unique_id=1932997227 instance=ExtResource("1_jepae")]
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=901067387]
+current = true
+fov = 50.0
+
+[node name="KeyLight" type="DirectionalLight3D" parent="." unique_id=605337419]
+light_color = Color(0, 0, 0, 1)
+light_energy = 1.1
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1357866297]
