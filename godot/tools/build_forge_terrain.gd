@@ -224,7 +224,18 @@ func _build_floor() -> CavernHeightfieldSpec:
 	# marcher, trop peu pour s'y sentir en sécurité. C'est l'endroit le plus
 	# dangereux du niveau qu'on ne soit pas obligé de traverser, et c'est
 	# exactement ce qu'on veut d'un espace optionnel.
-	plateaus.append(_plateau("Corniche des Douves", Vector2(0.0, -3.8), Vector2(30.0, 4.2), 4.05, 6.0, true, 2.2))
+	plateaus.append(_plateau("Corniche des Douves", Vector2(-4.0, -3.8), Vector2(38.0, 4.2), 4.05, 6.0, true, 2.2))
+
+	# LA BRÈCHE. Une entaille dans la berge nord, juste avant la cascade.
+	#
+	# Elle existe pour créer le SAUT. Sans elle, la berge court d'un bout à
+	# l'autre du cirque et l'on gagne le levier en marchant : le pylône de
+	# retour ne servirait alors à rien, et tout le détour se réduirait à une
+	# promenade. Cinq à six mètres de coulée, franchissables d'un élan et pas
+	# par mégarde.
+	#
+	# Posée APRÈS la corniche pour la trancher — ordre de liste, cf plus haut.
+	plateaus.append(_plateau("Brèche de la Corniche", Vector2(-62.0, -5.0), Vector2(3.0, 6.0), 0.5, 4.0, true, 2.0))
 
 	spec.plateaus = plateaus
 
