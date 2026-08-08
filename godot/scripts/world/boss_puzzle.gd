@@ -36,8 +36,11 @@ const GLYPH_SEED := 20260808
 
 ## Fourchette de hauteur des gravures, en mètres. Assez bas pour se lire
 ## depuis le sol, assez haut pour qu'on doive lever les yeux.
-const GLYPH_HEIGHT_MIN := 2.2
-const GLYPH_HEIGHT_MAX := 5.6
+## Remontées : à hauteur d'homme, les gravures se confondaient avec la
+## serrure et son cristal. Plus haut, elles redeviennent ce qu'elles sont —
+## une inscription qu'on lève les yeux pour lire.
+const GLYPH_HEIGHT_MIN := 5.0
+const GLYPH_HEIGHT_MAX := 8.4
 
 ## Où poser les éclats à ramasser, en (X, Z). Répartis sur le parcours : deux
 ## sur le chemin obligatoire, deux à l'écart — l'exploration doit payer, mais
@@ -156,8 +159,10 @@ func _engrave_pylons() -> void:
 		# jusqu'au lit du lac, plusieurs mètres sous la rive où l'on marche.
 		var at := Vector2(column.global_position.x, column.global_position.z)
 		pylon.ground_offset = maxf(_ground(at).y - column.global_position.y, 0.0)
+		# Pas de `position = ZERO` : le pylône se place LUI-MÊME devant sa
+		# serrure au `_ready`, et l'écraser ici le renverrait à la base du fût
+		# — c'est-à-dire loin de l'endroit où le joueur interagit.
 		column.add_child(pylon)
-		pylon.position = Vector3.ZERO
 		pylon.shard_placed.connect(_on_shard_placed)
 		pylon.shard_removed.connect(_on_shard_removed)
 		_pylons.append(pylon)
