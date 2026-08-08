@@ -1,16 +1,21 @@
 class_name ForgeLighting
 extends Node3D
 
-## L'éclairage de la Forge — **par le bas**.
+## L'éclairage de la Forge : **deux sources qui s'opposent**.
 ##
-## Au niveau 1, deux puits percent la voûte et la lumière tombe ; les glows
-## muraux servent de boussole. Ici la seule source est le lac de lave, au fond
-## du gouffre, et tout se renverse : les visages sont éclairés par en dessous,
-## les surplombs sont noirs, et plus on descend plus il fait clair.
+## **La lave, par en dessous.** Au fond du gouffre, chaude, mouvante. Elle
+## éclaire les visages par en dessous et noie les surplombs — plus on descend,
+## plus il fait clair. C'est elle qui dit l'altitude sans minimap.
 ##
-## Ce renversement est le biome. Un joueur qui lève les yeux voit du noir ; un
-## joueur qui regarde ses pieds voit de l'or. C'est aussi ce qui lui dit où il
-## est sans minimap : la luminosité EST l'altitude.
+## **La lune rouge, par au-dessus.** Rasante, froide dans son rouge, immobile.
+## Elle ne fait presque pas de lumière : elle fait des OMBRES. C'est elle qui
+## découpe la silhouette du château sur le ciel, et c'est son rayon qu'il
+## faudra détourner pour ouvrir la porte.
+##
+## Les deux ne se mélangent jamais. Une surface est soit orange et vivante,
+## soit rouge sombre et figée, et l'œil sait immédiatement laquelle des deux
+## la touche. C'est ce qui rend le puzzle des miroirs lisible : dans un monde
+## entièrement chaud, la lumière lunaire est la seule chose qui détonne.
 ##
 ## ## Ce qui remplace la couleur du danger
 ##
@@ -30,15 +35,19 @@ extends Node3D
 @export var lava_light_range: float = 62.0
 @export var lava_light_energy: float = 3.2
 
-## Braises qui montent des cheminées : quelques lampes faibles très haut, pour
-## que la voûte ne soit pas un plafond noir absolu.
-@export var vent_light_energy: float = 0.7
+## LA LUNE. Rouge sombre — elle n'éclaire pas, elle découpe.
+@export var moon_color: Color = Color(0.72, 0.20, 0.22)
+@export var moon_energy: float = 0.85
+## Rasante : 20° au-dessus de l'horizon. Au zénith elle éclairerait le fond du
+## gouffre et volerait son rôle à la lave.
+@export var moon_direction_degrees: Vector3 = Vector3(-20.0, 35.0, 0.0)
 
 const LAVA_CORE := Color(1.000, 0.545, 0.243)
 const LAVA_DEEP := Color(1.000, 0.322, 0.114)
 
 var _terrain: CavernTerrainData
 var _pulses: Array[OmniLight3D] = []
+var _moon: DirectionalLight3D = null
 var _time: float = 0.0
 
 
@@ -50,7 +59,7 @@ func _ready() -> void:
 	# Une frame : le terrain se construit d'abord, on s'accroche ensuite.
 	await get_tree().process_frame
 	_light_the_lava()
-	_light_the_vents()
+	_light_the_moon()
 
 
 ## La couronne de lampes sur le bassin. Réparties sur un anneau et non au
@@ -82,22 +91,41 @@ func _light_the_lava() -> void:
 		_pulses.append(light)
 
 
-## Les cheminées. Elles n'éclairent pas la salle — elles évitent seulement que
-## la voûte soit un vide noir, et donnent une cible au regard quand on lève la
-## tête.
-func _light_the_vents() -> void:
-	for opening in _terrain.sky_openings:
-		var light := OmniLight3D.new()
-		light.name = "Event_%s" % opening.label
-		light.light_color = LAVA_DEEP
-		light.light_energy = vent_light_energy
-		light.omni_range = 30.0
-		light.shadow_enabled = false
-		add_child(light)
-		light.global_position = Vector3(
-			opening.center.x,
-			_terrain.floor_field.base_altitude + _terrain.max_headroom - 2.0,
-			opening.center.y)
+## LA LUNE. Une seule directionnelle, très rasante, avec des ombres.
+##
+## Elle est la seule source ombrée du niveau — les six lampes de la lave n'en
+## portent pas, pour le coût. C'est donc elle qui donne au cirque son relief
+## et au château sa silhouette : sans ombres, une forteresse noire sur un ciel
+## noir n'est qu'un trou dans l'image.
+##
+## Rasante et non zénithale : une lune au zénith éclairerait le fond du
+## gouffre et volerait son rôle à la lave. Basse, elle n'atteint que les
+## crêtes — et laisse le fond à la lave, ce qui sépare nettement les deux
+## territoires lumineux.
+func _light_the_moon() -> void:
+	var moon := DirectionalLight3D.new()
+	moon.name = "LuneRouge"
+	moon.light_color = moon_color
+	moon.light_energy = moon_energy
+	moon.shadow_enabled = true
+	# Biais généreux : les falaises du cirque sont hautes et rasantes, terrain
+	# de jeu idéal pour l'acné d'ombre.
+	moon.shadow_bias = 0.09
+	moon.shadow_normal_bias = 1.6
+	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	moon.directional_shadow_max_distance = 180.0
+	add_child(moon)
+	moon.rotation_degrees = moon_direction_degrees
+	_moon = moon
+
+
+## L'azimut de la lune, utilisé par le puzzle des miroirs pour savoir d'où
+## vient le rayon. Une seule source de vérité : si la lune bouge, le puzzle
+## suit.
+func get_moon_direction() -> Vector3:
+	if _moon == null:
+		return Vector3(0.0, -0.34, -0.94).normalized()
+	return -_moon.global_transform.basis.z
 
 
 ## La respiration du bassin. Chaque lampe pulse à sa propre cadence : en

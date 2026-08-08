@@ -52,6 +52,9 @@ func _run() -> void:
 	failed += _test_the_terrain_actually_builds()
 	failed += _test_the_light_comes_from_below()
 	failed += _test_spawns_are_on_the_rim()
+	failed += _test_the_sky_is_open()
+	failed += _test_the_castle_closes_the_pit()
+	failed += _test_the_moon_puzzle_is_solvable()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -196,4 +199,137 @@ func _test_spawns_are_on_the_rim() -> int:
 				% [m.name, m.global_position.y])
 			return 1
 	print("[OK] spawns_are_on_the_rim")
+	return 0
+
+
+## À CIEL OUVERT : aucune voûte ne doit avoir été construite. Le générateur en
+## bâtit une par défaut, et c'est exactement ce qu'on ne veut pas ici — un
+## couvercle sur un niveau qu'on veut ouvert.
+##
+## L'enceinte est alors le SOL qui monte : on vérifie que les falaises
+## existent, sinon le joueur sortirait par les côtés.
+func _test_the_sky_is_open() -> int:
+	if not _terrain.open_sky:
+		print("[FAIL] ciel : le terrain n'est pas déclaré ouvert")
+		return 1
+
+	var vault: Node = _world.find_child("Vault", true, false)
+	if vault != null and vault.get_child_count() > 0:
+		print("[FAIL] ciel : %d tuiles de voûte construites — le niveau est couvert"
+			% vault.get_child_count())
+		return 1
+
+	# Les falaises. Hors des chambres, le sol doit être nettement plus haut que
+	# le sol jouable — sinon rien ne borne le cirque.
+	#
+	# On CHERCHE un point hors chambre au lieu d'en supposer un : le premier
+	# essai mesurait à (0, 74), qui tombe en plein dans la Galerie Nord — donc
+	# à l'intérieur du volume, là où par construction il n'y a pas de falaise.
+	var inside: float = _ground_with_rim(Vector2(0.0, 30.0))
+	var outside: float = -INF
+	var probe := Vector2.ZERO
+	var r: float = 60.0
+	while r < 76.0:
+		var a: float = 0.0
+		while a < TAU:
+			var at := Vector2(cos(a) * r, sin(a) * r)
+			if CavernTerrainBuilder.chamber_mask(_terrain, at) > 0.01:
+				a += 0.2
+				continue
+			var h: float = _ground_with_rim(at)
+			if h > outside:
+				outside = h
+				probe = at
+			a += 0.2
+		r += 4.0
+
+	if outside == -INF:
+		print("[FAIL] falaises : aucun point hors chambre — le cirque déborde du domaine")
+		return 1
+	if outside - inside < 15.0:
+		print("[FAIL] falaises : %.1f m en (%.0f, %.0f) — on sortirait du cirque"
+			% [outside - inside, probe.x, probe.y])
+		return 1
+	print("[OK] the_sky_is_open (falaises à +%.0f m, aucune voûte)" % (outside - inside))
+	return 0
+
+
+## Le sol tel qu'on le foule, falaises comprises.
+func _ground_with_rim(at: Vector2) -> float:
+	var base: float = _ground(at)
+	var mask: float = CavernTerrainBuilder.chamber_mask(_terrain, at)
+	return base + (1.0 - mask) * _terrain.open_sky_rim_height
+
+
+func _test_the_castle_closes_the_pit() -> int:
+	var castle: Node3D = _world.get_node_or_null("Chateau") as Node3D
+	if castle == null:
+		print("[FAIL] château : absent")
+		return 1
+	# Il doit dominer la crête : c'est ce qu'on voit en arrivant.
+	var top: float = 0.0
+	for child in castle.get_children():
+		var mesh: Node3D = child as Node3D
+		if mesh != null and mesh.name.begins_with("Tour"):
+			top = maxf(top, mesh.global_position.y)
+	var rim: float = _ground(Vector2(0.0, 48.0))
+	if top < rim + 10.0:
+		print("[FAIL] château : sommet à %.1f m, la crête est à %.1f m — invisible en arrivant"
+			% [top, rim])
+		return 1
+	# Et sa porte doit être scellée au départ.
+	if castle.call("is_open"):
+		print("[FAIL] château : la porte est déjà ouverte")
+		return 1
+	print("[OK] the_castle_closes_the_pit (tours à %.0f m, crête à %.0f m)" % [top, rim])
+	return 0
+
+
+## LE PUZZLE DOIT ÊTRE SOLUBLE. Un puzzle de réflexion mal placé n'échoue pas
+## bruyamment : il reste simplement insoluble, et le joueur tourne des miroirs
+## pendant vingt minutes en croyant qu'il n'a pas compris.
+##
+## On l'essaie par la force : toutes les combinaisons de crans, jusqu'à en
+## trouver une qui ouvre la porte. Trois miroirs à douze crans font 1728
+## essais — négligeable pour une machine, impossible pour un joueur, et c'est
+## bien la preuve qu'on cherche : qu'AU MOINS une solution existe.
+func _test_the_moon_puzzle_is_solvable() -> int:
+	var puzzle: Node = _world.get_node_or_null("PuzzleLune")
+	if puzzle == null:
+		print("[FAIL] puzzle : absent")
+		return 1
+	var mirrors: Array = puzzle.call("get_mirrors")
+	if mirrors.size() < 3:
+		print("[FAIL] puzzle : %d miroirs au lieu de 3" % mirrors.size())
+		return 1
+
+	# Il ne doit PAS être résolu d'entrée : une énigme déjà faite n'en est pas
+	# une.
+	if bool(puzzle.call("is_solved")):
+		print("[FAIL] puzzle : résolu dès le départ")
+		return 1
+
+	var steps: int = MoonMirror.STEPS
+	var found: Array[int] = []
+	for a in steps:
+		for b in steps:
+			for c in steps:
+				mirrors[0].step = a
+				mirrors[1].step = b
+				mirrors[2].step = c
+				for m in mirrors:
+					m._apply_step()
+				puzzle.call("_recompute")
+				if bool(puzzle.call("is_solved")):
+					found = [a, b, c]
+					break
+			if not found.is_empty():
+				break
+		if not found.is_empty():
+			break
+
+	if found.is_empty():
+		print("[FAIL] puzzle : AUCUNE combinaison n'ouvre la porte — insoluble")
+		return 1
+	print("[OK] the_moon_puzzle_is_solvable (crans %s)" % [found])
 	return 0

@@ -10,10 +10,16 @@ extends Node
 ##
 ## ## Ce qui diffère du niveau 1
 ##
-## Pas de puzzle. La Caverne se mérite — quatre éclats, quatre serrures, un
-## mot à reconstituer. La Forge est une **arène** : on voit le boss depuis la
-## crête, on descend, on se bat. Deux niveaux qui demanderaient la même chose
-## au joueur ne seraient qu'un seul niveau joué deux fois.
+## **Un autre verbe.** La Caverne demande de *rassembler* — quatre éclats,
+## quatre serrures, un mot à reconstituer. La Forge demande d'*orienter* :
+## trois miroirs de basalte à faire pivoter pour conduire la lumière de la
+## lune rouge jusqu'au sceau du château. Deux niveaux qui demanderaient la
+## même chose au joueur ne seraient qu'un seul niveau joué deux fois.
+##
+## **Et la solution est visible.** Le rayon se voit sur toute sa longueur et
+## s'arrête là où il bute : il n'y a rien à deviner, seulement une trajectoire
+## à lire. Personne n'a besoin qu'on lui explique comment se comporte un
+## miroir.
 ##
 ## Le danger n'est plus signalé par la couleur — toute la salle est ambre — mais
 ## par le **mouvement** : la lave qui monte pendant le combat, et qui reprend
@@ -31,8 +37,25 @@ const BOSS_SCENE := "res://scenes/boss/boss_golem.tscn"
 
 signal boss_awakened()
 
+## Où poser les trois miroirs, en (X, Z).
+##
+## Le premier est sur la crête, en vue dégagée : c'est lui que la lune touche,
+## et il doit être la première chose qu'on croise en arrivant. Les deux autres
+## descendent vers le château — le rayon suit donc le chemin du joueur, ce qui
+## fait de la trajectoire une carte.
+## Les distances comptent autant que les positions : plus une cible est loin,
+## plus la tolérance angulaire se resserre, et plus le puzzle devient un
+## exercice d'adresse. Les sauts font ici entre vingt et trente mètres.
+const MIRROR_SPOTS: Array[Vector2] = [
+	Vector2(-4.0, 36.0),
+	Vector2(24.0, 12.0),
+	Vector2(8.0, -14.0),
+]
+
 var _world: Node3D
 var _boss: Node3D
+var _castle: ForgeCastle
+var _puzzle: MoonPuzzle
 
 
 func _ready() -> void:
@@ -45,6 +68,9 @@ func _ready() -> void:
 	# marqueurs. Instancier avant reviendrait à poser les objets dans le vide.
 	await get_tree().process_frame
 	await get_tree().process_frame
+
+	_build_castle()
+	_build_moon_puzzle()
 
 	if spawn_boss:
 		_spawn_boss()
@@ -99,3 +125,55 @@ func _build_arena_lock() -> void:
 
 func get_boss() -> Node3D:
 	return _boss
+
+
+# ---------------------------------------------------------------------------
+# Le château et son verrou
+# ---------------------------------------------------------------------------
+
+func _build_castle() -> void:
+	_castle = ForgeCastle.new()
+	_castle.name = "Chateau"
+	_world.add_child(_castle)
+
+
+func _build_moon_puzzle() -> void:
+	var terrain: CavernTerrainData = load(
+		"res://data/levels/level02_forge_terrain.tres") as CavernTerrainData
+	if terrain == null:
+		push_warning("ForgeGameplay : terrain introuvable — pas de miroirs.")
+		return
+	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
+
+	var mirrors: Array[MoonMirror] = []
+	for i in MIRROR_SPOTS.size():
+		var at: Vector2 = MIRROR_SPOTS[i]
+		var mirror := MoonMirror.new()
+		mirror.name = "Miroir_%d" % i
+		# Chaque miroir démarre à un cran différent — sinon les trois seraient
+		# alignés d'entrée et le puzzle serait résolu avant d'exister.
+		mirror.step = (i * 5) % MoonMirror.STEPS
+		_world.add_child(mirror)
+		mirror.global_position = Vector3(
+			at.x, CavernTerrainBuilder.sample_point(terrain.floor_field, at, noise), at.y)
+		mirrors.append(mirror)
+
+	_puzzle = MoonPuzzle.new()
+	_puzzle.name = "PuzzleLune"
+	_world.add_child(_puzzle)
+
+	var lighting: Node = _world.get_node_or_null("Lighting")
+	# Deux frames de plus : la lune est posée par l'éclairage, et le puzzle a
+	# besoin de son azimut pour savoir d'où vient le rayon.
+	await get_tree().process_frame
+	_puzzle.setup(mirrors, _castle, lighting as ForgeLighting)
+	_puzzle.solved.connect(func() -> void:
+		print("[ForgeGameplay] le sceau a cédé."))
+
+
+func get_castle() -> ForgeCastle:
+	return _castle
+
+
+func get_puzzle() -> MoonPuzzle:
+	return _puzzle

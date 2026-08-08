@@ -24,29 +24,48 @@ const OUTPUT_PATH := "res://data/levels/level02_forge_environment.tres"
 func _init() -> void:
 	var env := Environment.new()
 
-	# PAS DE CIEL. Les cheminées de la voûte laissent SORTIR la lumière de la
-	# lave, elles ne laissent rien entrer : ce qu'on voit à travers doit être
-	# du noir, pas un dehors.
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.020, 0.014, 0.016)
-	env.background_energy_multiplier = 1.0
+	# UN CIEL, et une lune rouge dedans.
+	#
+	# La Forge n'est plus une cavité : c'est un cirque ouvert. Le ciel est donc
+	# la moitié de l'image, et il doit raconter quelque chose — un rouge très
+	# sombre en haut, qui s'éclaircit vers l'horizon comme si l'incendie était
+	# partout autour et pas seulement dans le trou.
+	var sky_material := ProceduralSkyMaterial.new()
+	sky_material.sky_top_color = Color(0.055, 0.020, 0.030)
+	sky_material.sky_horizon_color = Color(0.235, 0.075, 0.075)
+	sky_material.ground_bottom_color = Color(0.035, 0.016, 0.020)
+	sky_material.ground_horizon_color = Color(0.196, 0.063, 0.063)
+	# LA LUNE. Le disque du soleil procédural sert de lune : large, rouge,
+	# aux bords flous — elle doit se lire comme un astre, pas comme une lampe.
+	sky_material.sun_angle_max = 9.0
+	sky_material.sun_curve = 0.22
+	var sky := Sky.new()
+	sky.sky_material = sky_material
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	# Le ciel n'éclaire presque pas : la lumière vient de la lave et de la lune
+	# elle-même, deux sources ponctuelles. Un ciel qui éclairerait comme un
+	# dôme aplatirait tout le relief du cirque.
+	env.background_energy_multiplier = 0.85
 
 	# Ambiante chaude, très basse. Elle ne modèle rien — elle empêche
 	# seulement les faces détournées de la lave de tomber au noir absolu.
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.35, 0.18, 0.12)
-	env.ambient_light_energy = 0.30
-	# Piège déjà payé au niveau 1 : sans ciel, cette contribution à 1 par
-	# défaut annule purement et simplement la couleur ambiante ci-dessus.
-	env.ambient_light_sky_contribution = 0.0
+	env.ambient_light_color = Color(0.30, 0.13, 0.14)
+	env.ambient_light_energy = 0.42
+	# Un peu de ciel dans l'ambiante, maintenant qu'il y en a un — mais peu :
+	# la nuit reste noire, c'est la lune qui découpe.
+	env.ambient_light_sky_contribution = 0.25
 
 	# BRUME. Sombre et chaude : elle enfouit les lointains dans la suie. Plus
 	# dense qu'au niveau 1 — l'air d'une forge est un obstacle, pas un voile.
+	# Elle affecte MAINTENANT le ciel : sans ça, un horizon net trahirait que
+	# le cirque est une boîte.
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.145, 0.075, 0.055)
 	env.fog_light_energy = 0.35
 	env.fog_density = 0.011
-	env.fog_sky_affect = 0.0
+	env.fog_sky_affect = 0.35
 	env.fog_aerial_perspective = 0.0
 
 	# Brume VOLUMÉTRIQUE : c'est elle qui matérialise la chaleur montant du

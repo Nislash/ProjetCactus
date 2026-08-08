@@ -104,3 +104,48 @@ biome — que ça descende, et que la lumière vienne d'en bas.
 **Reste** : la lave montante branchée sur les phases du boss (`mechanic_rising_lava.gd` existe et
 n'est pas encore câblé), les props de basalte, l'audio, et un boss propre au niveau — pour l'instant
 c'est le Golem de la Caverne.
+
+### À ciel ouvert (2026-08-09)
+
+La Forge n'est plus une cavité : c'est un **cirque**, bordé de falaises, sous une **lune rouge**.
+
+Le générateur referme toujours son volume par une voûte. Il sait maintenant faire l'inverse
+(`open_sky`) : aucune voûte n'est construite, et hors des chambres c'est le **sol qui monte** de
+`open_sky_rim_height`. Même masque, donc même silhouette jouable — seul change ce qui la borne. La
+hauteur libre continue d'être calculée, parce qu'elle définit la zone jouable et sert aux contrôles
+d'étanchéité ; elle ne matérialise simplement plus rien.
+
+**Deux lumières qui s'opposent.** La lave, par en dessous, chaude et mouvante. La lune, rasante et
+froide dans son rouge, qui ne fait presque pas de lumière mais fait les **ombres** — c'est elle qui
+découpe le château sur le ciel. Elles ne se mélangent jamais : une surface est soit orange et vivante,
+soit rouge sombre et figée. C'est ce qui rend le puzzle lisible.
+
+### Le puzzle : les miroirs de lune
+
+**Le verbe change.** Le niveau 1 demande de *rassembler* — quatre éclats, un mot. Celui-ci demande
+d'*orienter* : trois miroirs de basalte à faire pivoter pour conduire la lumière de la lune jusqu'au
+sceau du château, qui fige et cède.
+
+Dans un monde de chaleur, c'est **le froid qui ouvre**. La lune devient un acteur, pas un décor.
+
+**Ça se comprend sans un mot** : le rayon est visible sur toute sa longueur et s'arrête là où il bute.
+On voit donc aussi *pourquoi* il n'arrive pas. Rien à deviner, seulement une trajectoire à lire — et
+personne n'a besoin qu'on lui explique comment se comporte un miroir.
+
+**L'échec ne coûte rien.** Un rayon qui rate ne casse rien. Dans un roguelike où rien ne persiste, une
+énigme punitive serait une double peine.
+
+#### Deux corrections imposées par la mesure
+
+Le test résout le puzzle **par force brute** — toutes les combinaisons de crans — parce qu'un puzzle
+de réflexion mal placé n'échoue pas bruyamment : il reste insoluble, et le joueur tourne des miroirs
+vingt minutes en croyant qu'il n'a pas compris. Il a trouvé deux fautes.
+
+1. **Douze crans ne suffisaient pas.** Un rayon réfléchi tourne *deux fois plus vite* que la normale
+   du miroir : 30° de cran font 60° de balayage, et la cible passait systématiquement entre deux
+   positions. Vingt-quatre crans.
+2. **La lune rasante rendait le puzzle impossible.** Un miroir vertical conserve l'inclinaison du
+   rayon incident : venant de 20° au-dessus de l'horizon, il repartait vers le bas et plongeait dans
+   le sol vingt mètres plus loin. Les miroirs sont donc **taillés pour redresser** — ils renvoient à
+   l'horizontale. Le joueur ne raisonne qu'en azimut, ce qui est exactement ce qu'on veut à la
+   manette, où viser en site est pénible.

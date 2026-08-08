@@ -8,7 +8,7 @@ extends SceneTree
 ##
 ## ## Le lieu
 ##
-## Une cavité volcanique en entonnoir : trois anneaux concentriques qui
+## Un cirque volcanique À CIEL OUVERT, en entonnoir : trois anneaux concentriques qui
 ## descendent vers un lac de lave central. On tourne autour du gouffre plutôt
 ## que de le traverser — l'inverse exact du niveau 1, où le lac gelé est une
 ## chaussée qu'on emprunte.
@@ -46,6 +46,14 @@ func _init() -> void:
 	terrain.chunk_size = 40.0
 	# Voûte plus basse et plus régulière qu'au niveau 1 : une forge est une
 	# salle, pas un réseau. On doit sentir le couvercle au-dessus de la tête.
+	# À CIEL OUVERT. La Forge n'est pas une cavité : c'est un cirque, bordé de
+	# falaises, sous une lune rouge. Aucune voûte n'est construite — ce sont
+	# les parois qui montent qui bornent le volume.
+	#
+	# La hauteur libre reste déclarée parce qu'elle définit la zone jouable et
+	# sert aux contrôles d'étanchéité. Elle ne matérialise plus rien.
+	terrain.open_sky = true
+	terrain.open_sky_rim_height = 38.0
 	terrain.min_headroom = 9.0
 	terrain.max_headroom = 16.0
 	terrain.playable_headroom_threshold = 2.5
@@ -75,7 +83,11 @@ func _build_chambers() -> Array[CavernChamber]:
 
 	# LE PUITS — la grande salle ronde qui contient tout. Une seule poche, là
 	# où le niveau 1 en assemblait treize : la Forge se lit d'un coup d'œil.
-	chambers.append(_room("F1 Le Puits", Vector2(0.0, 0.0), Vector2(58.0, 58.0), 0.0, 16.0, 16.0))
+	#
+	# Rayon 46 et non 58 : avec son adoucissement, la poche s'étendait jusqu'à
+	# 74 m sur un domaine qui n'en fait que 78. Il ne restait que quatre
+	# mètres pour les falaises, et le cirque n'était donc pas borné.
+	chambers.append(_room("F1 Le Puits", Vector2(0.0, 0.0), Vector2(46.0, 46.0), 0.0, 16.0, 9.0))
 
 	# LES GALERIES D'ACCÈS. Trois entailles dans la paroi, décalées, qui
 	# donnent au pourtour une silhouette mordue plutôt qu'un cercle parfait.
@@ -134,15 +146,10 @@ func _build_floor() -> CavernHeightfieldSpec:
 	return spec
 
 
-## Trois cheminées dans la voûte. Elles ne laissent pas entrer le jour — la
-## Forge est trop profonde — mais laissent SORTIR la lumière de la lave, et
-## c'est ce qui donne au plafond ses colonnes de fumée.
+## Plus aucune ouverture de voûte : il n'y a plus de voûte. Le ciel est
+## partout, la lune éclaire tout ce que la lave n'atteint pas.
 func _build_openings() -> Array[CavernSkyOpening]:
-	var openings: Array[CavernSkyOpening] = []
-	openings.append(_opening("Cheminée centrale", Vector2(0.0, 0.0), Vector2(11.0, 11.0), 0.0))
-	openings.append(_opening("Évent Nord-Est", Vector2(26.0, 22.0), Vector2(6.0, 8.0), 25.0))
-	openings.append(_opening("Évent Sud-Ouest", Vector2(-24.0, -18.0), Vector2(7.0, 5.5), -15.0))
-	return openings
+	return []
 
 
 ## Le lac de lave. Même système que le lac gelé du niveau 1 — c'est ce qui

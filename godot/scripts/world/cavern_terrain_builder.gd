@@ -76,7 +76,11 @@ func build() -> void:
 
 	var dims: Vector2i = grid_dimensions(data)
 	var floor_heights: PackedFloat32Array = sample_field(data, data.floor_field)
+	# La voûte reste CALCULÉE même à ciel ouvert : elle définit la zone jouable
+	# et sert aux contrôles d'étanchéité. Simplement, on ne la construit pas.
 	var vault_heights: PackedFloat32Array = compose_vault(data, floor_heights)
+	# Le sol foulé — falaises comprises si le ciel est ouvert.
+	var ground_heights: PackedFloat32Array = compose_ground(data, floor_heights)
 
 	var chunks := Vector2i(
 		maxi(int(ceil((data.bounds_max.x - data.bounds_min.x) / data.chunk_size)), 1),
@@ -96,10 +100,14 @@ func build() -> void:
 			# jouable : la générer coûterait de la géométrie pour rien.
 			if not _chunk_has_volume(floor_heights, vault_heights, dims, range_x, range_z):
 				continue
-			_build_chunk(floor_root, "Floor", cx, cz, floor_heights, dims, range_x, range_z,
+			_build_chunk(floor_root, "Floor", cx, cz, ground_heights, dims, range_x, range_z,
 				floor_material, false, WORLD_COLLISION_LAYER | NAVMESH_SOURCE_LAYER, false)
-			_build_chunk(vault_root, "Vault", cx, cz, vault_heights, dims, range_x, range_z,
-				vault_material, true, WORLD_COLLISION_LAYER, true)
+			# À ciel ouvert, aucune voûte : ce sont les falaises du sol qui
+			# bornent le volume. En construire une reviendrait à poser un
+			# couvercle sur un niveau qu'on veut ouvert.
+			if not data.open_sky:
+				_build_chunk(vault_root, "Vault", cx, cz, vault_heights, dims, range_x, range_z,
+					vault_material, true, WORLD_COLLISION_LAYER, true)
 			built += 1
 
 	_build_lake(floor_heights, dims)
@@ -248,6 +256,33 @@ static func sample_point(spec: CavernHeightfieldSpec, p: Vector2, noise: FastNoi
 ##
 ## C'est ici que le volume se referme. Là où le masque vaut 0, voûte = sol : il
 ## n'y a plus d'espace, donc plus de caverne, donc rien à sceller.
+## Le SOL tel qu'on le foule, falaises comprises.
+##
+## En intérieur, il est le champ de hauteurs tel quel : c'est la voûte qui
+## descend pour fermer le volume. À ciel ouvert il n'y a pas de voûte, donc
+## c'est le sol qui monte — hors des chambres, il grimpe de
+## `open_sky_rim_height` et forme l'enceinte.
+##
+## Même masque dans les deux cas, donc même silhouette : un niveau ouvert et
+## un niveau fermé bâtis sur les mêmes chambres ont exactement le même contour
+## jouable. Seul change ce qui le borne.
+static func compose_ground(terrain: CavernTerrainData,
+		floor_heights: PackedFloat32Array) -> PackedFloat32Array:
+	if not terrain.open_sky:
+		return floor_heights
+
+	var dims: Vector2i = grid_dimensions(terrain)
+	var ground: PackedFloat32Array = PackedFloat32Array()
+	ground.resize(floor_heights.size())
+	for iz in dims.y:
+		for ix in dims.x:
+			var i: int = iz * dims.x + ix
+			var p: Vector2 = sample_position(terrain, ix, iz)
+			var mask: float = chamber_mask(terrain, p)
+			ground[i] = floor_heights[i] + (1.0 - mask) * terrain.open_sky_rim_height
+	return ground
+
+
 static func compose_vault(terrain: CavernTerrainData, floor_heights: PackedFloat32Array) -> PackedFloat32Array:
 	var dims: Vector2i = grid_dimensions(terrain)
 	var modulation: PackedFloat32Array = PackedFloat32Array()
