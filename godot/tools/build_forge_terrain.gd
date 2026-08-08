@@ -27,9 +27,9 @@ extends SceneTree
 ## une couleur ne peut plus rien dire. C'est donc **ce qui bouge** qui alerte :
 ## la lave qui monte, les coulées qui s'ouvrent. Cf `level02_forge.md`.
 ##
-## Bien plus petit que le niveau 1 — 150 × 150 m contre 310 × 210. Le niveau 1
-## est une exploration, celui-ci une arène : on doit voir le boss depuis la
-## crête et savoir tout de suite où l'on va.
+## Le cirque fait 156 m ; derrière le château, un tunnel mène à l'**arène du
+## Golem**, une salle à part. On ne rencontre donc le boss qu'après avoir
+## résolu le puzzle — c'est ce qui donne un enjeu à la porte.
 
 const OUTPUT_PATH := "res://data/levels/level02_forge_terrain.tres"
 
@@ -40,7 +40,7 @@ const PATH_TARGET_DEG := 18.0
 
 func _init() -> void:
 	var terrain := CavernTerrainData.new()
-	terrain.bounds_min = Vector2(-78.0, -78.0)
+	terrain.bounds_min = Vector2(-78.0, -132.0)
 	terrain.bounds_max = Vector2(78.0, 78.0)
 	terrain.cell_size = 1.25
 	terrain.chunk_size = 40.0
@@ -100,6 +100,21 @@ func _build_chambers() -> Array[CavernChamber]:
 	chambers.append(_corridor("G2 Descente Est", Vector2(56.0, -10.0), Vector2(34.0, -6.0), 6.5, 10.0, 6.0))
 	chambers.append(_corridor("G3 Descente Ouest", Vector2(-52.0, -36.0), Vector2(-32.0, -22.0), 6.5, 10.0, 6.0))
 
+	# L'ARÈNE DU BOSS — une salle à part, DERRIÈRE le château.
+	#
+	# Le Golem se tenait auparavant au bord du bassin, à vingt-deux mètres du
+	# centre du cirque : il s'éveillait avant même qu'on ait fini de descendre,
+	# et le puzzle n'avait plus aucun sens puisqu'on se battait avant de
+	# l'avoir résolu. Il faut franchir la porte pour le rencontrer.
+	#
+	# Elle est vaste — 38 m de rayon — parce qu'un boss de placement a besoin
+	# d'espace : le tir ami est actif, et à quatre dans une salle étroite le
+	# combat se joue entre joueurs plutôt que contre le boss.
+	chambers.append(_room("A1 Arène du Golem", Vector2(0.0, -86.0), Vector2(38.0, 34.0), 0.0, 15.0, 12.0))
+	# Le tunnel qui la relie au cirque, sous le château. Étroit et long : le
+	# passage de l'un à l'autre doit se sentir.
+	chambers.append(_corridor("G4 Sous le Château", Vector2(0.0, -40.0), Vector2(0.0, -60.0), 5.0, 9.0, 5.0))
+
 	return chambers
 
 
@@ -136,6 +151,11 @@ func _build_floor() -> CavernHeightfieldSpec:
 	plateaus.append(_plateau("Seuil Nord", Vector2(-6.0, 66.0), Vector2(20.0, 16.0), 8.6, 14.0, true, 0.6))
 	plateaus.append(_plateau("Seuil Est", Vector2(64.0, -12.0), Vector2(18.0, 16.0), 8.6, 14.0, true, 0.6))
 	plateaus.append(_plateau("Souffleries", Vector2(-60.0, -42.0), Vector2(22.0, 17.0), 8.8, 14.0, true, 0.8))
+
+	# L'arène est PLATE et plus basse que le cirque : on y descend, et une
+	# fois dedans plus rien ne distrait du combat.
+	plateaus.append(_plateau("Sol de l'Arène", Vector2(0.0, -86.0), Vector2(34.0, 30.0), 4.0, 22.0, true, 4.5))
+	plateaus.append(_plateau("Tunnel", Vector2(0.0, -50.0), Vector2(8.0, 14.0), 6.5, 12.0, true, 2.0))
 	spec.plateaus = plateaus
 
 	var basins: Array[CavernBasin] = []

@@ -30,10 +30,18 @@ const BOSS_SCENE := "res://scenes/boss/boss_golem.tscn"
 ## Si faux, le boss n'est pas instancié (utile pour visiter).
 @export var spawn_boss: bool = true
 
-## Rayon de la laisse d'arène. Plus large qu'au niveau 1 : le bol de la Forge
-## fait 21 m de rayon au palier bas, et le boss doit pouvoir remonter d'un
-## anneau à la poursuite d'un joueur.
-@export var boss_leash_radius: float = 30.0
+## Rayon de la laisse d'arène. L'arène du Golem fait 34 m de demi-grand axe :
+## la laisse la couvre sans déborder dans le tunnel, sinon le boss suivrait
+## un fuyard jusqu'au cirque.
+@export var boss_leash_radius: float = 32.0
+
+## Rayon de la zone d'éveil, en mètres. NETTEMENT plus petit que la laisse.
+##
+## Les deux étaient confondus, et le boss se réveillait donc dès qu'on entrait
+## dans son rayon de poursuite — soit, dans la version précédente, avant même
+## d'avoir fini de descendre le cirque. Il faut pénétrer dans l'arène pour le
+## réveiller ; il peut ensuite y poursuivre plus loin qu'on ne l'a réveillé.
+@export var boss_wake_radius: float = 18.0
 
 signal boss_awakened()
 
@@ -106,7 +114,7 @@ func _build_arena_lock() -> void:
 	zone.name = "ReveilDuGolem"
 	var shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
-	sphere.radius = boss_leash_radius
+	sphere.radius = boss_wake_radius
 	shape.shape = sphere
 	zone.add_child(shape)
 	_world.add_child(zone)

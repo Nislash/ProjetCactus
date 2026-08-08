@@ -44,10 +44,30 @@ const STEPS: int = 24
 ## Longueur maximale du rayon réfléchi, en mètres.
 @export var beam_length: float = 90.0
 
+## Altitude ABSOLUE du plan optique, en mètres.
+##
+## Tous les miroirs portent leur disque à la même hauteur, sur un mât dont la
+## longueur s'adapte au terrain. Ce n'est pas cosmétique : puisqu'ils
+## redressent le rayon à l'horizontale, deux miroirs d'altitudes différentes ne
+## peuvent PAS se voir — le rayon du premier passe au-dessus ou au-dessous du
+## second, indéfiniment. Le premier jet les posait à 2,3 m du sol chacun, sur
+## un terrain qui varie de douze mètres : aucune chaîne n'était possible, et
+## le test l'a démontré par force brute.
+@export var focus_altitude: float = 14.0
+
+## Couche de collision des surfaces optiques — miroirs et sceau.
+##
+## Séparée du décor pour que le rayon sache CE QU'IL a touché. Un raycast qui
+## ne rendrait qu'un point d'impact obligerait à retrouver le nœud par
+## proximité, et c'est exactement le genre d'approximation qui rendait le
+## comportement bizarre.
+const OPTICS_LAYER: int = 16
+
 const MOON := Color(0.85, 0.24, 0.26)
 const MOON_HOT := Color(1.00, 0.55, 0.50)
 
 var _disc: MeshInstance3D
+var _optic: StaticBody3D
 var _beam: MeshInstance3D
 var _beam_material: StandardMaterial3D
 var _lit: bool = false
@@ -71,32 +91,50 @@ func _build() -> void:
 	shape.shape = sphere
 	add_child(shape)
 
-	# Le pied. Il tient le miroir à hauteur d'homme et l'ancre au sol : un
-	# disque flottant se lirait comme un effet, pas comme un objet.
+	# LE MÂT. Sa longueur rattrape le terrain pour que le disque tombe pile au
+	# plan optique — c'est lui qui rend la chaîne possible.
+	var mast: float = maxf(focus_altitude - global_position.y, 2.0)
 	var base := MeshInstance3D.new()
 	base.name = "Pied"
 	var base_mesh := CylinderMesh.new()
 	base_mesh.top_radius = 0.35
-	base_mesh.bottom_radius = 0.75
-	base_mesh.height = 1.9
+	base_mesh.bottom_radius = 0.9
+	base_mesh.height = mast
 	base_mesh.radial_segments = 6
 	base.mesh = base_mesh
 	var stone := StandardMaterial3D.new()
 	stone.albedo_color = Color(0.055, 0.045, 0.050)
 	stone.roughness = 0.9
 	base.material_override = stone
-	base.position = Vector3(0.0, 0.95, 0.0)
+	base.position = Vector3(0.0, mast * 0.5, 0.0)
 	add_child(base)
 
 	var body := StaticBody3D.new()
 	var col := CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
-	cyl.height = 1.9
-	cyl.radius = 0.7
+	cyl.height = mast
+	cyl.radius = 0.8
 	col.shape = cyl
-	col.position = Vector3(0.0, 0.95, 0.0)
+	col.position = Vector3(0.0, mast * 0.5, 0.0)
 	body.add_child(col)
 	add_child(body)
+
+	# LA SURFACE OPTIQUE. Un vrai collider sur la couche des miroirs : c'est
+	# lui que le rayon touche. Le puzzle ne calcule plus de distances à un axe
+	# — il lance un rayon et regarde ce qu'il rencontre, comme la lumière.
+	var optic := StaticBody3D.new()
+	optic.name = "Surface"
+	optic.collision_layer = OPTICS_LAYER
+	# Il ne se met en travers de personne : ni du joueur, ni des tirs.
+	optic.collision_mask = 0
+	var optic_shape := CollisionShape3D.new()
+	var plate := BoxShape3D.new()
+	plate.size = Vector3(2.7, 2.7, 0.3)
+	optic_shape.shape = plate
+	optic.add_child(optic_shape)
+	optic.position = Vector3(0.0, mast, 0.0)
+	add_child(optic)
+	_optic = optic
 
 	# LE MIROIR. Basalte poli, presque noir, très lisse : c'est sa BRILLANCE
 	# qui dit qu'il réfléchit, pas sa couleur.
@@ -115,7 +153,7 @@ func _build() -> void:
 	_disc.material_override = polished
 	# Debout : couché, il renverrait la lune au ciel.
 	_disc.rotation_degrees = Vector3(90.0, 0.0, 0.0)
-	_disc.position = Vector3(0.0, 2.3, 0.0)
+	_disc.position = Vector3(0.0, mast, 0.0)
 	add_child(_disc)
 
 	_build_beam()
@@ -164,6 +202,10 @@ func _apply_step() -> void:
 		return
 	# Le disque tourne AUTOUR de la verticale : sa normale balaie l'horizon.
 	_disc.rotation_degrees = Vector3(90.0, facing_degrees(), 0.0)
+	# La surface optique suit : si elle restait fixe, le rayon toucherait un
+	# miroir orienté autrement que ce qu'on voit.
+	if _optic != null:
+		_optic.rotation_degrees = Vector3(0.0, facing_degrees(), 0.0)
 
 
 func facing_degrees() -> float:
@@ -179,7 +221,7 @@ func get_normal() -> Vector3:
 
 ## Le centre du miroir — d'où part le rayon réfléchi.
 func get_focus() -> Vector3:
-	return global_position + Vector3(0.0, 2.3, 0.0)
+	return Vector3(global_position.x, focus_altitude, global_position.z)
 
 
 ## Allume ou éteint le rayon sortant. Piloté par [MoonPuzzle], qui est seul à
@@ -187,7 +229,8 @@ func get_focus() -> Vector3:
 func set_incoming(direction: Vector3, lit: bool) -> void:
 	_incoming = direction
 	_lit = lit
-	_refresh_beam()
+	if not lit:
+		hide_segment()
 
 
 ## La direction du rayon RÉFLÉCHI — loi de la réflexion, **rabattue dans le
@@ -220,33 +263,28 @@ func is_lit() -> bool:
 	return _lit
 
 
-## Trace le rayon sortant jusqu'à ce qu'il rencontre quelque chose.
-func _refresh_beam() -> void:
+## Dessine le segment de rayon qui part de ce miroir.
+##
+## C'est le PUZZLE qui fournit la longueur, parce que c'est lui qui a lancé le
+## rayon. Le miroir traçait auparavant son propre segment avec son propre
+## raycast : les deux calculs pouvaient diverger, et on voyait alors un trait
+## s'arrêter là où la logique croyait qu'il continuait.
+func draw_segment(direction: Vector3, length: float) -> void:
 	if _beam == null:
 		return
-	if not _lit:
+	if not _lit or length <= 0.05 or direction.length_squared() < 0.0001:
 		_beam.visible = false
 		return
-	var dir: Vector3 = get_reflection()
-	if dir.length_squared() < 0.0001:
-		_beam.visible = false
-		return
-
-	var origin: Vector3 = get_focus()
-	var reach: float = beam_length
-	var space: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
-	var query := PhysicsRayQueryParameters3D.create(origin + dir * 0.6, origin + dir * beam_length)
-	# Le décor seul : un rayon qui s'arrêterait sur un joueur clignoterait dès
-	# que quelqu'un traverse.
-	query.collision_mask = 1
-	var hit: Dictionary = space.intersect_ray(query)
-	if not hit.is_empty():
-		reach = origin.distance_to(hit["position"])
-
 	_beam.visible = true
-	_beam.scale = Vector3(1.0, maxf(reach, 0.1), 1.0)
-	_beam.position = Vector3(0.0, 2.3, 0.0) + dir * (reach * 0.5)
-	# Un CylinderMesh pointe vers +Y : on l'aligne sur la direction du rayon.
-	_beam.look_at_from_position(_beam.position + global_position,
-		_beam.position + global_position + dir, Vector3.UP)
+	_beam.scale = Vector3(1.0, length, 1.0)
+	var mid: Vector3 = Vector3(0.0, focus_altitude - global_position.y, 0.0) \
+		+ direction * (length * 0.5)
+	_beam.position = mid
+	_beam.look_at_from_position(global_position + mid,
+		global_position + mid + direction, Vector3.UP)
 	_beam.rotate_object_local(Vector3.RIGHT, PI * 0.5)
+
+
+func hide_segment() -> void:
+	if _beam != null:
+		_beam.visible = false
