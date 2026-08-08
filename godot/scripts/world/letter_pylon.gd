@@ -35,9 +35,12 @@ const SHAFT_FACES := 9
 ## Hauteur de la console qui porte l'éclat, en mètres. À portée de main.
 const ALTAR_HEIGHT := 1.35
 
-## Hauteur du cristal à l'échelle où on l'affiche (la flèche sculptée mesure
-## 1,9 m, réduite à 0,58).
-const ALTAR_CRYSTAL_HEIGHT := 1.1
+## Dimensions de la niche creusée dans le fût, en mètres.
+const NICHE_WIDTH := 1.15
+const NICHE_HEIGHT := 1.55
+
+## Nombre d'éclats de roche autour de l'ouverture.
+const NICHE_RIM_CHUNKS := 9
 
 ## La lettre gravée. Une seule majuscule.
 @export var letter: String = "B"
@@ -99,23 +102,72 @@ func _build() -> void:
 	var facing: Vector3 = _face_normal()
 	var reach: float = _face_distance(ALTAR_HEIGHT)
 
-	# LA CONSOLE. Une tablette de pierre qui SAILLE du fût, à hauteur de main.
-	# Sans support, l'éclat aurait l'air collé au mur ; avec elle, il est posé.
-	var ledge := MeshInstance3D.new()
-	ledge.name = "Console"
-	var slab := BoxMesh.new()
-	slab.size = Vector3(1.25, 0.22, 0.95)
-	ledge.mesh = slab
-	var stone := StandardMaterial3D.new()
-	stone.albedo_color = Color(0.055, 0.080, 0.115)
-	stone.roughness = 0.92
-	ledge.material_override = stone
-	ledge.position = facing * (reach + 0.42) + Vector3(0.0, ALTAR_HEIGHT, 0.0)
-	ledge.rotation.y = _face_angle()
-	add_child(ledge)
+	# LA NICHE — un trou creusé à même le fût.
+	#
+	# Une tablette en saillie avait été essayée d'abord : elle se lisait comme
+	# du mobilier posé contre la colonne, alors que tout le reste du niveau est
+	# taillé dans la masse. Un creux appartient à la pierre.
+	#
+	# Godot n'a pas de soustraction booléenne, et on ne peut pas non plus
+	# « regarder dans » une boîte enfoncée : le fût est opaque et l'occlut
+	# toujours (essayé — on ne voyait que de la roche).
+	#
+	# La cavité est donc PEINTE : un fond noir mat posé à ras de la paroi,
+	# entouré d'éclats de roche qui saillent. Le contraste et le relief du
+	# pourtour suffisent à l'œil pour lire un creux — c'est ce que font tous
+	# les jeux qui n'ont pas de découpe booléenne, et ça coûte deux triangles.
 
-	# L'AUTEL. Un cristal RETOURNÉ, pointe en bas — l'empreinte en creux de
-	# l'éclat qui doit venir s'y loger.
+	var cavity := MeshInstance3D.new()
+	cavity.name = "Niche"
+	var hole := QuadMesh.new()
+	hole.size = Vector2(NICHE_WIDTH, NICHE_HEIGHT)
+	cavity.mesh = hole
+	var dark := StandardMaterial3D.new()
+	dark.albedo_color = Color(0.008, 0.014, 0.024)
+	# Non éclairé : une surface qui répond à la lumière trahit qu'elle est
+	# plate. Un fond de cavité reste noir quoi qu'il arrive.
+	dark.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	cavity.material_override = dark
+	cavity.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	cavity.position = facing * (reach + 0.015) + Vector3(0.0, ALTAR_HEIGHT, 0.0)
+	cavity.rotation.y = _face_angle()
+	add_child(cavity)
+
+	# L'OURLET DE ROCHE. Quelques éclats irréguliers autour de l'ouverture :
+	# c'est ce qui fait que le trou a été CREUSÉ et non découpé. Tailles et
+	# inclinaisons varient avec la lettre, pour que deux colonnes ne portent
+	# pas le même encadrement.
+	var rim_rng := RandomNumberGenerator.new()
+	rim_rng.seed = hash(letter) + glyph_face * 977
+	var rim_material := StandardMaterial3D.new()
+	rim_material.albedo_color = Color(0.070, 0.098, 0.140)
+	rim_material.roughness = 0.95
+	for i in NICHE_RIM_CHUNKS:
+		var a: float = TAU * (float(i) + rim_rng.randf_range(-0.18, 0.18)) \
+			/ float(NICHE_RIM_CHUNKS)
+		var chunk := MeshInstance3D.new()
+		chunk.name = "Ourlet_%d" % i
+		var block := BoxMesh.new()
+		var scale: float = rim_rng.randf_range(0.16, 0.34)
+		block.size = Vector3(scale, scale * rim_rng.randf_range(0.7, 1.6), scale * 0.8)
+		chunk.mesh = block
+		chunk.material_override = rim_material
+		# Sur l'ellipse du contour, avec un peu de désordre : un anneau régulier
+		# ferait joint de fenêtre.
+		var local := Vector3(
+			cos(a) * (NICHE_WIDTH * 0.5 + rim_rng.randf_range(0.02, 0.12)),
+			sin(a) * (NICHE_HEIGHT * 0.5 + rim_rng.randf_range(0.02, 0.12)),
+			rim_rng.randf_range(0.02, 0.14))
+		chunk.position = facing * reach + Vector3(0.0, ALTAR_HEIGHT, 0.0) \
+			+ Basis(Vector3.UP, _face_angle()) * local
+		chunk.rotation = Vector3(
+			rim_rng.randf_range(-0.5, 0.5),
+			_face_angle() + rim_rng.randf_range(-0.6, 0.6),
+			rim_rng.randf_range(-0.5, 0.5))
+		add_child(chunk)
+
+	# L'AUTEL. Un cristal RETOURNÉ, pointe en bas, suspendu DANS la niche —
+	# l'empreinte en creux de l'éclat qui doit venir s'y loger.
 	#
 	# Il est TOUJOURS visible, même vide. C'est tout l'intérêt : sans lui, rien
 	# n'indiquait où poser, et le joueur qui portait ses éclats devait deviner
@@ -124,18 +176,17 @@ func _build() -> void:
 	var altar := MeshInstance3D.new()
 	altar.name = "Autel"
 	altar.mesh = CrystalGrammar.boss_shard_mesh()
-	# Retourné : la pointe descend dans la console.
-	altar.scale = Vector3(0.58, -0.58, 0.58)
+	altar.scale = Vector3(0.42, -0.42, 0.42)
 	var hollow := StandardMaterial3D.new()
-	hollow.albedo_color = Color(0.030, 0.048, 0.072)
-	hollow.roughness = 0.95
+	hollow.albedo_color = Color(0.045, 0.070, 0.100)
+	hollow.roughness = 0.9
 	hollow.metallic = 0.0
 	altar.material_override = hollow
-	# Suspendu de toute sa hauteur au-dessus de la console : renversé, le mesh
-	# descend depuis son origine, et posé trop bas sa pointe traversait la
-	# tablette.
-	altar.position = facing * (reach + 0.42) \
-		+ Vector3(0.0, ALTAR_HEIGHT + ALTAR_CRYSTAL_HEIGHT + 0.11, 0.0)
+	# Suspendu depuis le haut de la niche : renversé, le mesh descend depuis
+	# son origine.
+	# Devant le fond noir : c'est ce détachement qui donne la profondeur.
+	altar.position = facing * (reach + 0.30) \
+		+ Vector3(0.0, ALTAR_HEIGHT + NICHE_HEIGHT * 0.44, 0.0)
 	add_child(altar)
 
 	# L'éclat posé, qui vient combler l'empreinte.
@@ -146,9 +197,10 @@ func _build() -> void:
 	_socket_mesh.material_override = _socket_material
 	# Même échelle que l'éclat au sol : ce qu'on pose doit être RECONNU comme
 	# ce qu'on portait. Posé pointe en haut, il comble l'empreinte inversée.
-	_socket_mesh.scale = Vector3.ONE * 0.58
-	# Posé SUR la tablette, pointe en haut : il vient combler l'empreinte.
-	_socket_mesh.position = facing * (reach + 0.42) + Vector3(0.0, ALTAR_HEIGHT + 0.11, 0.0)
+	_socket_mesh.scale = Vector3.ONE * 0.42
+	# Logé dans la niche, pointe en haut : il vient combler l'empreinte.
+	_socket_mesh.position = facing * (reach + 0.30) \
+		+ Vector3(0.0, ALTAR_HEIGHT - NICHE_HEIGHT * 0.42, 0.0)
 	add_child(_socket_mesh)
 
 	_glow = CrystalGrammar.make_glow(CrystalGrammar.COLOR_BOSS_LOCK, 0.0, 8.0)
