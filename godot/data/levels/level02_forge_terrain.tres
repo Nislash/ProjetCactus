@@ -49,8 +49,8 @@ label = "G1 Descente Nord"
 center = Vector2(-4, 56)
 to_center = Vector2(-2, 34)
 is_corridor = true
-radii = Vector2(7, 7)
-edge_softness = 6.0
+radii = Vector2(13, 13)
+edge_softness = 7.5
 headroom = 10.0
 
 [sub_resource type="Resource" id="Resource_47xjm"]
@@ -202,18 +202,26 @@ altitude = -4.0
 falloff = 24.0
 
 [sub_resource type="Resource" id="Resource_sa7ro"]
+script = ExtResource("3_lh7c1")
+label = "Corniche des Douves"
+center = Vector2(0, -3.8)
+half_extent = Vector2(30, 4.2)
+is_ellipse = true
+altitude = 4.05
+
+[sub_resource type="Resource" id="Resource_m75eq"]
 script = ExtResource("5_cifn8")
 base_altitude = 9.0
-plateaus = Array[ExtResource("3_lh7c1")]([SubResource("Resource_7xc55"), SubResource("Resource_7o2q6"), SubResource("Resource_m6xhl"), SubResource("Resource_8q83x"), SubResource("Resource_6ewc3"), SubResource("Resource_8fxhg"), SubResource("Resource_31rig"), SubResource("Resource_6coql"), SubResource("Resource_asr3i"), SubResource("Resource_msf7j")])
+plateaus = Array[ExtResource("3_lh7c1")]([SubResource("Resource_7xc55"), SubResource("Resource_7o2q6"), SubResource("Resource_m6xhl"), SubResource("Resource_8q83x"), SubResource("Resource_6ewc3"), SubResource("Resource_8fxhg"), SubResource("Resource_31rig"), SubResource("Resource_6coql"), SubResource("Resource_asr3i"), SubResource("Resource_msf7j"), SubResource("Resource_sa7ro")])
 basins = Array[ExtResource("2_tl2nx")]([SubResource("Resource_0fww4")])
 noise_amplitude = 0.3
 noise_scale = 11.0
 noise_seed = 20260809
 
-[sub_resource type="Resource" id="Resource_m75eq"]
+[sub_resource type="Resource" id="Resource_53v1g"]
 script = ExtResource("5_cifn8")
 
-[sub_resource type="Resource" id="Resource_53v1g"]
+[sub_resource type="Resource" id="Resource_002sd"]
 script = ExtResource("6_ghxga")
 label = "Douves de lave"
 surface_altitude = 1.9
@@ -228,9 +236,9 @@ bounds_min = Vector2(-92, -142)
 bounds_max = Vector2(92, 78)
 cell_size = 1.25
 chambers = Array[ExtResource("1_klbrc")]([SubResource("Resource_qpqrx"), SubResource("Resource_vvckm"), SubResource("Resource_0ort5"), SubResource("Resource_qoqgs"), SubResource("Resource_lxelb"), SubResource("Resource_47xjm"), SubResource("Resource_tcgnm"), SubResource("Resource_fpc72"), SubResource("Resource_3vy0h"), SubResource("Resource_qx3p0")])
-floor_field = SubResource("Resource_sa7ro")
-headroom_field = SubResource("Resource_m75eq")
-lake = SubResource("Resource_53v1g")
+floor_field = SubResource("Resource_m75eq")
+headroom_field = SubResource("Resource_53v1g")
+lake = SubResource("Resource_002sd")
 open_sky = true
 open_sky_rim_height = 38.0
 min_headroom = 9.0

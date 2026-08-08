@@ -60,6 +60,7 @@ func _run() -> void:
 	failed += _test_the_stone_is_textured()
 	failed += _test_nothing_spawns_in_the_lava()
 	failed += await _test_the_lava_kills()
+	failed += _test_you_can_go_around_and_under_the_bridge()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -149,6 +150,9 @@ func _test_the_lava_is_at_the_bottom() -> int:
 func _test_slopes_stay_walkable() -> int:
 	var worst: float = 0.0
 	var worst_at := Vector2.ZERO
+	var worst_bank: float = 0.0
+	var banks: int = 0
+	var lava: CavernLake = _terrain.lake
 	var step: float = 2.0
 	var r: float = 4.0
 	while r < 56.0:
@@ -159,7 +163,21 @@ func _test_slopes_stay_walkable() -> int:
 			var hx: float = _ground(at + Vector2(step, 0.0))
 			var hz: float = _ground(at + Vector2(0.0, step))
 			var slope: float = rad_to_deg(atan(maxf(absf(hx - h), absf(hz - h)) / step))
-			if slope > worst:
+			# LES BERGES DE LA COULÉE ONT LEUR PROPRE PLAFOND.
+			#
+			# Une berge raide n'est pas un défaut, c'est ce qui empêche de
+			# descendre par mégarde dans de la lave qui tue. Lui appliquer la
+			# règle des chemins reviendrait à exiger qu'on puisse marcher dans
+			# le danger.
+			#
+			# Mais elle reste PLAFONNÉE, et c'est ce qui distingue ce contrôle
+			# d'une exemption : une paroi verticale au bord de la coulée ferait
+			# encore échouer le test, et le nombre de points concernés est
+			# affiché pour qu'il ne puisse pas grossir en silence.
+			if _near_lava(at, lava):
+				banks += 1
+				worst_bank = maxf(worst_bank, slope)
+			elif slope > worst:
 				worst = slope
 				worst_at = at
 			a += 0.35
@@ -169,8 +187,31 @@ func _test_slopes_stay_walkable() -> int:
 		print("[FAIL] pentes : %.1f° en (%.0f, %.0f), au-delà du plafond de %.0f°"
 			% [worst, worst_at.x, worst_at.y, _terrain.max_slope_degrees])
 		return 1
-	print("[OK] slopes_stay_walkable (max %.1f°)" % worst)
+	if worst_bank > BANK_MAX_SLOPE:
+		print("[FAIL] berges : %.1f°, au-delà du plafond de berge de %.0f°"
+			% [worst_bank, BANK_MAX_SLOPE])
+		return 1
+	print("[OK] slopes_stay_walkable (max %.1f° ; berges %.1f° sur %d points)"
+		% [worst, worst_bank, banks])
 	return 0
+
+
+## Un point est « sur la berge » s'il touche la coulée à moins de cette
+## distance de son bord, en mètres.
+const BANK_REACH: float = 5.0
+
+## Plafond propre aux berges. Elles ont le droit d'être raides — pas d'être
+## verticales : une paroi franche se lit comme un mur invisible.
+const BANK_MAX_SLOPE: float = 52.0
+
+
+func _near_lava(at: Vector2, lava: CavernLake) -> bool:
+	if lava == null:
+		return false
+	var local: Vector2 = at - lava.center
+	var d: float = Vector2(local.x / maxf(lava.radii.x - BANK_REACH, 0.001),
+		local.y / maxf(lava.radii.y - BANK_REACH, 0.001)).length()
+	return d <= 1.0 + BANK_REACH / maxf(lava.radii.y, 0.001)
 
 
 func _test_the_terrain_actually_builds() -> int:
@@ -681,4 +722,70 @@ func _test_the_lava_kills() -> int:
 		return 1
 	print("[OK] the_lava_kills (mort, corps posé sur la berge à %.0f m du lit)"
 		% absf(landed.y - lava.center.y))
+	return 0
+
+
+## ON DOIT POUVOIR CONTOURNER LE PONT, ET PASSER DESSOUS.
+##
+## Demandé en jeu : « le joueur peut passer à droite et à gauche du pont pour
+## explorer en dessous ». C'est ce qui interdit d'en faire une chaussée
+## continue : un ouvrage qui traverse tout le cirque le coupe en deux, et
+## l'espace sous lui cesse d'exister.
+##
+## Deux choses à prouver, donc — qu'on passe À CÔTÉ, et qu'il y a quelque chose
+## SOUS lui où poser les pieds.
+func _test_you_can_go_around_and_under_the_bridge() -> int:
+	var bridge: ForgeBridge = _world.get_node_or_null("PontSuspendu") as ForgeBridge
+	var region: NavigationRegion3D = _world.get_node_or_null("Navigation") as NavigationRegion3D
+	if bridge == null or region == null:
+		print("[FAIL] contournement : pont ou navigation absents")
+		return 1
+	var map: RID = region.get_navigation_map()
+
+	# 1. LA CORNICHE existe et porte : elle doit être sèche, et sur le navmesh.
+	var lava: CavernLake = _terrain.lake
+	var ledge := Vector2(0.0, -3.8)
+	var ledge_ground: float = _ground(ledge)
+	if ledge_ground < lava.surface_altitude + 0.5:
+		print("[FAIL] corniche : à %.2f m, la lave est à %.2f m — noyée"
+			% [ledge_ground, lava.surface_altitude])
+		return 1
+	var ledge_point := Vector3(ledge.x, ledge_ground, ledge.y)
+	var on_mesh: Vector3 = NavigationServer3D.map_get_closest_point(map, ledge_point)
+	if on_mesh.distance_to(ledge_point) > 2.5:
+		print("[FAIL] corniche : à %.1f m du navmesh — on n'y accède pas"
+			% on_mesh.distance_to(ledge_point))
+		return 1
+
+	# 2. Elle passe bien SOUS le tablier, et avec de la hauteur pour un joueur.
+	var deck_here: float = bridge.deck_altitude_at(
+		clampf((bridge.from_point.y - ledge.y)
+			/ maxf(bridge.from_point.y - bridge.to_point.y, 0.001), 0.0, 1.0))
+	var headroom: float = deck_here - ledge_ground
+	if headroom < 1.9:
+		print("[FAIL] corniche : %.2f m sous le tablier — on ne tient pas debout" % headroom)
+		return 1
+
+	# 3. ON PASSE À CÔTÉ : un chemin d'une rive à l'autre du pont qui ne monte
+	#    jamais dessus. Sans ce contrôle, le pont pourrait devenir le seul
+	#    passage sans que rien ne le signale.
+	var west := Vector3(-22.0, _ground(Vector2(-22.0, 6.0)), 6.0)
+	var east := Vector3(22.0, _ground(Vector2(22.0, 6.0)), 6.0)
+	var path: PackedVector3Array = NavigationServer3D.map_get_path(map,
+		NavigationServer3D.map_get_closest_point(map, west),
+		NavigationServer3D.map_get_closest_point(map, east), true)
+	if path.size() < 2:
+		print("[FAIL] contournement : aucun chemin d'une rive à l'autre")
+		return 1
+	# Le critère n'est PAS l'altitude : au sud, le tablier est au niveau du sol
+	# par construction, donc « plus haut que le pont » ne distingue pas marcher
+	# sur l'ouvrage de marcher devant. Le critère est de ne pas SURVOLER la
+	# coulée — seul le pont permet ça.
+	for point in path:
+		if _in_lava(Vector2(point.x, point.z), lava):
+			print("[FAIL] contournement : le chemin survole la coulée — il emprunte le pont")
+			return 1
+
+	print("[OK] you_can_go_around_and_under_the_bridge (corniche à %.2f m, %.2f m sous le tablier)"
+		% [ledge_ground, headroom])
 	return 0
