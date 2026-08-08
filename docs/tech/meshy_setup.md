@@ -258,3 +258,22 @@ brief (art bible)
 
 Le choix entre **MCP interactif** et **skill CLI reproductible** pour la phase de production (E3/E4) est
 tranché après le probe E1 — cf la tâche « Figer le pipeline de production assets ».
+
+
+---
+
+## Ce que Meshy ne sait pas faire : la typographie (● Opus, 2026-08-08)
+
+**Sonde à 5 crédits, concluante.** Demande : une plaque de pierre gravée de la lettre capitale « B »,
+relief peu profond, style runique. Résultat : **un caillou informe**, sans la moindre lettre lisible.
+Comparé côte à côte avec le même B extrudé par le `TextMesh` de Godot, il n'y a pas de débat.
+
+C'est un défaut connu des modèles text-to-3D : ils apprennent des formes, pas des glyphes. Aucun
+prompt ne le contourne, et affiner le prompt ne fait que dépenser des crédits.
+
+**Règle** : pour tout ce qui est **lettre, chiffre, symbole ou inscription**, utiliser `TextMesh`
+(extrusion native, nette à toute distance) et réserver Meshy à ce qui l'entoure — la dalle, le
+cadre, la roche. C'est ce que fait `LetterPylon` : cartouche de pierre + lettre extrudée.
+
+La sonde suit le protocole du projet — *prouver la boucle sur un asset avant d'industrialiser*. Sans
+elle, on aurait dépensé quatre générations pour quatre cailloux.

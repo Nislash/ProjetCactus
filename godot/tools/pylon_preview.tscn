@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bxc4him0sllxv"]
+
+[ext_resource type="Script" uid="uid://ogb60kb3ubys" path="res://tools/pylon_preview.gd" id="1_njk0n"]
+
+[node name="PylonPreview" type="Node3D" unique_id=2042705208]
+script = ExtResource("1_njk0n")
