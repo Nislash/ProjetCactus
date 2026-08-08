@@ -24,6 +24,14 @@ signal animation_finished(anim_name: StringName)
 ## set_local_player().
 @export var hide_for_local_player: bool = false
 
+## Matériau appliqué à TOUS les mesh du modèle instancié, en override.
+##
+## C'est le seul moyen d'habiller un personnage dont le `.glb` est chargé à
+## l'exécution : on ne peut pas poser un `material_override` dans la scène sur
+## un nœud qui n'existe pas encore. Laisser vide = le modèle garde ses propres
+## matériaux.
+@export var model_material_override: Material = null
+
 const LIB_NAME: StringName = &"char"
 
 var _model: Node3D = null
@@ -67,6 +75,9 @@ func _build() -> void:
 	if anim_set.y_rotation_deg != 0.0:
 		_model.rotation.y = deg_to_rad(anim_set.y_rotation_deg)
 
+	if model_material_override != null:
+		_apply_material_override(_model)
+
 	# Trouver / créer l'AnimationPlayer cible.
 	_anim_player = _find_animation_player(_model)
 	if _anim_player == null:
@@ -81,6 +92,21 @@ func _build() -> void:
 	# Lance idle par défaut si dispo
 	if _anim_player.has_animation(_full_name(&"idle")):
 		play_state(&"idle")
+
+
+## Change l'habillage à chaud, sans reconstruire les animations.
+func set_model_material_override(mat: Material) -> void:
+	model_material_override = mat
+	if _model != null and is_instance_valid(_model):
+		_apply_material_override(_model)
+
+
+func _apply_material_override(node: Node) -> void:
+	var mesh: MeshInstance3D = node as MeshInstance3D
+	if mesh != null:
+		mesh.material_override = model_material_override
+	for child in node.get_children():
+		_apply_material_override(child)
 
 
 func _install_animation_library() -> void:

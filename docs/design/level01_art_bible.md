@@ -179,7 +179,7 @@ pas au jugé, au moment de la mesure post-texturing (E3).
 3. **Formations/piliers de cristal** landmarks — 2-3 grosses pièces héro (E4)
 4. **Props caverne** : stalactites/stalagmites, éboulis (E4)
 5. **Coffres** : départ + reliques, retexturés (E4)
-6. **Boss Golem de cristal** retexturé (E4, sans casser IA/hitbox — cf #62 fait, #63/#64 en cours)
+6. **Boss Golem de cristal** habillé (E4 #23 — fait, cf §7bis)
 
 ---
 
@@ -211,3 +211,38 @@ pas au jugé, au moment de la mesure post-texturing (E3).
 - [x] Palette, matériaux, contraintes, budget de départ, liste d'assets (ce document)
 - [x] Budget technique **confirmé** sur la machine cible (mesures 2026-08-07, §5 + `docs/tech/perf_budget.md`, PR #107)
 - [x] Brief créatif §6bis exécuté par Fable → [`level01_topography.md`](level01_topography.md) (2026-08-08 ; validation finale au playtest E2)
+
+
+## 7bis. L'habillage du Golem (● Opus, tâche #23)
+
+**Pourquoi pas de génération Meshy.** Le Golem emprunte le squelette et les dix animations du
+mannequin « Sentinel ». Lui générer un corps neuf imposerait de le rigger puis de recibler les
+animations — beaucoup de travail, et un risque réel sur la hitbox, qui est précisément ce que la
+tâche interdisait de casser. Il est donc habillé par **matériau** : `shaders/golem_crystal.gdshader`,
+roche sombre parcourue de veines de cristal. Le rig, la collision et l'IA restent intacts.
+
+**Pourquoi pas de triplanaire.** La roche de la caverne est projetée en espace monde, ce qui est
+parfait pour du décor immobile. Sur un corps qui marche, la matière glisserait sur la peau à chaque
+pas. Le shader du Golem travaille en espace UV : la matière est solidaire du personnage.
+
+**Les veines portent l'information de combat**, dans le vocabulaire du §3 (le chaud est réservé au
+danger) :
+
+| État | Veines | Éclat de poitrine |
+|---|---|---|
+| P1 — Le Réveil | cyan `#66d9ff` | caché |
+| P2 — La Fracture | cyan tiédi (`heat` 0,35) | caché |
+| P3 — Le Cœur ouvert | orange `#f2b45c` | **visible** — le point faible se lit |
+| Telegraph d'attaque | battement, quelle que soit la phase | — |
+
+Le battement monte en 0,12 s et retombe sur le reste du windup : **quand la lueur s'éteint, le coup
+part**. Le joueur lit le timing sans rien compter, ce qui compte en quart d'écran.
+
+Deux matériaux : `golem_crystal_material.tres` (le corps, veines fines) et
+`golem_shard_material.tres` (les deux éclats affleurants, dos et poitrine). Les deux sont
+**dupliqués à l'exécution** — animer un `.tres` partagé teindrait tout objet qui viendrait à s'en
+servir.
+
+**Banc de visualisation** : `res://tools/golem_preview.tscn` (`phase` exporté, présentoir tournant).
+Il existe parce qu'un test automatique prouve qu'une valeur est arrivée dans le matériau, pas qu'elle
+rend bien.
