@@ -117,12 +117,14 @@ func _test_every_poi_reachable_from_every_spawn() -> int:
 ## parcours nominal s'enchaîne, pas seulement que les points sont accessibles.
 func _test_full_traversal_spawn_to_boss() -> int:
 	var legs: Array = [
-		["spawn", Vector3(-104.0, 9.0, -38.0)],
-		["poche du loot", Vector3(-126.0, 9.0, 6.0)],
-		["anse sud-ouest", Vector3(-84.0, 3.0, 30.0)],
-		["lac gelé", Vector3(-6.0, -1.0, 36.0)],
-		["nef centre", Vector3(-16.0, 4.5, -38.0)],
-		["crête du seuil", Vector3(42.0, 6.0, -47.0)],
+		["spawn", Vector3(-124.0, 9.0, -42.0)],
+		["poche du loot", Vector3(-128.0, 9.5, 8.0)],
+		["galerie centrale", Vector3(-54.0, 6.0, -42.0)],
+		["baie nord (K3)", Vector3(-44.0, 5.0, -62.0)],
+		["jardin de givre", Vector3(-84.0, 3.0, 34.0)],
+		["rive du lac", Vector3(-10.0, 2.0, 58.0)],
+		["berge du passage", Vector3(40.0, 4.0, -14.0)],
+		["crête du seuil", Vector3(42.0, 6.5, -46.0)],
 		["arène (boss)", Vector3(100.0, -3.0, -52.0)],
 	]
 	var total: float = 0.0
@@ -180,10 +182,10 @@ func _path_report(from: Vector3, to: Vector3) -> Dictionary:
 
 func _spawns() -> Array:
 	return [
-		["Spawn0", Vector3(-104.0, 9.0, -44.0)],
-		["Spawn1", Vector3(-100.0, 9.0, -38.0)],
-		["Spawn2", Vector3(-104.0, 9.0, -32.0)],
-		["Spawn3", Vector3(-108.0, 9.0, -38.0)],
+		["Spawn0", Vector3(-124.0, 9.0, -48.0)],
+		["Spawn1", Vector3(-120.0, 9.0, -42.0)],
+		["Spawn2", Vector3(-124.0, 9.0, -36.0)],
+		["Spawn3", Vector3(-128.0, 9.0, -42.0)],
 	]
 
 
@@ -191,10 +193,12 @@ func _spawns() -> Array:
 ## docs/design/level01_topography.md §8.
 func _points_of_interest() -> Array:
 	return [
-		["Lac gelé", Vector3(-6.0, -1.0, 36.0)],
-		["Poche du Loot", Vector3(-126.0, 9.0, 6.0)],
-		["Anse Sud-Ouest", Vector3(-84.0, 3.0, 30.0)],
-		["Nef centre", Vector3(-16.0, 4.5, -38.0)],
-		["Crête du Seuil", Vector3(42.0, 6.0, -47.0)],
+		["Rive du Lac", Vector3(-10.0, 2.0, 58.0)],
+		["Poche du Loot", Vector3(-128.0, 9.5, 8.0)],
+		["Jardin de Givre", Vector3(-84.0, 3.0, 34.0)],
+		["Baie Nord (K3)", Vector3(-44.0, 5.0, -62.0)],
+		["Galerie centrale", Vector3(-54.0, 6.0, -42.0)],
+		["Berge du Passage", Vector3(40.0, 4.0, -14.0)],
+		["Crête du Seuil", Vector3(42.0, 6.5, -46.0)],
 		["Arène (boss)", Vector3(100.0, -3.0, -52.0)],
 	]

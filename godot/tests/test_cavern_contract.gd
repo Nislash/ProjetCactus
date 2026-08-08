@@ -25,8 +25,10 @@ const TERRAIN_PATH := "res://data/levels/level01_cavern_terrain.tres"
 ## Couvre l'amplitude des ondulations sans laisser passer un enterrement.
 const MAX_GROUND_OFFSET := 0.6
 
-## Marqueurs volontairement décollés du sol, avec leur raison.
-const AIRBORNE_EXEMPT := {}
+## Marqueurs volontairement décollés du sol : ceux posés sur un PROP (chaussée,
+## îlot, pilier) et non sur le terrain. Le groupe est le même que celui du
+## snapper — une seule source de vérité, sinon les deux divergent.
+const GROUP_KEEP_ALTITUDE := &"keep_altitude"
 
 var _scene_root: Node3D
 var _world: Node3D
@@ -188,7 +190,7 @@ func _test_all_markers_are_grounded() -> int:
 	var checked: int = 0
 
 	for marker in _all_gameplay_markers():
-		if AIRBORNE_EXEMPT.has(marker.name):
+		if marker.is_in_group(GROUP_KEEP_ALTITUDE):
 			continue
 		var position: Vector3 = marker.global_transform.origin
 		var ground: float = CavernTerrainBuilder.sample_point(

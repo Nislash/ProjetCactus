@@ -54,37 +54,42 @@ func _init() -> void:
 func _build_chambers() -> Array[CavernChamber]:
 	var chambers: Array[CavernChamber] = []
 
-	# SALLE DU BOSS — en haut à droite du croquis, la plus vaste. Sa surface
-	# vaut à peu près celle de la caverne d'avant : c'est l'unité d'échelle que
-	# l'utilisateur a donnée.
-	chambers.append(_room("Salle du Boss", Vector2(88.0, -52.0), Vector2(60.0, 42.0), -12.0, 14.0, 16.0))
+	# --- SALLE DU BOSS (croquis : le grand lobe hachuré en haut) ------------
+	# Trois poches décalées plutôt qu'une ellipse : c'est ce qui casse l'effet
+	# « bulle » que la première silhouette produisait.
+	chambers.append(_room("B1 Salle du Boss", Vector2(96.0, -54.0), Vector2(49.0, 36.0), -14.0, 15.0, 14.0))
+	chambers.append(_room("B2 Lobe NO du Boss", Vector2(66.0, -70.0), Vector2(24.0, 18.0), 22.0, 14.0, 10.0))
+	chambers.append(_room("B3 Encoche Est", Vector2(122.0, -30.0), Vector2(14.0, 10.0), -30.0, 12.0, 6.0))
 
-	# GRANDE NEF — le long balayage qui traverse la caverne d'est en ouest.
-	chambers.append(_room("Grande Nef", Vector2(-18.0, -40.0), Vector2(86.0, 36.0), 8.0, 13.0, 18.0))
+	# --- LA GALERIE (l'entrée, scindée en deux actes par le Détroit) --------
+	chambers.append(_room("G1 Galerie Ouest", Vector2(-102.0, -38.0), Vector2(34.0, 24.0), 18.0, 13.0, 12.0))
+	chambers.append(_room("G2 Galerie Centrale", Vector2(-54.0, -44.0), Vector2(32.0, 22.0), -10.0, 12.0, 8.0))
+	chambers.append(_room("G3 Galerie Est", Vector2(-12.0, -36.0), Vector2(30.0, 22.0), 8.0, 13.0, 16.0))
+	# Bord serré (5 m) : la baie s'ouvre franchement, sans évasement mou.
+	chambers.append(_room("N1 Baie Nord (K3)", Vector2(-44.0, -64.0), Vector2(11.0, 8.0), 25.0, 11.0, 5.0))
 
-	# SEUIL — le goulet entre la nef et la salle du boss. C'est là que le
-	# croquis place le « mécanisme secret » : un passage étroit se surveille et
-	# se verrouille, une grande salle non.
-	chambers.append(_corridor("Seuil du Boss", Vector2(30.0, -44.0), Vector2(54.0, -50.0), 11.0, 10.5, 9.0))
+	# --- LE LAC, sous la Brèche --------------------------------------------
+	chambers.append(_room("L1 Salle du Lac", Vector2(-4.0, 36.0), Vector2(49.0, 42.0), -8.0, 15.0, 18.0))
+	chambers.append(_room("L2 Lobe Nord-Est", Vector2(28.0, 16.0), Vector2(22.0, 16.0), 30.0, 14.0, 8.0))
+	chambers.append(_room("L3 Queue Sud", Vector2(-14.0, 74.0), Vector2(14.0, 10.0), -20.0, 11.0, 6.0))
 
-	# SALLE DU LAC — la poche centrale basse, cœur du niveau.
-	chambers.append(_room("Salle du Lac", Vector2(-6.0, 34.0), Vector2(44.0, 52.0), -6.0, 15.0, 20.0))
+	# --- LES DÉTOURS -------------------------------------------------------
+	chambers.append(_room("P1 Poche du Loot", Vector2(-128.0, 8.0), Vector2(20.0, 15.0), 20.0, 10.0, 5.0))
+	chambers.append(_room("J1 Jardin de Givre", Vector2(-86.0, 34.0), Vector2(30.0, 22.0), -28.0, 12.0, 14.0))
+	chambers.append(_room("J2 Jardin (lobe est)", Vector2(-60.0, 52.0), Vector2(16.0, 12.0), 15.0, 11.0, 8.0))
 
-	# GOULET DU LAC — relie la nef à la salle du lac.
-	chambers.append(_corridor("Descente du Lac", Vector2(-22.0, -14.0), Vector2(-8.0, 6.0), 13.0, 12.0, 10.0))
-
-	# POCHE DU LOOT — la petite alcôve à l'extrême gauche du croquis. Petite et
-	# basse : une récompense cachée doit se sentir comme une cachette.
-	chambers.append(_room("Poche du Loot", Vector2(-126.0, 6.0), Vector2(24.0, 21.0), 18.0, 10.0, 11.0))
-
-	# GOULET DU LOOT — l'étranglement qui y mène, hors du chemin principal.
-	chambers.append(_corridor("Boyau du Loot", Vector2(-100.0, -24.0), Vector2(-118.0, 0.0), 9.0, 10.0, 8.0))
-
-	# APPENDICE SUD-OUEST — la queue que le croquis fait descendre en bas à
-	# gauche : une respiration, et de quoi éviter que la nef soit un simple
-	# couloir droit.
-	chambers.append(_room("Anse Sud-Ouest", Vector2(-84.0, 30.0), Vector2(38.0, 30.0), -24.0, 12.0, 16.0))
-	chambers.append(_corridor("Passe Sud-Ouest", Vector2(-70.0, -8.0), Vector2(-78.0, 14.0), 12.0, 11.5, 10.0))
+	# --- LES GOULETS -------------------------------------------------------
+	# C1/C2/C6 sont volontairement sous les 6 m du chemin principal : ce sont
+	# des passages secondaires, la fiche de contraintes l'autorise (≥ 3 m).
+	chambers.append(_corridor("C1 Le Détroit", Vector2(-32.0, -42.0), Vector2(-24.0, -38.0), 5.0, 10.0, 6.0))
+	chambers.append(_corridor("C2 Boyau du Loot", Vector2(-104.0, -22.0), Vector2(-120.0, 2.0), 4.5, 10.0, 5.0))
+	chambers.append(_corridor("C3 Passe du Jardin", Vector2(-74.0, -8.0), Vector2(-80.0, 16.0), 6.0, 11.0, 8.0))
+	chambers.append(_corridor("C4 La Descente", Vector2(-20.0, -14.0), Vector2(-10.0, 6.0), 7.0, 12.0, 9.0))
+	chambers.append(_corridor("C5 Seuil du Boss", Vector2(30.0, -40.0), Vector2(52.0, -48.0), 8.0, 10.0, 9.0))
+	# Le Passage Effondré : il EXISTE dans le terrain dès le départ. C'est la
+	# Porte (un prop) qui le bloque, pas la géométrie — sinon le raccourci
+	# n'existerait pas et le navmesh ne saurait pas le cuire.
+	chambers.append(_corridor("C6 Passage Effondré", Vector2(50.0, -32.0), Vector2(30.0, 2.0), 4.0, 10.0, 5.0))
 
 	return chambers
 
@@ -120,7 +125,7 @@ func _corridor(label: String, from_point: Vector2, to_point: Vector2, half_width
 
 func _build_floor() -> CavernHeightfieldSpec:
 	var spec := CavernHeightfieldSpec.new()
-	# Altitude de référence : le pourtour du lac.
+	# Altitude de référence : les rives du lac.
 	spec.base_altitude = 2.0
 	spec.noise_amplitude = 0.60
 	spec.noise_scale = 10.0
@@ -130,41 +135,45 @@ func _build_floor() -> CavernHeightfieldSpec:
 	var ramps: Array[CavernRamp] = []
 	var basins: Array[CavernBasin] = []
 
-	# Ordre : du général au particulier. Les plateaux se fondent par lerp, donc
-	# le dernier posé l'emporte localement.
-
-	# La nef domine le niveau et descend doucement vers le lac.
-	plateaus.append(_plateau("Nef ouest (haut)", Vector2(-96.0, -34.0), Vector2(34.0, 22.0), 8.0,
+	# L'histoire verticale : haut à l'ouest, bas au centre sous la Brèche,
+	# l'arène en contrebas au nord-est. On descend vers la lumière, puis on
+	# plonge vers le noir.
+	#
+	# Ordre : du général au particulier — les plateaux se fondent par lerp,
+	# donc le dernier posé l'emporte localement.
+	plateaus.append(_plateau("Perchoir Ouest", Vector2(-112.0, -38.0), Vector2(26.0, 20.0), 9.0,
 		CavernTerrainBuilder.min_falloff_for(4.0, PATH_TARGET_DEG), true))
-	plateaus.append(_plateau("Nef centre", Vector2(-16.0, -38.0), Vector2(46.0, 24.0), 4.5,
-		CavernTerrainBuilder.min_falloff_for(2.5, PATH_TARGET_DEG), true))
-
-	# Poche du loot : perchée, pour qu'y monter se mérite.
-	plateaus.append(_plateau("Poche du Loot", Vector2(-126.0, 6.0), Vector2(18.0, 15.0), 9.0,
+	plateaus.append(_plateau("Galerie mi-pente", Vector2(-54.0, -42.0), Vector2(26.0, 18.0), 6.0,
 		CavernTerrainBuilder.min_falloff_for(3.0, PATH_TARGET_DEG), true))
-
-	# Anse sud-ouest, en léger contrebas de la nef.
-	plateaus.append(_plateau("Anse Sud-Ouest", Vector2(-84.0, 30.0), Vector2(28.0, 22.0), 3.0,
+	plateaus.append(_plateau("Galerie basse", Vector2(-12.0, -36.0), Vector2(26.0, 18.0), 4.0,
+		CavernTerrainBuilder.min_falloff_for(2.0, PATH_TARGET_DEG), true))
+	plateaus.append(_plateau("Perchoir du Loot", Vector2(-128.0, 8.0), Vector2(16.0, 12.0), 9.5,
 		CavernTerrainBuilder.min_falloff_for(3.0, PATH_TARGET_DEG), true))
-
-	# Le seuil du boss : une crête qu'on franchit avant la révélation.
+	plateaus.append(_plateau("Jardin", Vector2(-82.0, 36.0), Vector2(26.0, 20.0), 3.0,
+		CavernTerrainBuilder.min_falloff_for(3.0, PATH_TARGET_DEG), true))
 	# ÉCART DE 10 m entre la crête et le bord du bol : sans lui, le bourrelet de
 	# la cuvette recouvre le fondu du plateau et les deux pentes s'additionnent
 	# — 49° mesurés, au-delà de l'angle où le joueur glisse.
-	plateaus.append(_plateau("Crête du Seuil", Vector2(42.0, -47.0), Vector2(9.0, 8.0), 6.0,
+	plateaus.append(_plateau("Crête du Seuil", Vector2(42.0, -46.0), Vector2(9.0, 7.0), 6.5,
+		CavernTerrainBuilder.min_falloff_for(2.0, PATH_TARGET_DEG), true))
+	plateaus.append(_plateau("Berge du Passage", Vector2(40.0, -14.0), Vector2(8.0, 12.0), 4.0,
 		CavernTerrainBuilder.min_falloff_for(2.0, PATH_TARGET_DEG), true))
 
-	# Salle du boss : un bol large et bas. Large parce qu'à cette échelle une
-	# paroi raide serait infranchissable ; bas parce qu'on y descend.
+	# Le bol de l'arène et son lit plat.
 	basins.append(_basin("Bol de l'Arène", Vector2(100.0, -52.0), Vector2(38.0, 30.0), 5.0, 0.6, 30.0, 0.42))
+	# LES RAMPES NE CREUSENT PAS. Elles sont cotées en altitude AVANT creusement,
+	# et le bol ajoute déjà son −5 m par-dessus : les faire descendre à −2,5
+	# donnait un fond à −7,4, soit une TRANCHÉE de 4 m sous le sol de l'arène,
+	# et 51° de paroi latérale. La paroi du bol descend déjà à ~26° (5,6 m sur
+	# 17,4 m radiaux), donc elle est praticable telle quelle : les rampes ne
+	# servent qu'à APLANIR un couloir d'approche pour qu'il se lise comme le
+	# chemin évident.
+	ramps.append(_ramp("Rampe nord", Vector2(64.0, -68.0), Vector2(84.0, -58.0), 3.0, 2.0, 10.0, 8.0))
+	ramps.append(_ramp("Rampe sud", Vector2(64.0, -36.0), Vector2(84.0, -46.0), 3.0, 2.0, 10.0, 8.0))
 
-	# Deux rampes franches dans la paroi du bol : le chemin évident.
-	ramps.append(_ramp("Rampe nord", Vector2(66.0, -66.0), Vector2(84.0, -58.0), 5.0, 3.0, 9.0, 7.0))
-	ramps.append(_ramp("Rampe sud", Vector2(66.0, -38.0), Vector2(84.0, -46.0), 5.0, 3.0, 9.0, 7.0))
-
-	# La cuvette du lac. Altitudes cotées AVANT creusement : les cuvettes
-	# s'appliquent en dernier et s'AJOUTENT.
-	basins.append(_basin("Cuvette du Lac", Vector2(-6.0, 36.0), Vector2(34.0, 42.0), 3.2, 0.7, 26.0, 0.55))
+	# Le lit du lac : large fond plat, pour une nappe de glace praticable et
+	# non une flaque au fond d'un entonnoir.
+	basins.append(_basin("Lit du Lac", Vector2(-4.0, 38.0), Vector2(30.0, 26.0), 3.2, 0.7, 26.0, 0.55))
 
 	spec.plateaus = plateaus
 	spec.ramps = ramps
@@ -178,14 +187,19 @@ func _build_floor() -> CavernHeightfieldSpec:
 func _build_headroom_modulation() -> CavernHeightfieldSpec:
 	var spec := CavernHeightfieldSpec.new()
 	spec.base_altitude = 0.0
-	spec.noise_amplitude = 0.8
-	spec.noise_scale = 22.0
+	# Bruit plus agressif que la première version (0,8 / 22 m) : c'est lui qui
+	# crénelle les parois et casse la rondeur des poches.
+	spec.noise_amplitude = 1.2
+	spec.noise_scale = 14.0
 	spec.noise_seed = 4412
 
 	var plateaus: Array[CavernPlateau] = []
-	plateaus.append(_plateau("Compression du seuil", Vector2(42.0, -47.0), Vector2(11.0, 10.0), -6.0, 10.0, true))
-	plateaus.append(_plateau("Ouverture de l'arène", Vector2(100.0, -52.0), Vector2(34.0, 26.0), 5.0, 16.0, true))
-	plateaus.append(_plateau("Nef haute", Vector2(-6.0, 34.0), Vector2(36.0, 44.0), 4.0, 18.0, true))
+	# Le Seuil : voûte à ~10 m, le minimum autorisé. On baisse la tête juste
+	# avant que l'arène ne s'ouvre — la compression EST la mise en scène.
+	plateaus.append(_plateau("Compression du Seuil", Vector2(42.0, -46.0), Vector2(11.0, 10.0), -6.0, 10.0, true))
+	plateaus.append(_plateau("Ouverture de l'Arène", Vector2(100.0, -52.0), Vector2(34.0, 26.0), 5.0, 16.0, true))
+	plateaus.append(_plateau("Nef de la Brèche", Vector2(-4.0, 36.0), Vector2(36.0, 44.0), 4.0, 18.0, true))
+	plateaus.append(_plateau("Étranglement du Détroit", Vector2(-28.0, -40.0), Vector2(8.0, 6.0), -4.0, 8.0, true))
 	spec.plateaus = plateaus
 	return spec
 
@@ -196,16 +210,19 @@ func _build_headroom_modulation() -> CavernHeightfieldSpec:
 
 func _build_sky_openings() -> Array[CavernSkyOpening]:
 	var openings: Array[CavernSkyOpening] = []
-	# LE grand puits, au-dessus du lac. Deux ellipses qui se recouvrent pour
-	# obtenir un contour irrégulier plutôt qu'un disque parfait — cf le second
-	# croquis, où le trou de plafond a une forme libre.
-	openings.append(_opening("P1 lac (a)", Vector2(-4.0, 30.0), Vector2(15.0, 11.0), -18.0))
-	openings.append(_opening("P1 lac (b)", Vector2(6.0, 38.0), Vector2(10.0, 13.0), 24.0))
-	# Un puits secondaire au-dessus de la poche du loot : c'est lui qui la
-	# signale de loin.
-	openings.append(_opening("P2 loot", Vector2(-126.0, 4.0), Vector2(6.0, 5.0), 0.0))
-	# Une fente au-dessus de la nef, pour ponctuer la traversée.
-	openings.append(_opening("P3 nef", Vector2(-58.0, -34.0), Vector2(4.0, 11.0), 32.0))
+	# LA BRÈCHE : trois lobes qui s'unissent pour former UN seul trou au contour
+	# irrégulier — le procédé du croquis du plafond. C'est la cicatrice de
+	# l'effondrement, pas une fenêtre.
+	openings.append(_opening("O1 Brèche (principal)", Vector2(-8.0, 32.0), Vector2(16.0, 12.0), -20.0))
+	openings.append(_opening("O2 Brèche (est)", Vector2(6.0, 40.0), Vector2(12.0, 14.0), 35.0))
+	openings.append(_opening("O3 Brèche (échancrure)", Vector2(-18.0, 44.0), Vector2(9.0, 7.0), 0.0))
+	# L'appât du Loot : c'est cette lueur qui signale la cachette de loin.
+	openings.append(_opening("O4 Loot", Vector2(-128.0, 6.0), Vector2(6.0, 5.0), 0.0))
+	# Une lame de lumière en travers de la galerie, à mi-parcours : elle rythme
+	# la traversée au lieu de la laisser muette.
+	openings.append(_opening("O5 Lame de la Galerie", Vector2(-58.0, -36.0), Vector2(4.0, 12.0), 30.0))
+	# La seule lumière du jour que le boss reçoit : une lame froide sur le Golem.
+	openings.append(_opening("O6 Fissure d'Arène", Vector2(104.0, -44.0), Vector2(2.5, 9.0), -40.0))
 	return openings
 
 
@@ -214,8 +231,8 @@ func _build_lake() -> CavernLake:
 	lake.label = "Lac gelé"
 	# Le fond de la cuvette descend à ~-1,2 ; la nappe posée à -0,4 laisse un
 	# lac peu profond aux rives franches.
-	lake.center = Vector2(-6.0, 36.0)
-	lake.radii = Vector2(36.0, 44.0)
+	lake.center = Vector2(-4.0, 38.0)
+	lake.radii = Vector2(30.0, 26.0)
 	lake.surface_altitude = -0.55
 	lake.minimum_depth = 0.2
 	lake.material_path = "res://data/levels/cavern_ice_material.tres"
@@ -327,9 +344,10 @@ func _report(terrain: CavernTerrainData) -> void:
 
 	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
 	for probe in [
-		["Poche du Loot", Vector2(-126.0, 6.0)], ["Anse SO", Vector2(-84.0, 30.0)],
-		["Nef ouest", Vector2(-96.0, -34.0)], ["Nef centre", Vector2(-16.0, -38.0)],
-		["Lac (centre)", Vector2(-6.0, 36.0)], ["Crête du Seuil", Vector2(42.0, -47.0)],
+		["Spawn (ouest)", Vector2(-124.0, -44.0)], ["Poche du Loot", Vector2(-128.0, 8.0)],
+		["Galerie centre", Vector2(-54.0, -42.0)], ["Le Détroit", Vector2(-28.0, -40.0)],
+		["Jardin", Vector2(-84.0, 34.0)], ["Lac (centre)", Vector2(-4.0, 38.0)],
+		["Berge du Passage", Vector2(40.0, -14.0)], ["Crête du Seuil", Vector2(42.0, -46.0)],
 		["Arène (fond)", Vector2(100.0, -52.0)],
 	]:
 		print("[terrain]   %-16s %6.2f m" % [probe[0],
