@@ -30,6 +30,15 @@ const MAX_GROUND_OFFSET := 0.6
 ## snapper — une seule source de vérité, sinon les deux divergent.
 const GROUP_KEEP_ALTITUDE := &"keep_altitude"
 
+## Marqueurs volontairement lâchés au-dessus du sol : les spawns joueurs. Posés
+## pile au niveau du terrain, ils commencent leur première frame en contact avec
+## lui et la moindre irrégularité du champ de hauteurs les coince.
+const GROUP_SPAWN_ABOVE_GROUND := &"spawn_above_ground"
+
+## Marge tolérée au-dessus du sol pour ces marqueurs (la hauteur de lâcher, plus
+## l'amplitude des ondulations).
+const SPAWN_CLEARANCE_TOLERANCE := 1.8
+
 var _scene_root: Node3D
 var _world: Node3D
 var _terrain: CavernTerrainData
@@ -196,6 +205,19 @@ func _test_all_markers_are_grounded() -> int:
 		var ground: float = CavernTerrainBuilder.sample_point(
 			_terrain.floor_field, Vector2(position.x, position.z), _noise)
 		var offset: float = position.y - ground
+
+		# Les spawns doivent être AU-DESSUS du sol, jamais dedans : on vérifie
+		# qu'ils sont bien lâchés, et pas trop haut non plus.
+		if marker.is_in_group(GROUP_SPAWN_ABOVE_GROUND):
+			if offset <= 0.0:
+				print("[FAIL] spawn « %s » au niveau du sol ou dessous (%.2f m) — le joueur s'y coincerait"
+					% [marker.name, offset])
+				return 1
+			if offset > SPAWN_CLEARANCE_TOLERANCE:
+				print("[FAIL] spawn « %s » lâché de %.2f m — chute trop longue" % [marker.name, offset])
+				return 1
+			continue
+
 		checked += 1
 		if absf(offset) > absf(worst_offset):
 			worst_offset = offset

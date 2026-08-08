@@ -19,6 +19,14 @@ extends Node
 ## Marqueurs de ce groupe : altitude laissée telle quelle.
 const GROUP_KEEP_ALTITUDE := &"keep_altitude"
 
+## Marqueurs de ce groupe : posés AU-DESSUS du sol, de
+## [member spawn_clearance].
+##
+## Un joueur posé pile au niveau du sol commence sa première frame en contact
+## avec le terrain, et la moindre irrégularité du champ de hauteurs suffit à le
+## coincer. Le lâcher d'un mètre le laisse retomber et se poser proprement.
+const GROUP_SPAWN_ABOVE_GROUND := &"spawn_above_ground"
+
 ## Racine sous laquelle chercher les marqueurs. Vide = le parent.
 @export var markers_root_path: NodePath
 
@@ -28,6 +36,9 @@ const GROUP_KEEP_ALTITUDE := &"keep_altitude"
 ## Décalage vertical appliqué après recalage, en mètres. Un objet posé
 ## exactement au sol s'y encastre visuellement d'un ou deux centimètres.
 @export var ground_offset: float = 0.0
+
+## Hauteur de lâcher des marqueurs du groupe [constant GROUP_SPAWN_ABOVE_GROUND].
+@export var spawn_clearance: float = 1.0
 
 ## Émis après recalage, avec le nombre de marqueurs traités.
 signal markers_snapped(count: int)
@@ -69,7 +80,10 @@ func snap_now() -> int:
 			outside += 1
 			continue
 		var ground: float = CavernTerrainBuilder.sample_point(terrain.floor_field, flat, noise)
-		marker.global_position = Vector3(position.x, ground + ground_offset, position.z)
+		var offset: float = ground_offset
+		if marker.is_in_group(GROUP_SPAWN_ABOVE_GROUND):
+			offset += spawn_clearance
+		marker.global_position = Vector3(position.x, ground + offset, position.z)
 		snapped += 1
 
 	if outside > 0:
