@@ -79,6 +79,55 @@ func _init() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_white = 1.2
 
+	# --- POST-PROCESS (#31) --------------------------------------------------
+	#
+	# GLOW. C'est la passe la plus importante du niveau, et de loin. Toute
+	# l'identité visuelle repose sur des cristaux ÉMISSIFS : sans halo, un
+	# émissif n'est qu'un aplat clair — il brille sur le papier et pas à
+	# l'écran. Le glow est ce qui fait qu'un cristal éclaire *l'air autour de
+	# lui* et devient un point d'appel dans la brume.
+	env.glow_enabled = true
+	# Seuil haut : seuls les émissifs passent. Un seuil bas ferait aussi baver
+	# la roche éclairée, et la caverne perdrait ses noirs — qui sont ce qui
+	# donne leur valeur aux cristaux.
+	env.glow_hdr_threshold = 1.05
+	env.glow_hdr_scale = 2.0
+	env.glow_intensity = 0.55
+	env.glow_bloom = 0.05
+	env.glow_strength = 1.1
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
+	# Halo LARGE et non serré : un halo serré fait « néon », un halo large fait
+	# « lumière dans la brume ». Les niveaux 1-2 (fins) sont coupés au profit
+	# des niveaux 3-5.
+	# Les niveaux vont de 0 à 6 (sept en tout) : `set_glow_level(7, …)` lève une
+	# erreur de bornes.
+	env.set_glow_level(0, 0.0)
+	env.set_glow_level(1, 0.3)
+	env.set_glow_level(2, 1.0)
+	env.set_glow_level(3, 1.0)
+	env.set_glow_level(4, 0.7)
+	env.set_glow_level(5, 0.2)
+	env.set_glow_level(6, 0.0)
+
+	# SSAO. La caverne est un relief continu sans arêtes franches : sans
+	# occlusion de contact, le sol et la paroi se rejoignent en dégradé mou et
+	# on perd la lecture du volume — précisément ce qui rend une caverne
+	# lisible. Réglage court, c'est du contact, pas de l'ombrage.
+	env.ssao_enabled = true
+	env.ssao_radius = 1.6
+	env.ssao_intensity = 1.8
+	env.ssao_power = 1.5
+	env.ssao_detail = 0.5
+	env.ssao_light_affect = 0.15
+
+	# AJUSTEMENTS. Inflexion glaciaire : légèrement désaturé, contrasté. La
+	# désaturation vient de l'art bible (§3, « froid, très désaturé ») ; le
+	# contraste compense le tonemap filmique, qui aplatit les noirs.
+	env.adjustment_enabled = true
+	env.adjustment_brightness = 1.0
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 0.88
+
 	var error: int = ResourceSaver.save(env, OUTPUT_PATH)
 	if error != OK:
 		push_error("Échec de l'écriture de %s (code %d)" % [OUTPUT_PATH, error])
