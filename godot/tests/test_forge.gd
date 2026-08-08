@@ -56,6 +56,7 @@ func _run() -> void:
 	failed += _test_the_castle_closes_the_pit()
 	failed += _test_the_moon_puzzle_is_solvable()
 	failed += _test_the_boss_waits_behind_the_gate()
+	failed += _test_the_castle_can_be_reached()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -378,3 +379,118 @@ func _test_the_boss_waits_behind_the_gate() -> int:
 	print("[OK] the_boss_waits_behind_the_gate (%.0f m du cirque, éveil à %.0f m)"
 		% [to_pit, radius])
 	return 0
+
+
+## ON DOIT POUVOIR ENTRER.
+##
+## Signalé en jeu : la porte s'ouvrait et le château restait inaccessible — il
+## était bâti de l'autre côté de la coulée, sans aucun passage. Le puzzle
+## récompensait par une porte ouverte sur rien.
+##
+## C'est un défaut de méthode : j'avais vérifié que la porte s'ouvrait, jamais
+## qu'on pouvait la franchir. Ce test couvre le trajet, pas l'événement.
+func _test_the_castle_can_be_reached() -> int:
+	var bridge: Node3D = _world.get_node_or_null("PontSuspendu") as Node3D
+	if bridge == null:
+		print("[FAIL] accès : aucun pont — le château est une île")
+		return 1
+
+	# Le pont doit ENJAMBER les douves : une extrémité de chaque côté.
+	var lava: CavernLake = _terrain.lake
+	var near := Vector2(bridge.from_point.x, bridge.from_point.y)
+	var far := Vector2(bridge.to_point.x, bridge.to_point.y)
+	if _in_lava(near, lava) or _in_lava(far, lava):
+		print("[FAIL] pont : une extrémité tombe dans la lave")
+		return 1
+	var crosses: bool = false
+	for i in 20:
+		var t: float = float(i) / 19.0
+		if _in_lava(near.lerp(far, t), lava):
+			crosses = true
+			break
+	if not crosses:
+		print("[FAIL] pont : il ne franchit pas les douves")
+		return 1
+
+	# Et son tablier doit passer AU-DESSUS de la coulée, pas dedans.
+	if bridge.deck_altitude < lava.surface_altitude + 3.0:
+		print("[FAIL] pont : tablier à %.1f m, la lave est à %.1f m"
+			% [bridge.deck_altitude, lava.surface_altitude])
+		return 1
+
+	# Il doit arriver près du château, sinon il ne mène nulle part.
+	var castle: Node3D = _world.get_node_or_null("Chateau") as Node3D
+	if castle == null:
+		print("[FAIL] accès : pas de château")
+		return 1
+	var gap: float = far.distance_to(Vector2(castle.global_position.x, castle.global_position.z))
+	if gap > 24.0:
+		print("[FAIL] pont : il s'arrête à %.0f m du château" % gap)
+		return 1
+
+	# Le tablier doit être un vrai sol : sans collision, on le traverse.
+	var decks: int = 0
+	for child in bridge.get_children():
+		var body: StaticBody3D = child as StaticBody3D
+		if body != null and body.name.begins_with("ColTablier"):
+			decks += 1
+	if decks < 5:
+		print("[FAIL] pont : %d segments de collision — on passerait au travers" % decks)
+		return 1
+
+	# ET LE VRAI TEST : un chemin de navigation existe, du spawn au seuil.
+	# La géométrie ci-dessus prouve qu'un pont est là ; seul le NavigationServer
+	# prouve qu'on peut le prendre.
+	var region: NavigationRegion3D = _world.get_node_or_null("Navigation") as NavigationRegion3D
+	if region == null:
+		print("[FAIL] accès : pas de région de navigation")
+		return 1
+	var map: RID = region.get_navigation_map()
+	var spawn: Node3D = _world.get_node_or_null("PlayerSpawnPoints/Spawn0") as Node3D
+	if spawn == null:
+		print("[FAIL] accès : Spawn0 introuvable")
+		return 1
+
+	var threshold := Vector3(far.x, bridge.deck_altitude, far.y)
+	var start: Vector3 = NavigationServer3D.map_get_closest_point(map, spawn.global_position)
+	var finish: Vector3 = NavigationServer3D.map_get_closest_point(map, threshold)
+	if finish.distance_to(threshold) > 4.0:
+		print("[FAIL] accès : le bout du pont n'est pas sur le navmesh (%.1f m)"
+			% finish.distance_to(threshold))
+		return 1
+
+	var path: PackedVector3Array = NavigationServer3D.map_get_path(map, start, finish, true)
+	if path.size() < 2:
+		print("[FAIL] accès : aucun chemin du spawn au château")
+		return 1
+	var arrival: float = path[path.size() - 1].distance_to(finish)
+	if arrival > 3.0:
+		print("[FAIL] accès : chemin tronqué, s'arrête à %.1f m du seuil" % arrival)
+		return 1
+
+	# Et ce chemin doit PASSER PAR LE PONT. Sinon le pathfinder a trouvé un
+	# contournement — ce qui voudrait dire que le pont ne sert à rien, ou pire,
+	# que le navmesh enjambe la lave par un raccourci qui n'existe pas en jeu.
+	var over_bridge: bool = false
+	for point in path:
+		if _in_lava(Vector2(point.x, point.z), lava):
+			over_bridge = true
+			break
+	if not over_bridge:
+		print("[FAIL] accès : le chemin évite le pont — il franchit les douves ailleurs")
+		return 1
+
+	var length: float = 0.0
+	for i in path.size() - 1:
+		length += path[i].distance_to(path[i + 1])
+	print("[OK] the_castle_can_be_reached (pont de %.0f m, %d segments, chemin de %.0f m)"
+		% [near.distance_to(far), decks, length])
+	return 0
+
+
+func _in_lava(at: Vector2, lava: CavernLake) -> bool:
+	if lava == null:
+		return false
+	var local: Vector2 = at - lava.center
+	return Vector2(local.x / maxf(lava.radii.x, 0.001),
+		local.y / maxf(lava.radii.y, 0.001)).length() <= 1.0

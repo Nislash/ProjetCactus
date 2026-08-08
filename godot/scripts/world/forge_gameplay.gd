@@ -55,14 +55,15 @@ signal boss_awakened()
 ## plus la tolérance angulaire se resserre, et plus le puzzle devient un
 ## exercice d'adresse. Les sauts font ici entre vingt et trente mètres.
 const MIRROR_SPOTS: Array[Vector2] = [
-	Vector2(-4.0, 36.0),
-	Vector2(24.0, 12.0),
-	Vector2(8.0, -14.0),
+	Vector2(-26.0, 34.0),
+	Vector2(30.0, 22.0),
+	Vector2(22.0, -2.0),
 ]
 
 var _world: Node3D
 var _boss: Node3D
 var _castle: ForgeCastle
+var _bridge: ForgeBridge
 var _puzzle: MoonPuzzle
 
 
@@ -78,6 +79,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	_build_castle()
+	_build_bridge()
 	_build_moon_puzzle()
 
 	if spawn_boss:
@@ -142,7 +144,19 @@ func get_boss() -> Node3D:
 func _build_castle() -> void:
 	_castle = ForgeCastle.new()
 	_castle.name = "Chateau"
+	# Reculé derrière les douves : c'est le pont qui l'atteint, plus le sol.
+	_castle.footprint_center = Vector2(0.0, -46.0)
 	_world.add_child(_castle)
+
+
+## LE PONT. Il manquait, et son absence rendait le puzzle absurde : la porte
+## s'ouvrait sur un château qu'aucun chemin n'atteignait.
+func _build_bridge() -> void:
+	_bridge = ForgeBridge.new()
+	_bridge.name = "PontSuspendu"
+	_bridge.from_point = Vector2(0.0, 6.0)
+	_bridge.to_point = Vector2(0.0, -38.0)
+	_world.add_child(_bridge)
 
 
 func _build_moon_puzzle() -> void:

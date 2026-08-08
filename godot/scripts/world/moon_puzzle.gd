@@ -95,6 +95,9 @@ func _recompute() -> void:
 			break
 		visited.append(current)
 		current.set_incoming(direction, true)
+		# D'où vient la lumière. Sur le premier miroir c'est la lune elle-même,
+		# tracée jusqu'au ciel ; sur les suivants, le miroir d'avant.
+		current.draw_incoming(direction, 60.0 if lit == 0 else 8.0)
 		lit += 1
 
 		var origin: Vector3 = current.get_focus()
