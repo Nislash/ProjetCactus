@@ -152,6 +152,33 @@ Ce qui dépend encore du câblage (#29) et non du placement : les **déclencheur
 entrer dans un lobe, activer un cristal), le **sanctuaire du lac** (zéro spawn avant le premier
 cristal), l'**échelle par nombre de joueurs**, et le **verrouillage d'arène**.
 
+## 5ter. L'IA sur relief — ce que la cuvette a changé (● Opus, tâche #28)
+
+L'arène n'est plus un sol plat de 35 × 35 m : c'est un **bol de 5 m de creux**, aux rayons 38 × 30 m,
+dont les parois montent à 37° — soit **sous le seuil de glissement** du personnage (45°). Elles sont
+donc marchables, et deux hypothèses de l'IA du POC sont tombées avec.
+
+**1. La portée est désormais horizontale.** Le déplacement du boss l'a toujours été (la composante
+verticale de son steering est annulée), mais l'agro se mesurait en 3D. Sur un sol plat les deux
+coïncident ; dans un bol, un joueur à 4 m de distance mais 10 m plus haut passait pour plus lointain
+qu'un joueur à 12 m sur le même plan. La sélection de cible **et** le choix d'attaque au corps à corps
+mesurent maintenant la seule distance que le Golem puisse franchir.
+
+**2. Un joueur perché n'est pas une cible.** Au-delà de `max_vertical_reach` (8 m par défaut : le bol
+et sa margelle), le boss cesse de le considérer et prend quelqu'un d'autre. Sans cette règle il
+resterait planté sous lui à tourner en rond, ce qui se lit comme une IA cassée plutôt que comme une
+IA qui renonce.
+
+**3. La laisse.** Rien n'empêchait un joueur de sortir le Golem de son arène en remontant la pente —
+et un boss qui suit jusque dans la Grande Nef, c'est le lock d'arène qui ne veut plus rien dire. Le
+boss circule **librement dans ses 24 m** (il doit pouvoir acculer un joueur contre la paroi) ; au-delà
+du rayon, seule la composante qui l'éloigne est retirée, si bien qu'il **longe** la limite au lieu de
+s'y figer ; passé 2 m de plus, il rentre. La charge est tenue par la même laisse : sans ça elle
+restait le moyen le plus simple de le faire sortir.
+
+Le rayon est transmis par `CavernGameplay` au moment du spawn (`boss_leash_radius`) : l'IA Rust ne
+connaît pas la topographie, et le centre du territoire est le point de spawn du boss.
+
 ## 6. Ce qui reste au playtest (#30) — les curseurs, pas la structure
 
 Effectifs exacts, HP de l'élite, durée des telegraphs P1 (0,8 s de départ), portée du resserrement de

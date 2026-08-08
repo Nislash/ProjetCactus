@@ -30,6 +30,14 @@ const BOSS_SCENE := "res://scenes/boss/boss_golem.tscn"
 ## Si faux, le boss n'est pas instancié (utile pour explorer sans combat).
 @export var spawn_boss: bool = true
 
+## Rayon (m, horizontal) au-delà duquel le Golem refuse de suivre un joueur.
+##
+## Le bol de l'arène fait 38 × 30 m de rayons, et ses parois sont marchables
+## (37°, sous le seuil de glissement) : sans cette laisse, on sort le boss de
+## son arène simplement en remontant la pente. La valeur tient le combat dans
+## le fond du bol, là où la mise en scène a été pensée.
+@export var boss_leash_radius: float = 24.0
+
 @export_file("*.tres") var rock_material_path: String = "res://data/levels/cavern_wall_material.tres"
 
 ## Émis quand les trois cristaux sont éveillés.
@@ -160,4 +168,14 @@ func _spawn_boss() -> void:
 	boss.name = "BossGolem"
 	_world.add_child(boss)
 	boss.global_position = marker.global_transform.origin
-	print("[CavernGameplay] boss posé en %v." % boss.global_position)
+
+	# La laisse : l'IA Rust ne connaît pas la topographie, on lui donne le
+	# centre et le rayon de son territoire. Sans ça, elle suit sa cible
+	# jusque dans la Grande Nef.
+	var ai: Node = boss.get_node_or_null("BossAI")
+	if ai != null and ai.has_method("set_arena"):
+		ai.call("set_arena", boss.global_position, boss_leash_radius)
+	else:
+		push_warning("CavernGameplay : BossAI/set_arena introuvable — pas de laisse d'arène.")
+
+	print("[CavernGameplay] boss posé en %v (laisse %.0f m)." % [boss.global_position, boss_leash_radius])
