@@ -35,12 +35,13 @@ func _ready() -> void:
 	hold_duration = 0.6
 	interaction_range = 2.5
 	_base_y = position.y
-	# Applique la couleur au mesh + à la lumière.
-	if _mesh != null and _mesh.material_override is StandardMaterial3D:
-		var mat: StandardMaterial3D = (_mesh.material_override as StandardMaterial3D).duplicate()
-		mat.albedo_color = element_color
-		mat.emission = element_color
-		_mesh.material_override = mat
+	# SILHOUETTE de la famille « pouvoir » : un octaèdre, seul solide régulier
+	# d'une caverne faite de cassures. Il garde la couleur de son élément —
+	# savoir qu'une gemme est de feu compte plus que savoir que c'est une
+	# gemme. Cf `CrystalGrammar`.
+	if _mesh != null:
+		_mesh.mesh = CrystalGrammar.power_gem_mesh()
+		_mesh.material_override = CrystalGrammar.make_material(element_color, 3.0)
 	if _light != null:
 		_light.light_color = element_color
 
