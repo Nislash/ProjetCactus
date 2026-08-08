@@ -22,11 +22,26 @@ signal shard_removed(pylon: LetterPylon, by_player: Node)
 ## Hauteur de la gravure sur le fût, en mètres.
 @export var glyph_height: float = 3.2
 
+## Cotes du fût, renseignées par [BossPuzzle] depuis la colonne réelle. Sans
+## elles, la gravure était posée sur l'AXE du poteau — c'est-à-dire à
+## l'intérieur de la pierre, invisible.
+@export var shaft_bottom_radius: float = 2.6
+@export var shaft_top_radius: float = 1.7
+@export var shaft_height: float = 16.0
+
+## Angle de la gravure autour du fût, en degrés.
+##
+## Tiré au sort **une fois**, à partir d'une graine fixe : chaque colonne porte
+## sa lettre à un endroit différent, donc il faut vraiment en faire le tour —
+## mais l'énigme reste la même d'une run à l'autre, ce qui permet de la
+## raconter à quelqu'un.
+@export var glyph_angle_degrees: float = 0.0
+
 var _filled: bool = false
 ## Vrai si l'éclat posé ici a bien été placé au bon rang de la séquence.
 var _validated: bool = false
 
-var _glyph: Label3D
+var _glyph: MeshInstance3D
 var _socket_mesh: MeshInstance3D
 var _socket_material: StandardMaterial3D
 var _glow: OmniLight3D
@@ -50,21 +65,7 @@ func _build() -> void:
 	shape.shape = sphere
 	add_child(shape)
 
-	# La gravure. Un Label3D et non une géométrie : la lettre doit rester
-	# lisible de l'autre rive, à trente mètres et à travers la brume.
-	_glyph = Label3D.new()
-	_glyph.name = "Gravure"
-	_glyph.text = letter
-	_glyph.font_size = 256
-	_glyph.pixel_size = 0.010
-	_glyph.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_glyph.shaded = false
-	_glyph.no_depth_test = false
-	_glyph.modulate = CrystalGrammar.COLOR_BOSS_LOCK
-	_glyph.outline_size = 24
-	_glyph.outline_modulate = Color(0.02, 0.06, 0.10, 0.9)
-	_glyph.position = Vector3(0.0, glyph_height, 0.0)
-	add_child(_glyph)
+	_build_glyph()
 
 	# Le berceau : une coupelle à hauteur de main, vide au départ. Sa présence
 	# dit « quelque chose se pose ici » avant qu'on ait le moindre éclat.
@@ -84,6 +85,70 @@ func _build() -> void:
 	add_child(_glow)
 
 
+## La gravure, POSÉE SUR LA PAROI et non sur l'axe.
+##
+## Elle était un `Label3D` en billboard, placé à `(0, h, 0)` — c'est-à-dire au
+## centre du fût, donc **enfermée dans la pierre**. Un billboard tourné vers la
+## caméra ne pouvait de toute façon pas se lire comme une gravure : il aurait
+## flotté devant le poteau.
+##
+## Elle est maintenant un texte EXTRUDÉ, plaqué sur la surface à un angle tiré
+## au sort, orienté vers l'extérieur. C'est de la géométrie posée sur de la
+## roche : elle prend la lumière du lieu, elle se cache quand on est du mauvais
+## côté, et il faut tourner autour du poteau pour la trouver.
+func _build_glyph() -> void:
+	var angle: float = deg_to_rad(glyph_angle_degrees)
+	var radius: float = _shaft_radius_at(glyph_height)
+	var outward := Vector3(sin(angle), 0.0, cos(angle))
+
+	# LE CARTOUCHE. Une dalle sombre encastrée dans le fût, sur laquelle la
+	# lettre est gravée. Sans elle, le texte flottait sur la roche brute et se
+	# lisait comme un sous-titre ; avec elle, c'est un ouvrage — quelqu'un a
+	# taillé cette pierre, et c'est ce qui donne envie de faire le tour.
+	var plaque := MeshInstance3D.new()
+	plaque.name = "Cartouche"
+	var slab := BoxMesh.new()
+	slab.size = Vector3(1.9, 2.3, 0.18)
+	plaque.mesh = slab
+	var stone := StandardMaterial3D.new()
+	stone.albedo_color = Color(0.055, 0.085, 0.125)
+	stone.roughness = 0.85
+	stone.metallic = 0.0
+	plaque.material_override = stone
+	plaque.position = outward * (radius - 0.02) + Vector3(0.0, glyph_height, 0.0)
+	plaque.rotation.y = angle
+	add_child(plaque)
+
+	var mesh := TextMesh.new()
+	mesh.text = letter
+	mesh.font_size = 160
+	mesh.pixel_size = 0.011
+	# Extrusion faible : une gravure affleure, elle ne saille pas.
+	mesh.depth = 0.06
+	mesh.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mesh.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	var glyph := MeshInstance3D.new()
+	glyph.name = "Gravure"
+	glyph.mesh = mesh
+	# Émission basse : DISCRÈTE. Une lettre qui brille autant que le berceau
+	# ferait croire qu'elle est le mécanisme, alors qu'elle est l'indice.
+	glyph.material_override = CrystalGrammar.make_material(
+		CrystalGrammar.COLOR_BOSS_LOCK, 1.1)
+
+	# Posée sur le cartouche, très légèrement en avant pour ne pas z-fighter.
+	glyph.position = outward * (radius + 0.08) + Vector3(0.0, glyph_height, 0.0)
+	glyph.rotation.y = angle
+	add_child(glyph)
+	_glyph = glyph
+
+
+## Rayon du fût à cette hauteur — la colonne est conique.
+func _shaft_radius_at(height: float) -> float:
+	var t: float = clampf(height / maxf(shaft_height, 0.001), 0.0, 1.0)
+	return lerpf(shaft_bottom_radius, shaft_top_radius, t)
+
+
 ## Vide : le berceau n'est qu'un creux sombre. Servi mais hors séquence :
 ## l'éclat est là, éteint — on voit qu'il ne « prend » pas. Validé : il brille.
 ##
@@ -100,9 +165,11 @@ func _refresh() -> void:
 		_socket_material.emission_energy_multiplier = energy
 	if _glow != null:
 		_glow.light_energy = 2.6 if _validated else (0.4 if _filled else 0.0)
-	if _glyph != null:
-		_glyph.modulate = CrystalGrammar.COLOR_BOSS_LOCK if _validated \
-			else CrystalGrammar.COLOR_BOSS_LOCK.darkened(0.45)
+	if _glyph != null and _glyph.material_override is StandardMaterial3D:
+		# La lettre s'affirme quand son rang est pris : c'est la confirmation
+		# la plus discrète possible, et elle suffit.
+		(_glyph.material_override as StandardMaterial3D).emission_energy_multiplier = \
+			3.0 if _validated else 1.1
 	prompt_text = "Reprendre l'éclat" if _filled else "Placer l'éclat"
 
 

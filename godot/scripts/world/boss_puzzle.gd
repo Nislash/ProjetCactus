@@ -31,6 +31,9 @@ signal solved()
 const WORD := "BOSS"
 const SHARD_COUNT := 4
 
+## Graine de l'orientation des gravures. Fixe : voir `_engrave_pylons`.
+const GLYPH_SEED := 20260808
+
 ## Où poser les éclats à ramasser, en (X, Z). Répartis sur le parcours : deux
 ## sur le chemin obligatoire, deux à l'écart — l'exploration doit payer, mais
 ## la run ne doit pas bloquer sur un éclat introuvable.
@@ -112,11 +115,21 @@ func _engrave_pylons() -> void:
 	# run ne se raconte pas entre joueurs, et le niveau est un cadeau qu'on
 	# montre.
 	const SCRAMBLE: Array[int] = [2, 0, 3, 1]
+
+	# L'ORIENTATION de chaque gravure est tirée au sort, mais à partir d'une
+	# graine FIXE. Chaque lettre est donc cachée d'un côté différent du fût —
+	# il faut vraiment tourner autour — et pourtant l'énigme reste la même
+	# d'une run à l'autre, ce qui permet de la raconter à quelqu'un.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = GLYPH_SEED
+
 	for i in mini(WORD.length(), columns.size()):
 		var column: Node3D = columns[SCRAMBLE[i] % columns.size()]
 		var pylon := LetterPylon.new()
 		pylon.name = "Pylone_%s_%d" % [WORD[i], i]
 		pylon.letter = WORD[i]
+		pylon.glyph_angle_degrees = rng.randf_range(0.0, 360.0)
+		_measure_shaft_for(column, pylon)
 		column.add_child(pylon)
 		pylon.position = Vector3.ZERO
 		pylon.shard_placed.connect(_on_shard_placed)
@@ -171,7 +184,7 @@ func _mount_indicator() -> void:
 	if pillar != null:
 		# On donne au cadran les cotes RÉELLES du fût pour qu'il s'y incruste :
 		# posé à un décalage fixe, il flottait à côté du pilier.
-		_measure_shaft(pillar, _indicator)
+		_measure_shaft_for(pillar, _indicator)
 		pillar.add_child(_indicator)
 		_indicator.position = Vector3.ZERO
 	else:
@@ -180,18 +193,22 @@ func _mount_indicator() -> void:
 		_indicator.global_position = _ground(Vector2(4.0, 28.0))
 
 
-## Lit le maillage du pilier pour en connaître le profil. Recopier les valeurs
-## à la main les ferait diverger au premier réglage de la colonnade.
-func _measure_shaft(pillar: Node3D, indicator: BossLockIndicator) -> void:
-	var mesh_instance: MeshInstance3D = pillar.get_node_or_null("Mesh") as MeshInstance3D
+## Lit le maillage d'une colonne pour en connaître le profil. Recopier les
+## valeurs à la main les ferait diverger au premier réglage de la colonnade —
+## et une gravure calée sur un mauvais rayon retombe DANS la pierre.
+##
+## Le nœud cible expose simplement les trois propriétés : cadran et poteau
+## partagent le même besoin sans partager de type.
+func _measure_shaft_for(column: Node3D, target: Node) -> void:
+	var mesh_instance: MeshInstance3D = column.get_node_or_null("Mesh") as MeshInstance3D
 	if mesh_instance == null:
 		return
 	var cylinder: CylinderMesh = mesh_instance.mesh as CylinderMesh
 	if cylinder == null:
 		return
-	indicator.shaft_bottom_radius = cylinder.bottom_radius
-	indicator.shaft_top_radius = cylinder.top_radius
-	indicator.shaft_height = cylinder.height
+	target.set(&"shaft_bottom_radius", cylinder.bottom_radius)
+	target.set(&"shaft_top_radius", cylinder.top_radius)
+	target.set(&"shaft_height", cylinder.height)
 
 
 # ---------------------------------------------------------------------------
