@@ -16,6 +16,17 @@ extends Interactable
 signal shard_placed(pylon: LetterPylon, by_player: Node)
 signal shard_removed(pylon: LetterPylon, by_player: Node)
 
+## Police du lettrage — October Crow, tracée à la main (licence libre, cf
+## `assets/fonts/october_crow_LICENSE.txt`).
+const FONT_PATH := "res://assets/fonts/october_crow.ttf"
+
+## Épaisseur du trait gravé, en mètres.
+const GLYPH_DEPTH := 0.05
+
+## Fraction de l'épaisseur laissée sous la surface. Au-delà de 1, la lettre
+## disparaît entièrement ; à 0, elle ressort pleine et cesse d'être discrète.
+const GLYPH_SINK := 0.55
+
 ## La lettre gravée. Une seule majuscule.
 @export var letter: String = "B"
 
@@ -92,52 +103,67 @@ func _build() -> void:
 ## caméra ne pouvait de toute façon pas se lire comme une gravure : il aurait
 ## flotté devant le poteau.
 ##
-## Elle est maintenant un texte EXTRUDÉ, plaqué sur la surface à un angle tiré
-## au sort, orienté vers l'extérieur. C'est de la géométrie posée sur de la
-## roche : elle prend la lumière du lieu, elle se cache quand on est du mauvais
-## côté, et il faut tourner autour du poteau pour la trouver.
+## Elle est maintenant un texte EXTRUDÉ, plaqué **à même la roche** à un angle
+## tiré au sort. Pas de cartouche, pas de dalle : une plaque encadrée aurait
+## crié « objet de jeu ici » et donné la réponse avant la question. C'est une
+## énigme — la lettre doit être trouvée, pas signalée.
+##
+## Elle est GRAVÉE EN CREUX : le glyphe est enfoncé dans le fût, si bien que
+## seules ses arêtes affleurent. On ne lit donc pas une lettre pleine mais un
+## **tracé au trait**, comme une marque faite au burin — beaucoup plus discret,
+## et impossible à confondre avec un élément d'interface.
+##
+## Elle est invisible du mauvais côté du fût. Ce qu'on cherche, on le cherche.
 func _build_glyph() -> void:
 	var angle: float = deg_to_rad(glyph_angle_degrees)
 	var radius: float = _shaft_radius_at(glyph_height)
 	var outward := Vector3(sin(angle), 0.0, cos(angle))
 
-	# LE CARTOUCHE. Une dalle sombre encastrée dans le fût, sur laquelle la
-	# lettre est gravée. Sans elle, le texte flottait sur la roche brute et se
-	# lisait comme un sous-titre ; avec elle, c'est un ouvrage — quelqu'un a
-	# taillé cette pierre, et c'est ce qui donne envie de faire le tour.
-	var plaque := MeshInstance3D.new()
-	plaque.name = "Cartouche"
-	var slab := BoxMesh.new()
-	slab.size = Vector3(1.9, 2.3, 0.18)
-	plaque.mesh = slab
-	var stone := StandardMaterial3D.new()
-	stone.albedo_color = Color(0.055, 0.085, 0.125)
-	stone.roughness = 0.85
-	stone.metallic = 0.0
-	plaque.material_override = stone
-	plaque.position = outward * (radius - 0.02) + Vector3(0.0, glyph_height, 0.0)
-	plaque.rotation.y = angle
-	add_child(plaque)
-
 	var mesh := TextMesh.new()
 	mesh.text = letter
-	mesh.font_size = 160
-	mesh.pixel_size = 0.011
-	# Extrusion faible : une gravure affleure, elle ne saille pas.
-	mesh.depth = 0.06
+	# La police du jeu : lettrage tracé à la main, irrégulier. Une grotesque
+	# propre se serait lue comme une signalétique ; celle-ci passe pour une
+	# marque laissée par quelqu'un.
+	var face: Font = load(FONT_PATH) as Font
+	if face != null:
+		mesh.font = face
+	mesh.font_size = 220
+	mesh.pixel_size = 0.010
+	# L'extrusion donne son épaisseur au trait : c'est elle qu'on voit, puisque
+	# la face avant reste dans la pierre.
+	mesh.depth = GLYPH_DEPTH
 	mesh.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mesh.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 	var glyph := MeshInstance3D.new()
 	glyph.name = "Gravure"
 	glyph.mesh = mesh
-	# Émission basse : DISCRÈTE. Une lettre qui brille autant que le berceau
-	# ferait croire qu'elle est le mécanisme, alors qu'elle est l'indice.
-	glyph.material_override = CrystalGrammar.make_material(
-		CrystalGrammar.COLOR_BOSS_LOCK, 1.1)
+	# Assez pour distinguer la lettre en s'approchant, trop faible pour
+	# l'apercevoir de l'autre rive : sinon les quatre lettres se liraient d'un
+	# seul point de vue et le tour du lac ne servirait à rien.
+	#
+	# L'albedo est éclairci séparément de l'émission. Avec le matériau commun
+	# (corps sombre, émission forte), seuls les BORDS du texte accrochaient la
+	# lumière : la lettre se lisait comme un artefact de rendu plutôt que comme
+	# une gravure.
+	var ink := StandardMaterial3D.new()
+	ink.albedo_color = CrystalGrammar.COLOR_BOSS_LOCK.darkened(0.45)
+	ink.emission_enabled = true
+	ink.emission = CrystalGrammar.COLOR_BOSS_LOCK
+	ink.emission_energy_multiplier = 1.3
+	ink.roughness = 0.55
+	# Culling désactivé : selon le sens d'extrusion du TextMesh, la face avant
+	# du glyphe peut regarder à l'opposé de la caméra. On ne voyait alors que
+	# les tranches latérales — un contour filaire, pas une lettre.
+	ink.cull_mode = BaseMaterial3D.CULL_DISABLED
+	glyph.material_override = ink
 
-	# Posée sur le cartouche, très légèrement en avant pour ne pas z-fighter.
-	glyph.position = outward * (radius + 0.08) + Vector3(0.0, glyph_height, 0.0)
+	# ENFONCÉ, volontairement. Le glyphe est reculé d'une fraction de son
+	# épaisseur : sa face avant reste sous la surface, seules les arêtes
+	# ressortent. Sorti complètement, on obtiendrait une lettre pleine et
+	# lumineuse — lisible de partout, donc plus une énigme.
+	glyph.position = outward * (radius - GLYPH_DEPTH * GLYPH_SINK) \
+		+ Vector3(0.0, glyph_height, 0.0)
 	glyph.rotation.y = angle
 	add_child(glyph)
 	_glyph = glyph
@@ -169,7 +195,7 @@ func _refresh() -> void:
 		# La lettre s'affirme quand son rang est pris : c'est la confirmation
 		# la plus discrète possible, et elle suffit.
 		(_glyph.material_override as StandardMaterial3D).emission_energy_multiplier = \
-			3.0 if _validated else 1.1
+			3.4 if _validated else 1.3
 	prompt_text = "Reprendre l'éclat" if _filled else "Placer l'éclat"
 
 
