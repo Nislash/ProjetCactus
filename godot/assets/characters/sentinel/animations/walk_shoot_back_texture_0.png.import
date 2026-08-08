@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dtkkhloscp0rk"
 path.s3tc="res://.godot/imported/walk_shoot_back_texture_0.png-65827ccc8d6a99410be8dfc98b5016bb.s3tc.ctex"
+path.etc2="res://.godot/imported/walk_shoot_back_texture_0.png-65827ccc8d6a99410be8dfc98b5016bb.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/sentinel/animations/walk_shoot_back_texture_0.png"
-dest_files=["res://.godot/imported/walk_shoot_back_texture_0.png-65827ccc8d6a99410be8dfc98b5016bb.s3tc.ctex"]
+dest_files=["res://.godot/imported/walk_shoot_back_texture_0.png-65827ccc8d6a99410be8dfc98b5016bb.s3tc.ctex", "res://.godot/imported/walk_shoot_back_texture_0.png-65827ccc8d6a99410be8dfc98b5016bb.etc2.ctex"]
 
 [params]
 

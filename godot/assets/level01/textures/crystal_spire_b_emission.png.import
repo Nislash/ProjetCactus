@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bgwhduxd1v8p"
 path.s3tc="res://.godot/imported/crystal_spire_b_emission.png-9197c947f486f4837e39311bef4b97a8.s3tc.ctex"
+path.etc2="res://.godot/imported/crystal_spire_b_emission.png-9197c947f486f4837e39311bef4b97a8.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/level01/textures/crystal_spire_b_emission.png"
-dest_files=["res://.godot/imported/crystal_spire_b_emission.png-9197c947f486f4837e39311bef4b97a8.s3tc.ctex"]
+dest_files=["res://.godot/imported/crystal_spire_b_emission.png-9197c947f486f4837e39311bef4b97a8.s3tc.ctex", "res://.godot/imported/crystal_spire_b_emission.png-9197c947f486f4837e39311bef4b97a8.etc2.ctex"]
 
 [params]
 

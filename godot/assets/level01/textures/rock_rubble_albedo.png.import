@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://n408q367cie4"
 path.s3tc="res://.godot/imported/rock_rubble_albedo.png-76ae08fad17b92c1f2ab11cdbac41a1e.s3tc.ctex"
+path.etc2="res://.godot/imported/rock_rubble_albedo.png-76ae08fad17b92c1f2ab11cdbac41a1e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/level01/textures/rock_rubble_albedo.png"
-dest_files=["res://.godot/imported/rock_rubble_albedo.png-76ae08fad17b92c1f2ab11cdbac41a1e.s3tc.ctex"]
+dest_files=["res://.godot/imported/rock_rubble_albedo.png-76ae08fad17b92c1f2ab11cdbac41a1e.s3tc.ctex", "res://.godot/imported/rock_rubble_albedo.png-76ae08fad17b92c1f2ab11cdbac41a1e.etc2.ctex"]
 
 [params]
 

@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bo4inpr5d8vws"
 path.s3tc="res://.godot/imported/run_texture_0.png-9add17d27981a69492d32bfc5f9ccf21.s3tc.ctex"
+path.etc2="res://.godot/imported/run_texture_0.png-9add17d27981a69492d32bfc5f9ccf21.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/sentinel/animations/run_texture_0.png"
-dest_files=["res://.godot/imported/run_texture_0.png-9add17d27981a69492d32bfc5f9ccf21.s3tc.ctex"]
+dest_files=["res://.godot/imported/run_texture_0.png-9add17d27981a69492d32bfc5f9ccf21.s3tc.ctex", "res://.godot/imported/run_texture_0.png-9add17d27981a69492d32bfc5f9ccf21.etc2.ctex"]
 
 [params]
 

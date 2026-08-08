@@ -80,3 +80,9 @@ godot/assets/level01/meshes/src/
 # Cache du plugin godot-mcp (captures d'écran de diagnostic, etc.) : artefacts
 # de session, régénérés à la demande.
 godot/addons/godot_mcp/cache/
+
+# Sortie de compilation Rust recopiée dans le projet Godot (cf tools/sync_native_lib.sh)
+godot/addons/cactus_native/bin/
+
+# Builds exportés — sortie de compilation, jamais versionnée
+build/

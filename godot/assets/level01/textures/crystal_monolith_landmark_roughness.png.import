@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bw2s5seyc4mpd"
 path.s3tc="res://.godot/imported/crystal_monolith_landmark_roughness.png-8166eff771c37e43aed71bf1e60d697b.s3tc.ctex"
+path.etc2="res://.godot/imported/crystal_monolith_landmark_roughness.png-8166eff771c37e43aed71bf1e60d697b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/level01/textures/crystal_monolith_landmark_roughness.png"
-dest_files=["res://.godot/imported/crystal_monolith_landmark_roughness.png-8166eff771c37e43aed71bf1e60d697b.s3tc.ctex"]
+dest_files=["res://.godot/imported/crystal_monolith_landmark_roughness.png-8166eff771c37e43aed71bf1e60d697b.s3tc.ctex", "res://.godot/imported/crystal_monolith_landmark_roughness.png-8166eff771c37e43aed71bf1e60d697b.etc2.ctex"]
 
 [params]
 

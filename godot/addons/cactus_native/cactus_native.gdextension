@@ -4,15 +4,25 @@ entry_symbol = "gdext_rust_init"
 compatibility_minimum = 4.6
 reloadable = true
 
+; Les binaires vivent DANS le projet (`res://`), et non dans `rust/target/`.
+; L'export Godot n'empaquette que ce qui est sous `res://` : avec les chemins
+; d'origine (`res://../rust/target/…`), la lib native tournait en éditeur et
+; disparaissait du build — le jeu exporté démarrait sans BossAI, sans erreur
+; de compilation, juste sans boss.
+;
+; `tools/sync_native_lib.sh` recopie les artefacts de `cargo build` ici. Le
+; dossier `bin/` est ignoré par git : c'est de la sortie de compilation, elle
+; se régénère.
+
 [libraries]
 
-linux.debug.x86_64 =     "res://../rust/target/debug/libcactus_native.so"
-linux.release.x86_64 =   "res://../rust/target/release/libcactus_native.so"
+linux.debug.x86_64 =     "res://addons/cactus_native/bin/libcactus_native.debug.so"
+linux.release.x86_64 =   "res://addons/cactus_native/bin/libcactus_native.so"
 
-windows.debug.x86_64 =   "res://../rust/target/debug/cactus_native.dll"
-windows.release.x86_64 = "res://../rust/target/release/cactus_native.dll"
+windows.debug.x86_64 =   "res://addons/cactus_native/bin/cactus_native.debug.dll"
+windows.release.x86_64 = "res://addons/cactus_native/bin/cactus_native.dll"
 
-macos.debug =            "res://../rust/target/debug/libcactus_native.dylib"
-macos.release =          "res://../rust/target/release/libcactus_native.dylib"
-macos.debug.arm64 =      "res://../rust/target/debug/libcactus_native.dylib"
-macos.release.arm64 =    "res://../rust/target/release/libcactus_native.dylib"
+macos.debug =            "res://addons/cactus_native/bin/libcactus_native.debug.dylib"
+macos.release =          "res://addons/cactus_native/bin/libcactus_native.dylib"
+macos.debug.arm64 =      "res://addons/cactus_native/bin/libcactus_native.debug.dylib"
+macos.release.arm64 =    "res://addons/cactus_native/bin/libcactus_native.dylib"

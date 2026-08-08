@@ -79,3 +79,30 @@ Le plugin est figé en `godot/addons/godot_mcp/` à la version 0.5.0. Pour bumpe
 ## Fallback
 
 Si tomyud1 pose problème (instabilité, bug bloquant, abandon upstream) : bascule sur [`Coding-Solo/godot-mcp`](https://github.com/Coding-Solo/godot-mcp) en moins de 30 min — modifier `.mcp.json`, désactiver le plugin tomyud1, installer Coding-Solo. Les `.tscn` restent éditables manuellement entre temps.
+
+
+---
+
+## L'outillage ne part jamais dans un build (● Opus, tâche #34)
+
+`addons/godot_mcp` ouvre une WebSocket sur `127.0.0.1:6505` et accepte des commandes : lecture de
+l'arbre de scène, capture d'écran, **injection d'entrées**. C'est ce qu'il faut en développement.
+Dans un binaire distribué, c'est une porte.
+
+Deux protections, parce qu'une seule ne suffisait pas.
+
+**L'autoload est un pont, pas le runtime.** `project.godot` déclare `MCPBridge`
+(`autoload/mcp_bridge.gd`), qui n'instancie le vrai runtime que si `OS.has_feature("editor")`. Cette
+fonctionnalité est décidée **au moment de l'export**, pas à l'exécution : impossible de l'activer par
+accident dans un build. Le pont survit aussi à l'absence du dossier `addons/`, ce qui rend
+l'exclusion possible sans casser le démarrage.
+
+**Le build retire physiquement le dossier.** ⚠️ L'`exclude_filter` du preset **ne suffit pas** :
+vérifié en fouillant le `.pck`, les fichiers du plugin y étaient malgré le filtre — le plugin est
+déclaré dans `[editor_plugins]` de `project.godot`, et Godot l'embarque. `tools/build_macos.sh`
+déplace donc le dossier et vide la déclaration le temps de l'export, puis restaure (via un `trap`,
+pour que ça tienne même si l'export échoue).
+
+**Et il le vérifie.** Le script fouille le `.pck` produit : il échoue si `godot_mcp`, `mcp_runtime`
+ou l'URL du serveur y apparaissent — et aussi si `cactus_native`, la caverne, l'antichambre ou une
+nappe audio en sont **absents**, parce qu'un build amputé passerait le premier contrôle sans peine.

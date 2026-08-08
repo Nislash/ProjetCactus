@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bfkjaas2pa62l"
 path.s3tc="res://.godot/imported/run_and_shoot_texture_0.png-2fb4ec93a4b511cfb53d5b5818efef91.s3tc.ctex"
+path.etc2="res://.godot/imported/run_and_shoot_texture_0.png-2fb4ec93a4b511cfb53d5b5818efef91.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/characters/sentinel/animations/run_and_shoot_texture_0.png"
-dest_files=["res://.godot/imported/run_and_shoot_texture_0.png-2fb4ec93a4b511cfb53d5b5818efef91.s3tc.ctex"]
+dest_files=["res://.godot/imported/run_and_shoot_texture_0.png-2fb4ec93a4b511cfb53d5b5818efef91.s3tc.ctex", "res://.godot/imported/run_and_shoot_texture_0.png-2fb4ec93a4b511cfb53d5b5818efef91.etc2.ctex"]
 
 [params]
 

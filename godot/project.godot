@@ -22,7 +22,7 @@ InputRouter="*res://autoload/input_router.gd"
 PlayerManager="*res://autoload/player_manager.gd"
 RunState="*res://autoload/run_state.gd"
 RelicLootTable="*res://autoload/relic_loot_table.gd"
-MCPRuntime="*res://addons/godot_mcp/runtime/mcp_runtime.gd"
+MCPBridge="*res://autoload/mcp_bridge.gd"
 
 [display]
 
@@ -86,5 +86,9 @@ ui_down={
 
 [rendering]
 
+; Requis par l'export macOS, qui refuse de produire un binaire universel ou
+; x86_64 sans ce format. Coût : les textures sont importées dans une variante
+; supplémentaire.
+textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=2
 environment/defaults/default_clear_color=Color(0.06, 0.07, 0.08, 1)

@@ -64,3 +64,25 @@ Le workflow GitHub Actions doit :
 1. `cargo check` (rapide)
 2. `cargo build --release` (lent, parallèle par OS si on cross-compile)
 3. `godot --headless --check-only godot/project.godot`
+
+
+---
+
+## La lib native doit vivre sous `res://` (● Opus, tâche #34)
+
+Le `.gdextension` pointait vers `res://../rust/target/debug/…` — **hors du projet**. Ça fonctionne
+dans l'éditeur, qui lit le disque librement. Mais **l'export Godot n'empaquette que ce qui vit sous
+`res://`** : la bibliothèque disparaissait purement et simplement du build. Le jeu exporté démarrait
+sans `BossAI`, sans erreur de compilation, sans message — juste sans boss.
+
+Les chemins visent maintenant `res://addons/cactus_native/bin/`, et `tools/sync_native_lib.sh` y
+recopie les artefacts de `cargo build`. Le dossier `bin/` est ignoré par git : c'est de la sortie de
+compilation, elle se régénère.
+
+```
+cd rust && cargo build --release
+tools/sync_native_lib.sh release     # ou: debug
+```
+
+`tools/build_macos.sh` enchaîne les deux automatiquement, et son contrôle final échoue si
+`cactus_native` n'est pas dans le `.pck`.
