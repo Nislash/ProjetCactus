@@ -388,16 +388,22 @@ func _build_jump_and_lever(terrain: CavernTerrainData, noise: FastNoiseLite) -> 
 	# tablier horizontal finirait en l'air, vingt mètres au-dessus du sol.
 	var pylon := FragilePylon.new()
 	pylon.name = "PyloneFragile"
-	pylon.fall_direction = Vector2(0.0, 1.0)
+	# IL TOMBE EN DIAGONALE, à trente-cinq degrés du nord.
+	#
+	# Droit au nord, sa pointe arrivait contre la paroi qui remonte derrière la
+	# coulée — relevé à 5,5 m alors que le tablier est à 2,8. Le pont finissait
+	# donc dans un mur. À 35° il traverse la coulée en biais, là où elle est
+	# plus large, et se pose sur une berge à 4,4 m.
+	pylon.fall_direction = Vector2(0.574, 0.819)
 	pylon.height = PYLON_SPAN
 	# Il se couche EN TRAVERS de la coulée, centré sur elle, avec son tablier
 	# quatre-vingt-dix centimètres au-dessus de la nappe : assez pour qu'on
 	# marche au sec, assez peu pour que la lave lèche ses flancs.
-	pylon.lands_at = Vector2(LEVER_SPOT.x, -13.0)
+	pylon.lands_at = Vector2(-51.1, -13.2)
 	pylon.deck_altitude = _lava_surface() + 0.9
 	pylon.bank_altitudes = Vector2(
-		CavernTerrainBuilder.ground_at(terrain, Vector2(LEVER_SPOT.x, -26.0), noise),
-		CavernTerrainBuilder.ground_at(terrain, Vector2(LEVER_SPOT.x, 0.0), noise))
+		CavernTerrainBuilder.ground_at(terrain, Vector2(-58.0, -23.0), noise),
+		CavernTerrainBuilder.ground_at(terrain, Vector2(-44.2, -3.3), noise))
 	_world.add_child(pylon)
 	pylon.global_position = Vector3(LEVER_SPOT.x + 4.0, LEVER_ALTITUDE, LEVER_SPOT.y - 5.0)
 

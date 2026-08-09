@@ -890,6 +890,41 @@ func _test_the_detour_opens_the_tower() -> int:
 				% [i, rock - line[i].y, line[i]])
 			return 1
 
+	# 3ter. AUCUNE POCHE OÙ SE COINCER LE LONG DU SENTIER.
+	#
+	# Signalé en jeu : « bloqué en bas de la rampe, impossible de bouger ». Le
+	# sentier traverse une tranchée ; entre son bord vertical et la paroi de
+	# roche subsistait une fente d'un demi-mètre — assez large pour y tomber,
+	# trop étroite pour s'en sortir.
+	#
+	# Élargir le sentier ne réglait rien : mesuré à 5, 8 puis 11 m, on passait de
+	# trois poches à quatre puis une. La fente se déplace. Ce sont les épaules
+	# qui la comblent, et c'est par la PHYSIQUE qu'on le vérifie — le terrain
+	# seul ne les connaît pas.
+	var half_width: float = trail.width * 0.5
+	for i in line.size():
+		var forward: Vector3 = line[mini(i + 1, line.size() - 1)] - line[maxi(i - 1, 0)]
+		var sideways := Vector3(-forward.z, 0.0, forward.x).normalized()
+		for direction in [-1.0, 1.0]:
+			var beside: Vector3 = line[i] + sideways * direction * (half_width + 0.6)
+			var outer: Vector3 = line[i] + sideways * direction * (half_width + 2.2)
+			# Pas de paroi au-delà : c'est un bord ouvert, on doit pouvoir en
+			# tomber. Une rambarde invisible mentirait sur le danger.
+			if CavernTerrainBuilder.ground_at(_terrain, Vector2(outer.x, outer.z), _noise) \
+					< line[i].y + 0.8:
+				continue
+			var below := PhysicsRayQueryParameters3D.create(
+				beside + Vector3(0.0, 2.0, 0.0), beside - Vector3(0.0, 8.0, 0.0))
+			below.collision_mask = CavernTerrainBuilder.WORLD_COLLISION_LAYER
+			var ground_hit: Dictionary = space.intersect_ray(below)
+			var here: float = -99.0
+			if not ground_hit.is_empty():
+				here = (ground_hit["position"] as Vector3).y
+			if here < line[i].y - 1.0:
+				print("[FAIL] sentier : poche au point %d — sol à %.2f, tablier à %.2f"
+					% [i, here, line[i].y])
+				return 1
+
 	# 4. LE SENTIER DÉBOUCHE SUR LE BELVÉDÈRE. Il doit finir DESSUS, pas à côté
 	#    — un sentier qui s'arrête trois mètres avant est un cul-de-sac.
 	var last: Vector3 = line[line.size() - 1]
