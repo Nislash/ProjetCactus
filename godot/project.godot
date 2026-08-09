@@ -12,7 +12,7 @@ config_version=5
 
 config/name="ProjetCactus"
 config/description="FPS roguelike/puzzle coop local 1-4 joueurs en split-screen, manettes USB uniquement."
-run/main_scene="res://scenes/ui/lobby/lobby.tscn"
+run/main_scene="res://scenes/ui/character_select/character_select.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -22,6 +22,7 @@ InputRouter="*res://autoload/input_router.gd"
 PlayerManager="*res://autoload/player_manager.gd"
 RunState="*res://autoload/run_state.gd"
 RelicLootTable="*res://autoload/relic_loot_table.gd"
+CharacterRoster="*res://autoload/character_roster.gd"
 MCPBridge="*res://autoload/mcp_bridge.gd"
 
 [display]
