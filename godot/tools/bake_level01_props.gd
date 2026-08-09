@@ -25,10 +25,20 @@ extends SceneTree
 ##   godot --headless --path godot --import
 ##   godot --headless --path godot --script tools/bake_level01_props.gd -- --pass=assets
 
-const SRC_DIR := "res://assets/level01/meshes/src/"
-const TEX_DIR := "res://assets/level01/textures/"
-const MESH_DIR := "res://assets/level01/meshes/"
-const MAT_DIR := "res://assets/level01/materials/"
+## Le niveau ciblé. `--level=02` bascule tous les dossiers d'un coup.
+##
+## Le nom du fichier dit encore « level01 » et c'est assumé : le renommer
+## casserait les trois documents qui l'appellent par ce nom, pour un gain nul.
+## C'est le CONTENU qui a cessé d'être spécifique à un niveau.
+var _level: String = "level01"
+
+var _tex_dir: String:
+	get: return "res://assets/%s/textures/" % _level
+var _mesh_dir: String:
+	get: return "res://assets/%s/meshes/" % _level
+var _mat_dir: String:
+	get: return "res://assets/%s/materials/" % _level
+
 const SCENE_DIR := "res://scenes/props/"
 
 ## Budget de résolution par rôle de texture.
@@ -64,6 +74,12 @@ const ASSETS := [
 	{"name": "crystal_monolith_landmark", "src": "src/crystal_monolith_landmark.glb", "hero": true, "emissive": true, "collision": "trimesh"},
 ]
 
+## Les assets du niveau 2. Le levier est vu de PRÈS — on s'en approche pour
+## l'actionner — donc budget hero sur les canaux que l'œil lit.
+const ASSETS_LEVEL02 := [
+	{"name": "forge_lever", "src": "src/forge_lever.glb", "hero": true, "emissive": true, "collision": "convex"},
+]
+
 const SLOTS := {
 	"albedo": BaseMaterial3D.TEXTURE_ALBEDO,
 	"normal": BaseMaterial3D.TEXTURE_NORMAL,
@@ -78,25 +94,28 @@ func _init() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--pass="):
 			mode = arg.trim_prefix("--pass=")
+		elif arg.begins_with("--level="):
+			_level = "level%s" % arg.trim_prefix("--level=")
 
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(TEX_DIR))
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(MAT_DIR))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_tex_dir))
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_mat_dir))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(SCENE_DIR))
 
+	var table: Array = ASSETS_LEVEL02 if _level == "level02" else ASSETS
 	var failures: int = 0
-	for entry in ASSETS:
+	for entry in table:
 		failures += (0 if _bake_one(entry, mode) else 1)
 
 	if failures > 0:
 		push_error("[bake] %d asset(s) en échec" % failures)
 		quit(1)
 		return
-	print("[bake] passe « %s » terminée sur %d assets." % [mode, ASSETS.size()])
+	print("[bake] %s : passe « %s » terminée sur %d assets." % [_level, mode, table.size()])
 	quit(0)
 
 
 func _bake_one(entry: Dictionary, mode: String) -> bool:
-	var source_path: String = MESH_DIR + entry.src
+	var source_path: String = _mesh_dir + entry.src
 	var packed: PackedScene = load(source_path) as PackedScene
 	if packed == null:
 		push_error("[bake] source introuvable : %s" % source_path)
@@ -149,7 +168,7 @@ func _bake_textures(entry: Dictionary, mesh: Mesh) -> bool:
 					maxi(int(round(image.get_height() * ratio)), 1),
 					Image.INTERPOLATE_LANCZOS)
 
-			var out_path: String = "%s%s_%s.png" % [TEX_DIR, entry.name, slot_name]
+			var out_path: String = "%s%s_%s.png" % [_tex_dir, entry.name, slot_name]
 			var error: int = image.save_png(ProjectSettings.globalize_path(out_path))
 			if error != OK:
 				push_error("[bake] échec d'écriture %s (code %d)" % [out_path, error])
@@ -177,7 +196,7 @@ func _bake_asset(entry: Dictionary, source_mesh: Mesh) -> bool:
 	for surface in source_mesh.get_surface_count():
 		mesh.add_surface_from_arrays(
 			Mesh.PRIMITIVE_TRIANGLES, source_mesh.surface_get_arrays(surface))
-	var mesh_path: String = "%s%s.res" % [MESH_DIR, entry.name]
+	var mesh_path: String = "%s%s.res" % [_mesh_dir, entry.name]
 	if ResourceSaver.save(mesh, mesh_path) != OK:
 		push_error("[bake] échec d'écriture %s" % mesh_path)
 		return false
@@ -188,7 +207,7 @@ func _bake_asset(entry: Dictionary, source_mesh: Mesh) -> bool:
 		# ni lecture de texture au rendu.
 		if slot_name == "emission" and not entry.emissive:
 			continue
-		var texture_path: String = "%s%s_%s.png" % [TEX_DIR, entry.name, slot_name]
+		var texture_path: String = "%s%s_%s.png" % [_tex_dir, entry.name, slot_name]
 		if not ResourceLoader.exists(texture_path):
 			continue
 		var texture: Texture2D = load(texture_path) as Texture2D
@@ -208,7 +227,7 @@ func _bake_asset(entry: Dictionary, source_mesh: Mesh) -> bool:
 				# cristaux qui guident dans le noir (cf topographie §5).
 				material.emission_energy_multiplier = 1.6
 
-	var material_path: String = "%s%s.tres" % [MAT_DIR, entry.name]
+	var material_path: String = "%s%s.tres" % [_mat_dir, entry.name]
 	if ResourceSaver.save(material, material_path) != OK:
 		push_error("[bake] échec d'écriture %s" % material_path)
 		return false

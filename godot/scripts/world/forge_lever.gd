@@ -22,7 +22,15 @@ extends Interactable
 
 signal pulled()
 
-const HANDLE_IDLE := Color(0.62, 0.16, 0.11)
+## Le maillage sculpté (Meshy, cf `assets/level02/assets_manifest.yaml`).
+const MESH_PATH := "res://assets/level02/meshes/forge_lever.res"
+const MATERIAL_PATH := "res://assets/level02/materials/forge_lever.tres"
+
+## Hauteur voulue en jeu, en mètres. Le maillage arrive à une échelle que Meshy
+## estime lui-même ; on le remet à la taille du niveau plutôt que de faire
+## confiance à cette estimation.
+const HEIGHT: float = 2.6
+
 const HANDLE_LIVE := Color(1.000, 0.478, 0.184)
 const STONE := Color(0.058, 0.049, 0.053)
 
@@ -50,12 +58,47 @@ func _build() -> void:
 	shape.position = Vector3(0.0, 1.6, 0.0)
 	add_child(shape)
 
+	# LE LEVIER SCULPTÉ.
+	#
+	# Il bascule TOUT ENTIER, socle compris, et c'est un compromis assumé : le
+	# maillage vient d'une génération, ses pièces ne sont pas séparées, et rien
+	# ne dit où finit la pierre et où commence le fer. Faire pivoter l'ensemble
+	# de quelques degrés se lit comme un mécanisme qui joue dans son logement ;
+	# tenter d'isoler la manette donnerait une découpe fausse.
+	_handle = Node3D.new()
+	_handle.name = "Levier"
+	add_child(_handle)
+
+	var mesh: Mesh = load(MESH_PATH) as Mesh
+	if mesh == null:
+		push_warning("ForgeLever : maillage absent — repli sur des primitives.")
+		_build_fallback()
+		return
+
+	var body := MeshInstance3D.new()
+	body.name = "Mesh"
+	body.mesh = mesh
+	var material: Material = load(MATERIAL_PATH) as Material
+	if material != null:
+		body.material_override = material
+	_handle.add_child(body)
+
+	# Remis à l'échelle du niveau depuis sa taille réelle : un asset généré
+	# arrive à la taille que le générateur a cru bon de lui donner.
+	var extent: Vector3 = mesh.get_aabb().size
+	if extent.y > 0.01:
+		_handle.scale = Vector3.ONE * (HEIGHT / extent.y)
+
+	_add_glow()
+
+
+## Repli si l'asset manque : le levier doit rester actionnable, sinon le niveau
+## devient infinissable pour une texture absente.
+func _build_fallback() -> void:
 	var stone := StandardMaterial3D.new()
 	stone.albedo_color = STONE
 	stone.roughness = 0.9
 
-	# LE SOCLE. Il porte le levier et, surtout, il le SIGNALE : une manette
-	# plantée dans le sol nu se confondrait avec un caillou.
 	var base := MeshInstance3D.new()
 	base.name = "Socle"
 	var base_mesh := CylinderMesh.new()
@@ -66,39 +109,31 @@ func _build() -> void:
 	base.mesh = base_mesh
 	base.material_override = stone
 	base.position = Vector3(0.0, 0.8, 0.0)
-	add_child(base)
+	_handle.add_child(base)
 
-	_handle = Node3D.new()
-	_handle.name = "Manette"
-	_handle.position = Vector3(0.0, 1.6, 0.0)
-	add_child(_handle)
+	var arm := MeshInstance3D.new()
+	arm.name = "Bras"
+	var arm_mesh := BoxMesh.new()
+	arm_mesh.size = Vector3(0.22, 2.2, 0.22)
+	arm.mesh = arm_mesh
+	arm.material_override = stone
+	arm.position = Vector3(0.0, 2.2, 0.0)
+	_handle.add_child(arm)
 
-	var lever := MeshInstance3D.new()
-	lever.name = "Bras"
-	var lever_mesh := BoxMesh.new()
-	lever_mesh.size = Vector3(0.22, 2.2, 0.22)
-	lever.mesh = lever_mesh
-	var metal := StandardMaterial3D.new()
-	metal.albedo_color = HANDLE_IDLE
-	metal.emission_enabled = true
-	metal.emission = HANDLE_IDLE
-	metal.emission_energy_multiplier = 1.1
-	metal.metallic = 0.5
-	metal.roughness = 0.4
-	lever.material_override = metal
-	lever.position = Vector3(0.0, 1.1, 0.0)
-	_handle.add_child(lever)
-	# Incliné vers l'arrière au repos : une manette verticale ne dit pas dans
-	# quel sens elle va basculer.
-	_handle.rotation.x = deg_to_rad(-24.0)
+	_add_glow()
 
+
+## LA LUEUR. Elle n'est pas décorative : le levier est au fond d'un palier
+## sombre, et sans elle on ne le distingue pas de la roche. Un objet qu'on doit
+## chercher au pixel près n'est pas caché, il est manquant.
+func _add_glow() -> void:
 	_glow = OmniLight3D.new()
 	_glow.name = "Lueur"
 	_glow.light_color = HANDLE_LIVE
-	_glow.light_energy = 1.4
-	_glow.omni_range = 9.0
+	_glow.light_energy = 2.2
+	_glow.omni_range = 12.0
 	_glow.shadow_enabled = false
-	_glow.position = Vector3(0.0, 2.4, 0.0)
+	_glow.position = Vector3(0.0, 1.8, 0.0)
 	add_child(_glow)
 
 
@@ -112,11 +147,13 @@ func try_interact(_by_player: Node) -> bool:
 	_pulled = true
 
 	var tween: Tween = create_tween()
-	tween.tween_property(_handle, "rotation:x", deg_to_rad(52.0), 0.55) \
+	# Quinze degrés, pas cinquante : c'est l'ensemble du bloc qui pivote, et
+	# une bascule ample donnerait un socle de pierre qui se couche.
+	tween.tween_property(_handle, "rotation:x", deg_to_rad(15.0), 0.55) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	if _glow != null:
-		tween.parallel().tween_property(_glow, "light_energy", 4.5, 0.35)
-		tween.tween_property(_glow, "light_energy", 1.0, 1.2)
+		tween.parallel().tween_property(_glow, "light_energy", 6.0, 0.35)
+		tween.tween_property(_glow, "light_energy", 1.4, 1.2)
 	tween.tween_callback(func() -> void: pulled.emit())
 	print("[ForgeLever] levier tiré — l'escalier sort de la tour.")
 	return true

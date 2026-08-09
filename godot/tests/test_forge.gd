@@ -795,43 +795,101 @@ func _test_you_can_go_around_and_under_the_bridge() -> int:
 
 ## LE DÉTOUR MÈNE QUELQUE PART.
 ##
-## La chaîne n'a de sens que bout à bout : le levier ouvre une rampe qu'on ne
-## peut pas encore atteindre, et le pylône ne fabrique un chemin que pour
-## revenir de là où le levier se trouve. Tester chaque pièce séparément
-## laisserait passer le seul défaut qui compte — qu'elles ne s'enchaînent pas.
+## La chaîne n'a de sens que bout à bout : le sentier ne sert que parce qu'il
+## finit sur un saut, le levier ouvre une rampe qu'on ne peut pas encore
+## atteindre, et le pylône ne fabrique un chemin que pour revenir de là où le
+## levier se trouve. Tester chaque pièce séparément laisserait passer le seul
+## défaut qui compte — qu'elles ne s'enchaînent pas.
 func _test_the_detour_opens_the_tower() -> int:
+	var trail: MountainTrail = _world.get_node_or_null("SentierDeLaMontagne") as MountainTrail
+	var belvedere: ForgeLedge = _world.get_node_or_null("BelvedereDeLaCascade") as ForgeLedge
+	var perch: ForgeLedge = _world.get_node_or_null("PalierDuLevier") as ForgeLedge
 	var lever: ForgeLever = _world.get_node_or_null("LevierCache") as ForgeLever
 	var ramp: KeepSpiralRamp = _world.get_node_or_null("RampeDuDonjon") as KeepSpiralRamp
 	var pylon: FragilePylon = _world.get_node_or_null("PyloneFragile") as FragilePylon
-	var ledge: ForgeLedge = _world.get_node_or_null("PalierDeLaCascade") as ForgeLedge
-	if lever == null or ramp == null or pylon == null or ledge == null:
-		print("[FAIL] détour : pièce manquante (levier/rampe/pylône/palier)")
+	if trail == null or belvedere == null or perch == null or lever == null \
+			or ramp == null or pylon == null:
+		print("[FAIL] détour : pièce manquante (sentier/belvédère/palier/levier/rampe/pylône)")
 		return 1
 
-	# LE SAUT doit être un saut : ni un pas, ni un gouffre. On mesure l'écart
-	# réel entre le bord sec de la berge et le bord du palier.
-	var lava: CavernLake = _terrain.lake
-	var bank_edge: float = 0.0
-	var x: float = -40.0
-	while x > -80.0:
-		if _ground(Vector2(x, ledge.centre.y)) < lava.surface_altitude:
-			bank_edge = x
-			break
-		x -= 0.5
-	var ledge_edge: float = ledge.centre.x + ledge.half_extent.x
-	var gap: float = bank_edge - ledge_edge
-	if gap < 2.5:
-		print("[FAIL] saut : %.1f m — on y accède en marchant, le pylône ne sert à rien" % gap)
-		return 1
-	if gap > 7.0:
-		print("[FAIL] saut : %.1f m — infranchissable" % gap)
+	# 1. LE SENTIER se monte. Une pente au-delà de ce que le joueur gravit en
+	#    ferait un décor, et rien dans le jeu ne le dirait.
+	var steepest: float = trail.steepest_slope()
+	if steepest > MountainTrail.MAX_SLOPE_DEGREES:
+		print("[FAIL] sentier : %.1f° au plus raide, au-delà de %.0f°"
+			% [steepest, MountainTrail.MAX_SLOPE_DEGREES])
 		return 1
 
-	# La rampe est CACHÉE tant que le levier n'a pas été tiré.
+	# 2. IL PART DERRIÈRE LE POINT D'APPARITION. C'est ce qui en fait une
+	#    découverte : un sentier devant soi est un couloir.
+	var spawn: Node3D = _world.get_node_or_null("PlayerSpawnPoints/Spawn0") as Node3D
+	var head: Vector3 = trail.waypoints[0]
+	if head.z < spawn.global_position.z:
+		print("[FAIL] sentier : il démarre devant le spawn (z=%.0f contre %.0f)"
+			% [head.z, spawn.global_position.z])
+		return 1
+
+	# 3. ON PEUT Y POSER LES PIEDS, SUR TOUTE SA LONGUEUR.
+	#
+	# On l'éprouve par la PHYSIQUE et non par le navmesh, et c'est un choix.
+	# Les joueurs marchent par collision ; le navmesh ne sert qu'aux ennemis, et
+	# il n'y en a pas là-haut. Or ce sentier se cuit en îlot — les blocs posés
+	# sur le terrain forment une surface que Recast ne raccorde pas à celle du
+	# sol —, ce qui n'empêche personne de le gravir mais ferait échouer un test
+	# de navigation. Mesurer ce qu'on ne joue pas est le meilleur moyen de
+	# corriger ce qui n'était pas cassé.
+	var space: PhysicsDirectSpaceState3D = _world.get_world_3d().direct_space_state
+	var line: PackedVector3Array = trail.call("_smoothed")
+	for i in line.size():
+		var above: Vector3 = line[i] + Vector3(0.0, 2.0, 0.0)
+		var query := PhysicsRayQueryParameters3D.create(above,
+			line[i] - Vector3(0.0, 1.2, 0.0))
+		query.collision_mask = CavernTerrainBuilder.WORLD_COLLISION_LAYER
+		var hit: Dictionary = space.intersect_ray(query)
+		if hit.is_empty():
+			print("[FAIL] sentier : rien sous les pieds au point %d %s" % [i, line[i]])
+			return 1
+		var normal: Vector3 = hit["normal"]
+		var tilt: float = rad_to_deg(acos(clampf(normal.dot(Vector3.UP), -1.0, 1.0)))
+		if tilt > 45.0:
+			print("[FAIL] sentier : %.0f° sous les pieds au point %d — on y glisse"
+				% [tilt, i])
+			return 1
+
+	# 3. LE SAUT. Ni un pas, ni un gouffre — et vers le BAS, sinon on repart en
+	#    sens inverse et le pylône ne sert à rien.
+	var gap: float = (perch.centre.y + perch.half_extent.y) \
+		- (belvedere.centre.y - belvedere.half_extent.y)
+	gap = absf(gap)
+	if gap < 3.0 or gap > 7.5:
+		print("[FAIL] saut : %.1f m — hors de ce qu'on franchit d'un élan" % gap)
+		return 1
+	var fall: float = belvedere.altitude - perch.altitude
+	if fall < 2.0:
+		print("[FAIL] saut : %.1f m de dénivelé — on pourrait revenir en sautant" % fall)
+		return 1
+
+	var region: NavigationRegion3D = _world.get_node_or_null("Navigation") as NavigationRegion3D
+	var map: RID = region.get_navigation_map()
+
+	# 4. LE SENTIER DÉBOUCHE SUR LE BELVÉDÈRE. Il doit finir DESSUS, pas à côté
+	#    — un sentier qui s'arrête trois mètres avant est un cul-de-sac.
+	var last: Vector3 = line[line.size() - 1]
+	var belvedere_point := Vector3(belvedere.centre.x, belvedere.altitude, belvedere.centre.y)
+	if absf(last.x - belvedere_point.x) > belvedere.half_extent.x \
+			or absf(last.z - belvedere_point.z) > belvedere.half_extent.y \
+			or absf(last.y - belvedere_point.y) > 0.6:
+		print("[FAIL] sentier : il finit en %s, le belvédère est en %s"
+			% [last, belvedere_point])
+		return 1
+
+	# 5. LE PALIER EST ISOLÉ : rien ne le touche, seul le saut y mène.
+	var perch_point := Vector3(perch.centre.x, perch.altitude, perch.centre.y)
+
+	# 6. LA RAMPE est cachée tant que le levier n'a pas été tiré.
 	if ramp.is_deployed():
 		print("[FAIL] rampe : déjà déployée avant le levier")
 		return 1
-
 	if not lever.try_interact(null):
 		print("[FAIL] levier : il ne répond pas")
 		return 1
@@ -839,13 +897,8 @@ func _test_the_detour_opens_the_tower() -> int:
 		print("[FAIL] pylône : il ne tombe pas")
 		return 1
 
-	# On attend en TEMPS RÉEL, pas en frames.
-	#
-	# La première version comptait des frames en les supposant à 1/60 s. En
-	# headless elles défilent bien plus vite : la boucle croyait avoir patienté
-	# neuf secondes après quelques dixièmes, et concluait que le levier n'avait
-	# rien déployé. Les `SceneTreeTimer` du déploiement, eux, sont bien en temps
-	# réel — c'est donc à cette horloge-là qu'il faut se fier.
+	# On attend en TEMPS RÉEL, pas en frames : en headless elles défilent bien
+	# plus vite que 1/60 s, et compter des frames revenait à ne pas attendre.
 	var started: int = Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started < 12000 \
 			and not (ramp.is_deployed() and pylon.has_fallen()):
@@ -857,19 +910,17 @@ func _test_the_detour_opens_the_tower() -> int:
 		print("[FAIL] pylône : il n'est pas tombé")
 		return 1
 
-	# LE PONT DE FORTUNE doit franchir la brèche : sinon on reste bloqué.
-	var deck: StaticBody3D = pylon.get_node_or_null("ColTablierPylone") as StaticBody3D
-	if deck == null:
+	# 7. LE PYLÔNE COUCHÉ SE DESCEND. Il tombe d'un palier haut vers une berge
+	#    basse : c'est une rampe, et une rampe trop raide est un précipice.
+	var slope: float = pylon.resting_slope_degrees()
+	if slope > 45.0:
+		print("[FAIL] pylône : %.0f° une fois couché — indescendable" % slope)
+		return 1
+	if pylon.get_node_or_null("ColTablierPylone") == null:
 		print("[FAIL] pylône : aucun tablier après la chute")
 		return 1
-	var reach: float = deck.global_position.x + pylon.height * 0.5
-	if reach < bank_edge:
-		print("[FAIL] pylône : il s'arrête à X=%.0f, la berge est à X=%.0f" % [reach, bank_edge])
-		return 1
 
-	# ET LA RAMPE MÈNE AU BOSS. C'est la promesse du détour tout entier.
-	var region: NavigationRegion3D = _world.get_node_or_null("Navigation") as NavigationRegion3D
-	var map: RID = region.get_navigation_map()
+	# 8. ET LA RAMPE MÈNE AU BOSS. C'est la promesse du détour tout entier.
 	await process_frame
 	await process_frame
 	var top: Vector3 = ramp.get_summit()
@@ -884,8 +935,8 @@ func _test_the_detour_opens_the_tower() -> int:
 		print("[FAIL] rampe : aucun chemin du sommet vers l'arène")
 		return 1
 
-	print("[OK] the_detour_opens_the_tower (saut de %.1f m, pylône jusqu'à X=%.0f, sommet relié à l'arène)"
-		% [gap, reach])
+	print("[OK] the_detour_opens_the_tower (sentier %.0f°, saut de %.1f m en descendant de %.0f m, pylône à %.0f°)"
+		% [steepest, gap, fall, slope])
 	return 0
 
 
