@@ -72,8 +72,30 @@ func _ready() -> void:
 
 	_apply_theme()
 	_populate_level_dropdown()
-	_set_phase(Phase.JOIN)
+	_adopt_existing_players()
 	_refresh_status()
+
+
+## RÉCUPÈRE LES JOUEURS DÉJÀ INSCRITS, au lieu de repartir de zéro.
+##
+## Signalé en jeu : après un game over, le lobby revenait « incomplet » et ne
+## permettait plus de relancer.
+##
+## La cause : les manettes restent enregistrées d'une run à l'autre — c'est
+## voulu, personne n'a envie de refaire l'appel après chaque mort. Mais le
+## lobby forçait la phase JOIN à son `_ready` et n'attendait plus que le signal
+## `player_joined` pour en sortir. Ce signal ne pouvait plus venir : les joueurs
+## étaient déjà là, et `poll_lobby_joins` ignore les manettes connues. On
+## restait donc bloqué sur un écran d'attente, slots vides, bouton « Lancer »
+## invisible, sans aucun moyen d'en sortir.
+##
+## Le lobby lit maintenant l'état plutôt que de l'attendre.
+func _adopt_existing_players() -> void:
+	var joined: Array[int] = PlayerManager.get_active_player_ids()
+	for player_id in joined:
+		if player_id < _slots.size():
+			_slots[player_id].set_joined(PlayerManager.get_device_id(player_id))
+	_set_phase(Phase.MENU if not joined.is_empty() else Phase.JOIN)
 
 
 ## Habille l'écran. Il était en boutons Godot par défaut : gris, arrondis,

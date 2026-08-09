@@ -40,4 +40,10 @@ func _input(event: InputEvent) -> void:
 		_waiting_for_input = false
 		# Restaure le time_scale au cas où le boss était en slow-mo.
 		Engine.time_scale = 1.0
+		# ET ON CLÔT LA RUN. Sans ça, classes, armes et XP de la partie
+		# perdue survivaient à l'écran de mort et repartaient dans la
+		# suivante — ce qui contredit la règle du jeu : rien ne persiste
+		# entre deux runs.
+		RunState.end_run(RunState.REASON_GAME_OVER)
+		RunState.reset()
 		get_tree().change_scene_to_file(LOBBY_SCENE)
