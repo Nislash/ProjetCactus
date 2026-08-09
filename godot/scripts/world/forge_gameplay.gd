@@ -98,11 +98,18 @@ const LEDGE_ALTITUDE: float = 29.0
 const LEVER_SPOT := Vector2(-58.0, -23.0)
 const LEVER_ALTITUDE: float = 25.0
 
-## LE PYLÔNE. Il bascule vers le cirque et retombe en RAMPE : sa base reste en
-## haut, sa pointe touche la berge d'en bas. Trente-huit mètres, pour rejoindre
-## un sol vingt mètres plus bas sans dépasser la pente descendable.
-const PYLON_SPAN: float = 38.0
-const PYLON_LANDING: float = 7.0
+## LE PYLÔNE. Il bascule depuis le palier et sa pointe va TREMPER DANS LA
+## COULÉE, vingt-trois mètres plus bas.
+##
+## Il ne se pose pas sur une berge : il se couche en travers de la lave, à demi
+## immergé. On saute dessus depuis le palier, on marche le long du fût pendant
+## qu'il baigne, et on ressort sur l'autre rive. C'est le seul endroit du niveau
+## où l'on traverse la lave au ras — un pont de fortune qui n'en est pas un.
+##
+## Sa longueur n'est pas décorative : vingt-quatre mètres, c'est la largeur de
+## la coulée à cette latitude plus ce qu'il faut pour poser ses deux bouts sur
+## la roche. Plus court, il finirait dans la lave et le retour n'existerait pas.
+const PYLON_SPAN: float = 24.0
 
 
 func _ready() -> void:
@@ -280,7 +287,7 @@ func _build_twist_chain() -> void:
 	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
 
 	_build_mountain_trail(terrain, noise)
-	_build_jump_and_lever()
+	_build_jump_and_lever(terrain, noise)
 	_build_keep_ramp(terrain, noise)
 
 
@@ -356,7 +363,7 @@ func _build_mountain_trail(terrain: CavernTerrainData, noise: FastNoiseLite) -> 
 ## donc en descendant, ce qui se franchit, et on ne peut pas repartir en sens
 ## inverse. C'est ça qui rend le pylône nécessaire plutôt que décoratif — un
 ## saut symétrique en ferait un ornement.
-func _build_jump_and_lever() -> void:
+func _build_jump_and_lever(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
 	var belvedere := ForgeLedge.new()
 	belvedere.name = "BelvedereDeLaCascade"
 	belvedere.centre = BELVEDERE
@@ -383,7 +390,14 @@ func _build_jump_and_lever() -> void:
 	pylon.name = "PyloneFragile"
 	pylon.fall_direction = Vector2(0.0, 1.0)
 	pylon.height = PYLON_SPAN
-	pylon.deck_altitude = PYLON_LANDING
+	# Il se couche EN TRAVERS de la coulée, centré sur elle, avec son tablier
+	# quatre-vingt-dix centimètres au-dessus de la nappe : assez pour qu'on
+	# marche au sec, assez peu pour que la lave lèche ses flancs.
+	pylon.lands_at = Vector2(LEVER_SPOT.x, -13.0)
+	pylon.deck_altitude = _lava_surface() + 0.9
+	pylon.bank_altitudes = Vector2(
+		CavernTerrainBuilder.ground_at(terrain, Vector2(LEVER_SPOT.x, -26.0), noise),
+		CavernTerrainBuilder.ground_at(terrain, Vector2(LEVER_SPOT.x, 0.0), noise))
 	_world.add_child(pylon)
 	pylon.global_position = Vector3(LEVER_SPOT.x + 4.0, LEVER_ALTITUDE, LEVER_SPOT.y - 5.0)
 
@@ -391,6 +405,16 @@ func _build_jump_and_lever() -> void:
 		var ramp: KeepSpiralRamp = _world.get_node_or_null("RampeDuDonjon") as KeepSpiralRamp
 		if ramp != null:
 			ramp.deploy())
+
+
+## L'altitude de la coulée. Lue sur la nappe plutôt que recopiée : elle a déjà
+## bougé deux fois, et un chiffre en double finit toujours par diverger.
+func _lava_surface() -> float:
+	var terrain: CavernTerrainData = load(
+		"res://data/levels/level02_forge_terrain.tres") as CavernTerrainData
+	if terrain == null or terrain.lake == null:
+		return 1.9
+	return terrain.lake.surface_altitude
 
 
 func _build_keep_ramp(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
@@ -408,9 +432,8 @@ func _build_keep_ramp(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
 	ramp.keep_radius = _castle.keep_width * 0.52 + 1.2
 	ramp.bottom_altitude = _castle.get_threshold_altitude()
 	ramp.top_altitude = _castle.get_threshold_altitude() + _castle.keep_height * 0.92
-	ramp.descent_target = Vector3(0.0,
-		CavernTerrainBuilder.ground_at(terrain, Vector2(0.0, -66.0), noise) + 1.0,
-		-66.0)
+	ramp.inner_radius = _castle.keep_width * 0.46 - 3.4
+	ramp.hall_altitude = _castle.get_hall_altitude()
 	_world.add_child(ramp)
 
 

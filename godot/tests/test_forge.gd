@@ -928,15 +928,46 @@ func _test_the_detour_opens_the_tower() -> int:
 		print("[FAIL] pylône : il n'est pas tombé")
 		return 1
 
-	# 7. LE PYLÔNE COUCHÉ SE DESCEND. Il tombe d'un palier haut vers une berge
-	#    basse : c'est une rampe, et une rampe trop raide est un précipice.
-	var slope: float = pylon.resting_slope_degrees()
-	if slope > 45.0:
-		print("[FAIL] pylône : %.0f° une fois couché — indescendable" % slope)
-		return 1
-	if pylon.get_node_or_null("ColTablierPylone") == null:
+	# 7. LE PYLÔNE COUCHÉ FRANCHIT LA COULÉE, ET ON PEUT Y MONTER.
+	#
+	# Les deux moitiés comptent. Un tablier qui n'atteint pas les deux rives
+	# laisse le joueur bloqué ; un tablier qu'on ne peut pas escalader aussi, et
+	# celui-là ne se voit pas — on croit avoir résolu le passage jusqu'à buter
+	# sur un ressaut d'un mètre.
+	var deck: StaticBody3D = pylon.get_node_or_null("ColTablierPylone") as StaticBody3D
+	if deck == null:
 		print("[FAIL] pylône : aucun tablier après la chute")
 		return 1
+
+	var lava: CavernLake = _terrain.lake
+	var along := Vector3(pylon.fall_direction.x, 0.0, pylon.fall_direction.y).normalized()
+	var near_tip: Vector3 = deck.global_position - along * pylon.height * 0.5
+	var far_tip: Vector3 = deck.global_position + along * pylon.height * 0.5
+	if _in_lava(Vector2(near_tip.x, near_tip.z), lava) \
+			or _in_lava(Vector2(far_tip.x, far_tip.z), lava):
+		print("[FAIL] pylône : un bout retombe dans la lave — on ne peut pas en sortir")
+		return 1
+	var crosses: bool = false
+	for i in 20:
+		if _in_lava(Vector2(near_tip.lerp(far_tip, float(i) / 19.0).x,
+				near_tip.lerp(far_tip, float(i) / 19.0).z), lava):
+			crosses = true
+			break
+	if not crosses:
+		print("[FAIL] pylône : il ne franchit pas la coulée")
+		return 1
+
+	# Le tablier doit être AU-DESSUS de la nappe, sinon on marche dans la lave.
+	if deck.global_position.y < lava.surface_altitude + 0.3:
+		print("[FAIL] pylône : tablier à %.2f m, la nappe est à %.2f m"
+			% [deck.global_position.y, lava.surface_altitude])
+		return 1
+
+	# Et ses deux rampes d'accès existent : c'est par elles qu'on y monte.
+	for side in 2:
+		if pylon.get_node_or_null("RampePylone_%d" % side) == null:
+			print("[FAIL] pylône : rampe d'accès %d absente — on ne peut pas monter dessus" % side)
+			return 1
 
 	# 8. ET LA RAMPE MÈNE AU BOSS. C'est la promesse du détour tout entier.
 	await process_frame
@@ -953,8 +984,8 @@ func _test_the_detour_opens_the_tower() -> int:
 		print("[FAIL] rampe : aucun chemin du sommet vers l'arène")
 		return 1
 
-	print("[OK] the_detour_opens_the_tower (sentier %.0f°, saut de %.1f m en descendant de %.0f m, pylône à %.0f°)"
-		% [steepest, gap, fall, slope])
+	print("[OK] the_detour_opens_the_tower (sentier %.0f°, saut de %.1f m en descendant de %.0f m, pylône de %.0f m en travers de la coulée)"
+		% [steepest, gap, fall, pylon.height])
 	return 0
 
 

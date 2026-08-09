@@ -44,8 +44,11 @@ signal deployed()
 ## l'œil sur un rayon de douze mètres, et lisses pour le navmesh.
 @export var segments_per_turn: int = 24
 
-## Où la rampe redescend, côté arène.
-@export var descent_target: Vector3 = Vector3(0.0, 6.0, -66.0)
+## Rayon de la spirale intérieure. Contre la paroi, en laissant le centre libre.
+@export var inner_radius: float = 6.8
+
+## Altitude du sol de la salle, où la descente débouche.
+@export var hall_altitude: float = 0.0
 
 const STONE_PATH := "res://assets/level02/materials/forge_masonry.tres"
 const EDGE := Color(1.000, 0.478, 0.184)
@@ -95,14 +98,26 @@ func _build() -> void:
 	_slab(stone, crown + Vector3(0.0, 0.0, 0.0),
 		Vector3(ramp_width * 2.6, 0.5, ramp_width * 2.6), "Palier")
 
-	# LA DESCENTE vers l'arène. Une volée droite, à l'opposé du cirque : on
-	# tourne le dos à ce qu'on connaît, ce qui est exactement le sentiment
-	# qu'on veut avant un boss.
-	var descent_steps: int = 16
-	for i in descent_steps:
-		var t0: float = float(i) / float(descent_steps)
-		var t1: float = float(i + 1) / float(descent_steps)
-		_span(stone, crown.lerp(descent_target, t0), crown.lerp(descent_target, t1),
+	# LA DESCENTE, à l'intérieur du donjon.
+	#
+	# Elle repart du sommet vers le CENTRE de la tour, puis s'enroule contre la
+	# paroi intérieure jusqu'à la salle. Le sens de rotation est inversé : on
+	# est monté dans un sens, on redescend dans l'autre, et ce simple
+	# changement suffit à dire qu'on n'est plus dehors.
+	var floor_altitude: float = hall_altitude if hall_altitude > 0.0 else bottom_altitude
+	var entry: Vector3 = _helix(inner_radius, turns, top_altitude - 1.0)
+	_span(stone, crown, entry, "Bréche")
+
+	var drop_turns: float = 2.0
+	var drop_steps: int = int(float(segments_per_turn) * drop_turns)
+	for i in drop_steps:
+		var t0: float = float(i) / float(drop_steps)
+		var t1: float = float(i + 1) / float(drop_steps)
+		_span(stone,
+			_helix(inner_radius, turns - t0 * drop_turns,
+				lerpf(top_altitude - 1.0, floor_altitude, t0)),
+			_helix(inner_radius, turns - t1 * drop_turns,
+				lerpf(top_altitude - 1.0, floor_altitude, t1)),
 			"Descente_%d" % i)
 
 
@@ -219,6 +234,11 @@ func _set_visible(state: bool) -> void:
 			# mais solide serait un mur en plein ciel.
 			body.process_mode = Node.PROCESS_MODE_INHERIT if state \
 				else Node.PROCESS_MODE_DISABLED
+
+
+## L'azimut du sommet, en tours. C'est là que la muraille doit être percée pour
+## qu'on entre dans la tour : le château le lit pour savoir quel pan raccourcir.
+const SUMMIT_TURNS: float = 2.0
 
 
 ## Le sommet RÉEL de la rampe — sur l'hélice, pas sur l'axe de la tour.

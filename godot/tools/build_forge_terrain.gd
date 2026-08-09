@@ -137,6 +137,18 @@ func _build_chambers() -> Array[CavernChamber]:
 	chambers.append(_room("A1 Arène du Golem", Vector2(0.0, -96.0), Vector2(38.0, 34.0), 0.0, 15.0, 12.0))
 	# Le tunnel qui la relie au cirque, sous le château. Étroit et long : le
 	# passage de l'un à l'autre doit se sentir.
+	# LA COUR DU CHÂTEAU. Elle dégage la roche autour du donjon.
+	#
+	# La chambre du Puits s'arrête en Z = -52 ; au-delà le rempart remonte à
+	# seize mètres. Or la rampe s'enroule sur un rayon de 14 m autour d'un
+	# donjon posé en Z = -46 : son arc sud passait donc DANS la montagne.
+	# Signalé en jeu, et mesuré — trois points de l'hélice enfouis, jusqu'à
+	# 5,9 m dedans.
+	#
+	# On dégage plutôt que de rétrécir la rampe : une hélice plus serrée
+	# grimperait plus raide, et le tour du donjon est ce qui la rend lisible
+	# depuis le cirque.
+	chambers.append(_room("A2 Cour du Château", Vector2(0.0, -50.0), Vector2(22.0, 20.0), 0.0, 16.0, 11.0))
 	chambers.append(_corridor("G4 Sous le Château", Vector2(0.0, -50.0), Vector2(0.0, -70.0), 5.0, 9.0, 5.0))
 
 	return chambers

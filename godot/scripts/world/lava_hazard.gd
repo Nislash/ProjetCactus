@@ -94,6 +94,18 @@ func _touch(body: Node3D) -> void:
 	if not _inside_lava(Vector2(body.global_position.x, body.global_position.z)):
 		return
 
+	# ET SURTOUT : on ne brûle pas si l'on a quelque chose sous les pieds.
+	#
+	# Le pylône abattu se couche EN TRAVERS de la coulée, à demi immergé : son
+	# tablier est quarante centimètres sous la surface. Sans cette exception, le
+	# joueur qui le traverse mourrait au premier pas, et tout le détour
+	# s'arrêterait là.
+	#
+	# C'est la bonne règle, pas un rustine : ce qui tue, c'est de TOMBER dedans,
+	# pas de passer au-dessus. Un pont de pierre à fleur de lave reste un pont.
+	if _standing_on_something(body):
+		return
+
 	_burning[body] = true
 	_eject(body)
 	# La brûlure AVANT la mort : elle ne changera rien à l'issue, mais elle
@@ -127,6 +139,27 @@ func _eject(body: Node3D) -> void:
 	var character: CharacterBody3D = body as CharacterBody3D
 	if character != null:
 		character.velocity = Vector3.ZERO
+
+
+## Y a-t-il un sol solide juste sous ce corps ?
+##
+## On tire vers le bas depuis les hanches. La portée est courte — un mètre
+## quatre-vingts — pour ne répondre oui que si l'on est réellement POSÉ sur
+## quelque chose, pas si l'on chute au-dessus d'une passerelle.
+func _standing_on_something(body: Node3D) -> bool:
+	var space: PhysicsDirectSpaceState3D = body.get_world_3d().direct_space_state
+	var from_point: Vector3 = body.global_position + Vector3(0.0, 0.9, 0.0)
+	var query := PhysicsRayQueryParameters3D.create(from_point,
+		from_point - Vector3(0.0, 1.8, 0.0))
+	query.collision_mask = CavernTerrainBuilder.WORLD_COLLISION_LAYER
+	var hit: Dictionary = space.intersect_ray(query)
+	if hit.is_empty():
+		return false
+	# Le lit de la coulée compte aussi comme un sol : il faut donc exiger que
+	# la surface touchée soit AU-DESSUS du fond, sinon marcher au fond de la
+	# lave deviendrait sans danger.
+	var surface: float = (hit["position"] as Vector3).y
+	return surface > _lake.surface_altitude - 1.2
 
 
 func _inside_lava(at: Vector2) -> bool:

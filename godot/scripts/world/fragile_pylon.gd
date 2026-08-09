@@ -32,12 +32,24 @@ signal fell()
 @export var height: float = 22.0
 @export var radius: float = 1.7
 
-## Altitude où sa POINTE vient se poser, une fois abattu.
+## Où le fût vient se coucher, en (X, Z), et à quelle altitude sa surface
+## marchable se retrouve.
 ##
-## Il ne tombe pas à plat : il tombe d'un palier haut vers une berge basse, et
-## se couche donc en RAMPE. Un tablier horizontal partirait du palier et
-## finirait vingt mètres au-dessus du sol — un pont vers le vide.
-@export var deck_altitude: float = 2.9
+## IL SE DÉTACHE DU PALIER. La version précédente le faisait pivoter sur sa
+## base, qui restait en haut : il finissait en rampe raide, et on ne voyait
+## jamais la lave qu'il était censé traverser. Il BASCULE maintenant dans le
+## vide et retombe à plat dans la coulée, à demi immergé.
+##
+## Ce qui change pour le joueur : il saute vingt-deux mètres pour l'atteindre —
+## le niveau n'inflige pas de dégâts de chute — puis marche le long du fût
+## pendant que la lave lèche ses flancs.
+@export var lands_at: Vector2 = Vector2.ZERO
+@export var deck_altitude: float = 2.8
+
+## Altitude des deux berges, dans l'ordre du sens de chute. Deux petites rampes
+## y raccordent le tablier : sans elles, on bute sur un ressaut d'un mètre et
+## « monter sur le pylône » devient une affaire de saut bien placé.
+@export var bank_altitudes: Vector2 = Vector2(2.0, 1.2)
 
 const STONE_PATH := "res://data/levels/forge_rock_material.tres"
 const CRACK := Color(1.000, 0.478, 0.184)
@@ -130,74 +142,89 @@ func try_interact(_by_player: Node) -> bool:
 	_fallen = true
 
 	var heading: float = atan2(fall_direction.x, fall_direction.y)
+	var along := Vector3(fall_direction.x, 0.0, fall_direction.y).normalized()
+	# Couché, le fût s'étend depuis son origine dans le sens de la chute : on
+	# recule donc l'origine d'une demi-longueur pour qu'il se centre sur le
+	# point d'arrivée.
+	var resting: Vector3 = Vector3(lands_at.x, deck_altitude - radius * 0.75, lands_at.y) \
+		- along * height * 0.5
+
 	var tween: Tween = create_tween()
 	# Il hésite, puis part. Une bascule à vitesse constante ressemble à une
 	# porte qui s'ouvre ; l'accélération dit le poids.
 	tween.tween_property(_shaft, "rotation:y", heading, 0.1)
-	tween.tween_property(_shaft, "rotation:x", deg_to_rad(4.0), 0.45) \
+	tween.tween_property(_shaft, "rotation:x", deg_to_rad(5.0), 0.45) \
 		.set_trans(Tween.TRANS_SINE)
-	tween.tween_property(_shaft, "rotation:x", _resting_pitch(), 0.9) \
+	tween.tween_property(_shaft, "rotation:x", deg_to_rad(90.0), 1.1) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(_shaft, "global_position", resting, 1.1) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(_lay_down)
 	return true
 
 
-## L'inclinaison à laquelle il s'arrête : celle où sa pointe touche le sol visé.
-##
-## `asin` du dénivelé sur la longueur, et non 90° : le fût pivote autour de sa
-## base, qui reste en haut. S'il basculait jusqu'à l'horizontale il flotterait,
-## et s'il continuait au-delà il traverserait la roche.
-func _resting_pitch() -> float:
-	var drop: float = global_position.y - deck_altitude
-	var ratio: float = clampf(drop / maxf(height, 0.001), 0.0, 1.0)
-	return deg_to_rad(90.0) - asin(ratio)
-
-
-## La pente de la rampe une fois posée, en degrés. Le test la relit : au-delà
-## de ce que le joueur descend, le pylône serait un toboggan sans retour.
-func resting_slope_degrees() -> float:
-	return rad_to_deg(asin(clampf((global_position.y - deck_altitude)
-		/ maxf(height, 0.001), 0.0, 1.0)))
-
-
-## Une fois couché, le fût cesse d'être un obstacle et devient un SOL.
-##
-## Les deux collisions sont séparées, et c'est nécessaire : un cylindre couché
-## est une surface ronde sur laquelle on glisse. Le tablier qu'on pose dessus
-## est un pavé plat, à peine plus étroit — on marche sur le dessus du fût, pas
-## sur son flanc.
 func _lay_down() -> void:
 	var standing: StaticBody3D = _shaft.get_node_or_null("ColDebout") as StaticBody3D
 	if standing != null:
 		standing.queue_free()
 
 	var along := Vector3(fall_direction.x, 0.0, fall_direction.y).normalized()
-	var drop: float = global_position.y - deck_altitude
-	var reach: float = sqrt(maxf(height * height - drop * drop, 0.0))
-	var tip: Vector3 = global_position + along * reach - Vector3(0.0, drop, 0.0)
-	var mid: Vector3 = (global_position + tip) * 0.5
+	var centre := Vector3(lands_at.x, deck_altitude, lands_at.y)
 
-	_bridge_body = StaticBody3D.new()
-	_bridge_body.name = "ColTablierPylone"
-	_bridge_body.collision_layer = CavernTerrainBuilder.WORLD_COLLISION_LAYER \
-		| CavernTerrainBuilder.NAVMESH_SOURCE_LAYER
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	# Un peu plus étroit que le fût, et plat : on marche sur le DESSUS d'un
-	# cylindre couché, pas sur son flanc, où l'on glisserait.
-	box.size = Vector3(radius * 1.7, 1.0, height)
-	shape.shape = box
-	_bridge_body.add_child(shape)
-	add_child(_bridge_body)
-	_bridge_body.global_position = mid + Vector3(0.0, radius * 0.55, 0.0)
-	_bridge_body.rotation.y = atan2(along.x, along.z)
-	# Le tablier suit la pente du fût couché : horizontal, il dépasserait
-	# au-dessus à un bout et s'enfoncerait à l'autre.
-	_bridge_body.rotate_object_local(Vector3.RIGHT, atan2(drop, maxf(reach, 0.001)))
+	# LE TABLIER. Un pavé plat sur le dessus du fût : un cylindre couché est
+	# une surface ronde sur laquelle on glisse.
+	_bridge_body = _slab("ColTablierPylone",
+		Vector3(radius * 1.8, 0.8, height), centre - Vector3(0.0, 0.4, 0.0),
+		atan2(along.x, along.z), 0.0)
+
+	# LES DEUX RAMPES D'ACCÈS, une par berge. C'est ce qui permet de MONTER sur
+	# le pylône : sans elles il reste un ressaut, et le pont ne sert qu'à ceux
+	# qui pensent à sauter au bon endroit.
+	for side in 2:
+		var direction: float = -1.0 if side == 0 else 1.0
+		var bank: float = bank_altitudes.x if side == 0 else bank_altitudes.y
+		var foot: Vector3 = centre + along * (height * 0.5 + RAMP_RUN * 0.5) * direction
+		var rise: float = deck_altitude - bank
+		var ramp: StaticBody3D = _slab("RampePylone_%d" % side,
+			Vector3(radius * 1.8, 0.6, RAMP_RUN),
+			foot - Vector3(0.0, rise * 0.5 + 0.3, 0.0),
+			atan2(along.x, along.z),
+			atan2(rise, RAMP_RUN) * direction)
+		ramp.name = "RampePylone_%d" % side
 
 	fell.emit()
 	_rebake()
-	print("[FragilePylon] le pylône est tombé — le passage est ouvert.")
+	print("[FragilePylon] le pylône est tombé dans la coulée — on peut traverser.")
+
+
+## Longueur des rampes d'accès, en mètres.
+const RAMP_RUN: float = 5.0
+
+
+func _slab(slab_name: String, size: Vector3, at: Vector3, heading: float,
+		pitch: float) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = slab_name
+	body.collision_layer = CavernTerrainBuilder.WORLD_COLLISION_LAYER \
+		| CavernTerrainBuilder.NAVMESH_SOURCE_LAYER
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = size
+	shape.shape = box
+	body.add_child(shape)
+	add_child(body)
+	body.global_position = at
+	body.rotation.y = heading
+	body.rotate_object_local(Vector3.RIGHT, pitch)
+
+	var visual := MeshInstance3D.new()
+	visual.name = "Mesh"
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	visual.mesh = mesh
+	visual.material_override = load(STONE_PATH) as Material
+	body.add_child(visual)
+	return body
 
 
 ## Le navmesh a été cuit avant la chute. Sans nouvelle cuisson, le pont existe
