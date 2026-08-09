@@ -86,6 +86,44 @@ assets:
       - res://assets/level02/textures/forge_deck_normal.png
       - res://assets/level02/textures/forge_deck_rough.png
 
+  - name: forge-lever
+    path: res://assets/level02/meshes/forge_lever.res
+    type: geo
+    scene: res://scenes/props/forge_lever.tscn
+    material: res://assets/level02/materials/forge_lever.tres
+    used_by:
+      - res://scripts/world/forge_lever.gd
+    prompt: >-
+      A heavy volcanic forge lever: a squat pedestal of rough near-black basalt
+      blocks, with a long blackened wrought-iron handle angled back on a thick
+      pivot bracket. The iron is hammered and pitted, heat-scaled, with faint
+      ember-orange glow deep inside the cracks of the stone base. Weathered,
+      industrial, ancient. Single object, standing upright, dark volcanic
+      palette.
+    texture_prompt: >-
+      Near-black volcanic basalt pedestal with deep recessed joints and grey ash
+      in the crevices; blackened hammered wrought iron handle with heat scale
+      and pitting; faint ember-orange glow deep inside the stone cracks only.
+      Dark, sooty, no bright colours.
+    meshy_task_id: 019fe3cd-cd65-7140-8f49-697fcf30d565   # aperçu
+    meshy_refine_task_id: 019fe3cf-1925-72f3-bcba-518623df9f69
+    meshy_remesh_task_id: 019fe3e1-21c7-75b0-bf03-4c4a2e7f58a2
+    meshy_model: meshy-6
+    credits_spent: 35   # 20 génération + 10 texturage + 5 remesh
+    triangles: 3034
+    license: meshy-paid-full-ownership
+    generated_on: 2026-08-09
+    notes: >-
+      Le remesh n'est pas optionnel : la génération brute pesait 28 Mo. Après
+      remesh et réduction des textures, le maillage fait 87 Ko. Le `.glb` source
+      n'est pas versionné (cf .gitignore), il se retélécharge depuis les
+      task_id ci-dessus.
+
+      Le maillage bascule d'un seul bloc, socle compris — une génération ne
+      sépare pas ses pièces, et découper la manette donnerait une coupe fausse.
+      D'où une bascule de quinze degrés seulement, qui se lit comme un mécanisme
+      qui joue dans son logement.
+
 # --- Généré mais NON embarqué ------------------------------------------------
 # Consigné pour que les crédits dépensés restent traçables, et pour qu'on ne
 # regénère pas la même chose en croyant qu'elle manque.
@@ -102,4 +140,4 @@ rejected:
       câbles du pont, qui font 16 cm de section : une texture 1024² y serait
       invisible. Les câbles gardent une teinte plate.
 
-credits_total: 27   # dont 9 non embarqués
+credits_total: 62   # dont 9 non embarqués

@@ -1,0 +1,19 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/level02/textures/forge_lever_albedo.png" id="1_wtk0v"]
+[ext_resource type="Texture2D" path="res://assets/level02/textures/forge_lever_emission.png" id="2_p4qjg"]
+[ext_resource type="Texture2D" path="res://assets/level02/textures/forge_lever_metallic.png" id="3_t5aug"]
+[ext_resource type="Texture2D" path="res://assets/level02/textures/forge_lever_normal.png" id="4_c0jd5"]
+[ext_resource type="Texture2D" path="res://assets/level02/textures/forge_lever_roughness.png" id="5_2ikcp"]
+
+[resource]
+albedo_texture = ExtResource("1_wtk0v")
+metallic_texture = ExtResource("3_t5aug")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("5_2ikcp")
+roughness_texture_channel = 1
+emission_enabled = true
+emission_energy_multiplier = 1.6
+emission_texture = ExtResource("2_p4qjg")
+normal_enabled = true
+normal_texture = ExtResource("4_c0jd5")

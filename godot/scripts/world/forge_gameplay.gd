@@ -66,19 +66,25 @@ var _castle: ForgeCastle
 var _bridge: ForgeBridge
 var _puzzle: MoonPuzzle
 
-## Où se cache le levier : derrière le rideau de la cascade amont, sur la rive
-## nord. Assez loin du bord pour qu'on ne l'aperçoive pas depuis la corniche —
-## il faut sauter pour le découvrir.
-## Le chiffre est CONTRAINT, pas choisi : la corniche s'arrête à X = -42, le
-## palier commence à -61+9 = -52-9 = -61… et l'écart entre les deux est le saut.
-## Cinq mètres au-dessus de la coulée : franchissable d'un élan, impossible par
-## mégarde. Déplacer l'un des deux sans l'autre casse le niveau en silence,
-## d'où le test qui mesure cet écart.
-const LEVER_SPOT := Vector2(-72.0, -5.0)
+## LE BELVÉDÈRE, au bout du sentier : l'éperon nord qui surplombe le déversoir.
+const BELVEDERE := Vector2(-58.0, -4.0)
+const LEDGE_ALTITUDE: float = 29.0
 
-## Longueur du pylône. Elle doit franchir l'intervalle entre le palier et la
-## corniche : c'est ce chiffre, et lui seul, qui décide si le retour existe.
-const PYLON_SPAN: float = 24.0
+## LE PALIER DU LEVIER, l'éperon d'en face. Quatre mètres plus bas — on saute
+## vers le bas, on ne remonte pas.
+##
+## Les deux Z sont contraints l'un par l'autre : le belvédère s'avance jusqu'à
+## Z = -10, le palier commence à Z = -16. Six mètres de vide, et la coulée
+## vingt-sept mètres plus bas. Déplacer l'un sans l'autre casse le saut en
+## silence, d'où le test qui mesure l'écart.
+const LEVER_SPOT := Vector2(-58.0, -23.0)
+const LEVER_ALTITUDE: float = 25.0
+
+## LE PYLÔNE. Il bascule vers le cirque et retombe en RAMPE : sa base reste en
+## haut, sa pointe touche la berge d'en bas. Trente-huit mètres, pour rejoindre
+## un sol vingt mètres plus bas sans dépasser la pente descendable.
+const PYLON_SPAN: float = 38.0
+const PYLON_LANDING: float = 7.0
 
 
 func _ready() -> void:
@@ -98,6 +104,7 @@ func _ready() -> void:
 	_build_lava_falls()
 	_build_twist_chain()
 	_build_moon_puzzle()
+	_rebake_navigation()
 
 	if spawn_boss:
 		_spawn_boss()
@@ -128,6 +135,27 @@ func _spawn_boss() -> void:
 
 ## La zone d'éveil. Le niveau 1 n'en avait pas et son boss dormait
 ## indéfiniment sans que rien ne le signale — on ne refait pas l'erreur.
+## RECUIRE LE NAVMESH une fois tout le décor posé.
+##
+## La navigation se cuit à la frame 1, le gameplay bâtit à la frame 2 : pont,
+## terrasse, sentier, paliers et pylônes arrivaient donc APRÈS, et n'existaient
+## pour aucun ennemi. Les joueurs, eux, marchaient dessus — c'est une collision,
+## pas une navigation — d'où un défaut invisible tant qu'on joue seul.
+##
+## Deux frames d'attente avant de recuire : les objets bâtis dans leur propre
+## `_ready` (le château, le pont) ne sont pas encore là quand celui-ci rend la
+## main.
+func _rebake_navigation() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var navigation: Node = _world.get_node_or_null("Navigation")
+	if navigation == null or not navigation.has_method("bake_now"):
+		push_warning("ForgeGameplay : pas de navigation à recuire.")
+		return
+	var polygons: int = navigation.call("bake_now")
+	print("[ForgeGameplay] navmesh recuit sur le décor complet — %d polygones." % polygons)
+
+
 func _build_arena_lock() -> void:
 	var zone := Area3D.new()
 	zone.name = "ReveilDuGolem"
@@ -218,12 +246,13 @@ func _build_lava_falls() -> void:
 	_world.add_child(sink)
 
 
-## LA CHAÎNE DU DÉTOUR : levier derrière la cascade, rampe autour du donjon,
-## pylône qu'on abat pour rentrer.
+## LA CHAÎNE DU DÉTOUR : sentier de montagne, saut par-dessus le déversoir,
+## levier, rampe autour du donjon, pylône qu'on abat pour rentrer.
 ##
-## Les trois objets sont posés ensemble parce qu'ils ne veulent rien dire
-## séparément : le levier ouvre une rampe qu'on ne peut pas encore atteindre, et
-## le pylône n'est un chemin que pour revenir de là où le levier se trouve.
+## Les pièces sont posées ensemble parce qu'elles ne veulent rien dire
+## séparément. Le levier ouvre une rampe qu'on ne peut pas encore atteindre ; le
+## pylône n'est un chemin que pour revenir de là où le levier se trouve ; et le
+## sentier n'a d'intérêt que parce qu'il finit sur un saut.
 func _build_twist_chain() -> void:
 	var terrain: CavernTerrainData = load(
 		"res://data/levels/level02_forge_terrain.tres") as CavernTerrainData
@@ -231,32 +260,89 @@ func _build_twist_chain() -> void:
 		push_warning("ForgeGameplay : pas de terrain ou de château — pas de détour.")
 		return
 	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
-	var lava: CavernLake = terrain.lake
 
-	# LE PALIER DERRIÈRE LA CASCADE, côté aval du rideau. On y arrive en
-	# sautant depuis la corniche : c'est le seul saut obligatoire du niveau, et
-	# il se fait au-dessus de la coulée, donc il se réfléchit.
-	var ledge_at := Vector2(LEVER_SPOT.x, LEVER_SPOT.y)
-	var ledge_altitude: float = maxf(
-		CavernTerrainBuilder.sample_point(terrain.floor_field, ledge_at, noise),
-		lava.surface_altitude + 1.4)
-	var ledge := ForgeLedge.new()
-	ledge.name = "PalierDeLaCascade"
-	ledge.centre = ledge_at
-	ledge.altitude = ledge_altitude
-	# 9,5 et non 8 : la brèche mouille la berge de X = -66 à -58, et le palier
-	# doit s'avancer assez pour que l'écart tombe à cinq mètres et demi. C'est
-	# ce chiffre-là que le test surveille, pas la taille du palier.
-	ledge.half_extent = Vector2(9.5, 6.0)
-	_world.add_child(ledge)
+	_build_mountain_trail(terrain, noise)
+	_build_jump_and_lever()
+	_build_keep_ramp(terrain, noise)
+
+
+## LE SENTIER. Il part DERRIÈRE le point d'apparition, sur la gauche, et monte
+## la montagne ouest en lacets jusqu'au haut de la cascade.
+func _build_mountain_trail(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
+	var start := Vector2(-18.0, 72.0)
+	var trail := MountainTrail.new()
+	trail.name = "SentierDeLaMontagne"
+	trail.waypoints = [
+		# LES DEUX PREMIERS POINTS RASENT LE SOL, et le premier lui est même
+		# légèrement enfoncé. Un sentier qui démarre en pente franche depuis un
+		# terrain plat crée une arête à sa naissance, et c'est exactement là que
+		# la navigation se coupait : le chemin existait, on n'y accédait pas.
+		Vector3(start.x, CavernTerrainBuilder.sample_point(terrain.floor_field, start, noise) - 0.4,
+			start.y),
+		Vector3(-25.0, CavernTerrainBuilder.sample_point(terrain.floor_field,
+			Vector2(-25.0, 71.0), noise) + 0.2, 71.0),
+		Vector3(-34.0, 12.0, 68.0),
+		Vector3(-46.0, 15.5, 58.0),
+		Vector3(-32.0, 19.0, 47.0),
+		Vector3(-48.0, 22.5, 35.0),
+		Vector3(-58.0, 26.0, 20.0),
+		# ET LE DERNIER PALIER ARRIVE À PLAT, à l'altitude du belvédère : une
+		# rampe qui débouche en pente sur une dalle horizontale refait la même
+		# arête qu'au départ, à l'autre bout.
+		Vector3(BELVEDERE.x, LEDGE_ALTITUDE, BELVEDERE.y + 12.0),
+		Vector3(BELVEDERE.x, LEDGE_ALTITUDE, BELVEDERE.y),
+	]
+	_world.add_child(trail)
+
+
+## LE SAUT ET LE LEVIER.
+##
+## Deux éperons de roche qui s'avancent au-dessus du déversoir, l'un en face de
+## l'autre. Entre leurs pointes, six mètres de vide et vingt-cinq mètres plus
+## bas, la coulée.
+##
+## Le palier du levier est QUATRE MÈTRES PLUS BAS que le belvédère : on saute
+## donc en descendant, ce qui se franchit, et on ne peut pas repartir en sens
+## inverse. C'est ça qui rend le pylône nécessaire plutôt que décoratif — un
+## saut symétrique en ferait un ornement.
+func _build_jump_and_lever() -> void:
+	var belvedere := ForgeLedge.new()
+	belvedere.name = "BelvedereDeLaCascade"
+	belvedere.centre = BELVEDERE
+	belvedere.altitude = LEDGE_ALTITUDE
+	belvedere.half_extent = Vector2(7.0, 6.0)
+	_world.add_child(belvedere)
+
+	var perch := ForgeLedge.new()
+	perch.name = "PalierDuLevier"
+	perch.centre = LEVER_SPOT
+	perch.altitude = LEVER_ALTITUDE
+	perch.half_extent = Vector2(9.0, 7.0)
+	_world.add_child(perch)
 
 	var lever := ForgeLever.new()
 	lever.name = "LevierCache"
 	_world.add_child(lever)
-	lever.global_position = Vector3(ledge_at.x, ledge_altitude, ledge_at.y)
+	lever.global_position = Vector3(LEVER_SPOT.x - 4.0, LEVER_ALTITUDE, LEVER_SPOT.y - 2.0)
 
-	# LA RAMPE. Le donjon est un cylindre : son rayon vaut `keep_width * 0.52`,
-	# et on s'enroule juste au-delà.
+	# LE PYLÔNE, au bord nord du palier. Il bascule vers le cirque et retombe
+	# en RAMPE : sa base reste haut, sa pointe touche la berge d'en bas. Un
+	# tablier horizontal finirait en l'air, vingt mètres au-dessus du sol.
+	var pylon := FragilePylon.new()
+	pylon.name = "PyloneFragile"
+	pylon.fall_direction = Vector2(0.0, 1.0)
+	pylon.height = PYLON_SPAN
+	pylon.deck_altitude = PYLON_LANDING
+	_world.add_child(pylon)
+	pylon.global_position = Vector3(LEVER_SPOT.x + 4.0, LEVER_ALTITUDE, LEVER_SPOT.y - 5.0)
+
+	lever.pulled.connect(func() -> void:
+		var ramp: KeepSpiralRamp = _world.get_node_or_null("RampeDuDonjon") as KeepSpiralRamp
+		if ramp != null:
+			ramp.deploy())
+
+
+func _build_keep_ramp(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
 	# TOUTES ses cotes AVANT `add_child`.
 	#
 	# `add_child` déclenche `_ready`, donc la construction : régler les
@@ -275,18 +361,6 @@ func _build_twist_chain() -> void:
 		CavernTerrainBuilder.sample_point(terrain.floor_field, Vector2(0.0, -66.0), noise) + 1.0,
 		-66.0)
 	_world.add_child(ramp)
-
-	# LE PYLÔNE, sur le palier, orienté vers la corniche : il tombe en travers
-	# de la coulée, donc du côté d'où l'on est venu.
-	var pylon := FragilePylon.new()
-	pylon.name = "PyloneFragile"
-	pylon.fall_direction = Vector2(1.0, 0.0)
-	pylon.height = PYLON_SPAN
-	pylon.deck_altitude = lava.surface_altitude + 1.0
-	_world.add_child(pylon)
-	pylon.global_position = Vector3(ledge_at.x + 6.0, ledge_altitude, ledge_at.y)
-
-	lever.pulled.connect(func() -> void: ramp.deploy())
 
 
 func _build_castle() -> void:

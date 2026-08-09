@@ -76,6 +76,7 @@ godot/assets/level01/meshes/*_Baked_*.png.import
 godot/assets/level01/meshes/*_normal.png
 godot/assets/level01/meshes/*_normal.png.import
 godot/assets/level01/meshes/src/
+godot/assets/level02/meshes/src/
 
 # Cache du plugin godot-mcp (captures d'écran de diagnostic, etc.) : artefacts
 # de session, régénérés à la demande.
