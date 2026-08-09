@@ -1,0 +1,66 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/character_select.gd" id="1_select"]
+
+[node name="CharacterSelect" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_select")
+
+[node name="Stage" type="SubViewportContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+stretch = true
+
+[node name="Viewport" type="SubViewport" parent="Stage"]
+handle_input_locally = false
+size = Vector2i(1920, 1080)
+render_target_update_mode = 4
+
+[node name="World" type="Node3D" parent="Stage/Viewport"]
+
+[node name="Pivot" type="Node3D" parent="Stage/Viewport/World"]
+unique_name_in_owner = true
+
+[node name="Camera" type="Camera3D" parent="Stage/Viewport/World"]
+transform = Transform3D(1, 0, 0, 0, 0.966, 0.259, 0, -0.259, 0.966, 0, 1.7, 3.6)
+fov = 45.0
+
+[node name="Key" type="DirectionalLight3D" parent="Stage/Viewport/World"]
+transform = Transform3D(0.87, -0.35, 0.35, 0, 0.7, 0.71, -0.5, -0.61, 0.61, 0, 6, 4)
+light_energy = 1.6
+shadow_enabled = true
+
+[node name="Fill" type="OmniLight3D" parent="Stage/Viewport/World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2, 2)
+light_color = Color(0.62, 0.72, 1, 1)
+light_energy = 1.4
+omni_range = 12.0
+
+[node name="Layout" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 48.0
+offset_bottom = -48.0
+alignment = 2
+theme_override_constants/separation = 10
+
+[node name="NameLabel" type="Label" parent="Layout"]
+unique_name_in_owner = true
+horizontal_alignment = 1
+
+[node name="TaglineLabel" type="Label" parent="Layout"]
+unique_name_in_owner = true
+horizontal_alignment = 1
+
+[node name="StatesLabel" type="Label" parent="Layout"]
+unique_name_in_owner = true
+horizontal_alignment = 1
+
+[node name="HintLabel" type="Label" parent="Layout"]
+unique_name_in_owner = true
+horizontal_alignment = 1

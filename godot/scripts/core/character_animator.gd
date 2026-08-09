@@ -124,33 +124,72 @@ func notify_death() -> void:
 		_visual.play_oneshot(&"death")
 
 
+## LE CORPS SUIT LA VISÉE, PAS LE DÉPLACEMENT.
+##
+## Le joueur tourne avec la caméra (`rotation.y = _yaw`) et se déplace en
+## repère local : il va donc en pas chassés et à reculons en permanence, pas
+## seulement en combat. Sans états directionnels, marcher en arrière joue une
+## course avant — le moonwalk, visible tout le temps en vue à la troisième
+## personne.
+##
+## On classe la direction en quatre quadrants plutôt qu'en huit : à la manette
+## on tient rarement une diagonale franche, et le clip latéral le plus proche
+## se lit très bien. Ce que le personnage n'a pas, `resolve_state` le remplace.
 func _pick_state() -> StringName:
-	# Mort fige sur death (déjà géré par notify_death + override).
 	if _is_dead:
 		return &"death"
 
 	var v: Vector3 = _read_velocity()
 	var horizontal: Vector2 = Vector2(v.x, v.z)
 	var speed: float = horizontal.length()
+	var moving: bool = speed >= walk_threshold
 
-	# Combat : shoot
 	if _read_shooting():
-		if _visual.has_state(&"shoot_run") and speed >= run_threshold:
-			return &"shoot_run"
-		if speed >= walk_threshold:
-			if _is_moving_backward(horizontal) and _visual.has_state(&"shoot_walk_back"):
-				return &"shoot_walk_back"
-			if _visual.has_state(&"shoot_walk_forward"):
-				return &"shoot_walk_forward"
-		if _visual.has_state(&"shoot_walk_forward"):
-			return &"shoot_walk_forward"
+		if not moving:
+			return _resolve(&"shoot_idle")
+		if _is_moving_backward(horizontal):
+			return _resolve(&"shoot_walk_back")
+		if speed >= run_threshold:
+			return _resolve(&"shoot_run")
+		return _resolve(&"shoot_walk_forward")
 
-	# Locomotion
-	if speed >= run_threshold and _visual.has_state(&"run"):
-		return &"run"
-	if speed >= walk_threshold and _visual.has_state(&"walk"):
-		return &"walk"
-	return &"idle"
+	if not moving:
+		return _resolve(&"idle")
+
+	var wanted: StringName = _directional_state(horizontal, speed >= run_threshold)
+	return _resolve(wanted)
+
+
+## L'état de locomotion correspondant à la direction du déplacement, exprimée
+## dans le repère du personnage.
+func _directional_state(horizontal: Vector2, running: bool) -> StringName:
+	if _parent == null:
+		return &"run" if running else &"walk"
+	# Composantes avant et latérale, dans le repère du corps.
+	var forward := Vector2(-_parent.global_transform.basis.z.x,
+		-_parent.global_transform.basis.z.z).normalized()
+	var side := Vector2(_parent.global_transform.basis.x.x,
+		_parent.global_transform.basis.x.z).normalized()
+	var direction: Vector2 = horizontal.normalized()
+	var ahead: float = direction.dot(forward)
+	var lateral: float = direction.dot(side)
+
+	if ahead < -0.4:
+		return &"run_back"
+	if absf(lateral) > absf(ahead):
+		return &"run_right" if lateral > 0.0 else &"run_left"
+	if ahead > 0.4 and absf(lateral) > 0.35:
+		return &"run_forward_right" if lateral > 0.0 else &"run_forward_left"
+	return &"run" if running else &"walk"
+
+
+## Passe par la table de repli du visuel : un personnage à qui il manque un
+## clip doit rester jouable, pas se figer.
+func _resolve(wanted: StringName) -> StringName:
+	if _visual == null:
+		return wanted
+	var resolved: StringName = _visual.resolve_state(wanted)
+	return resolved if resolved != &"" else &"idle"
 
 
 func _read_velocity() -> Vector3:

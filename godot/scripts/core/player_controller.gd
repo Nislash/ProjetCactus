@@ -118,6 +118,7 @@ func _ready() -> void:
 	# Permet aux ennemis (et autres systèmes) de retrouver les joueurs via
 	# get_tree().get_nodes_in_group("players").
 	add_to_group("players")
+	_adopt_selected_character()
 	# Au start, aucune arme equipee — le joueur doit ramasser un WeaponPickup.
 	_set_weapon_visible(_weapon_hitscan, false)
 	_set_weapon_visible(_weapon_melee, false)
@@ -156,6 +157,22 @@ func _set_weapon_visible(node: Node, on: bool) -> void:
 func set_spawn_position(pos: Vector3) -> void:
 	_spawn_position = pos
 	global_transform.origin = pos
+
+
+## Applique le personnage choisi à l'écran de démarrage.
+##
+## La scène du joueur embarque un pack par défaut ; on le remplace ici plutôt
+## que de dupliquer une scène de joueur par personnage. Si rien n'a été choisi
+## — lancement direct d'un niveau depuis l'éditeur, par exemple — on garde
+## celui de la scène : un écran de test ne doit pas dépendre d'un menu.
+func _adopt_selected_character() -> void:
+	var visual: CharacterVisual = find_child("Visual", true, false) as CharacterVisual
+	if visual == null:
+		return
+	var chosen: CharacterAnimSet = CharacterRoster.selected_anim_set()
+	if chosen == null or chosen == visual.anim_set:
+		return
+	visual.set_anim_set(chosen)
 
 
 func get_health() -> HealthComponent:

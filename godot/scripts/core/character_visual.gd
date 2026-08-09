@@ -109,7 +109,71 @@ func _apply_material_override(node: Node) -> void:
 		_apply_material_override(child)
 
 
+## LA TABLE DE REPLI. Ce qu'on joue quand l'état demandé n'existe pas.
+##
+## Elle est la raison pour laquelle aucune animation n'est obligatoire : un
+## personnage livré avec trois clips reste jouable, il se contente d'être moins
+## expressif. Sans elle, il faudrait produire les trente animations avant de
+## pouvoir seulement voir un nouveau personnage bouger.
+##
+## Chaque chaîne va du plus précis au plus générique, et se termine sur un état
+## que tout le monde a. On ne descend jamais vers un état d'une autre famille :
+## un tir qui retomberait sur une course afficherait un personnage qui court
+## sans tirer, ce qui ment sur ce qu'il fait.
+const FALLBACKS := {
+	&"shoot_idle": [&"shoot_walk_forward", &"shoot_run", &"idle"],
+	&"shoot_walk_forward": [&"shoot_run", &"shoot_idle", &"walk"],
+	&"shoot_walk_back": [&"shoot_walk_forward", &"shoot_idle", &"walk"],
+	&"shoot_run": [&"shoot_walk_forward", &"shoot_idle", &"run"],
+	&"run_back": [&"run", &"walk", &"idle"],
+	&"run_left": [&"run_forward_left", &"run", &"walk", &"idle"],
+	&"run_right": [&"run_forward_right", &"run", &"walk", &"idle"],
+	&"run_forward_left": [&"run", &"walk", &"idle"],
+	&"run_forward_right": [&"run", &"walk", &"idle"],
+	&"run": [&"walk", &"idle"],
+	&"walk": [&"run", &"idle"],
+	&"dash_left": [&"dash", &"dash_right"],
+	&"dash_right": [&"dash", &"dash_left"],
+	&"dash_back": [&"dash"],
+	&"downed_crawl": [&"downed_idle", &"death"],
+	&"downed_idle": [&"death", &"idle"],
+	&"get_up": [&"idle"],
+	&"death": [&"downed_idle", &"idle"],
+	&"land": [&"idle"],
+	&"fall_loop": [&"jump", &"idle"],
+	&"jump_start": [&"jump", &"idle"],
+}
+
+
+## L'état réellement jouable pour l'état demandé.
+##
+## Retourne une chaîne vide si rien de la chaîne n'existe — l'appelant doit
+## alors ne rien faire, plutôt que de jouer n'importe quoi.
+func resolve_state(wanted: StringName) -> StringName:
+	if has_state(wanted):
+		return wanted
+	if not FALLBACKS.has(wanted):
+		return &""
+	for candidate in FALLBACKS[wanted]:
+		if has_state(candidate):
+			return candidate
+	return &""
+
+
 func _install_animation_library() -> void:
+	# La bibliothèque préparée court-circuite tout : elle porte déjà les
+	# animations sous leur nom d'état.
+	if anim_set.library != null:
+		for existing in _anim_player.get_animation_library_list():
+			_anim_player.remove_animation_library(existing)
+		var baked: AnimationLibrary = anim_set.library.duplicate(true) as AnimationLibrary
+		for state in baked.get_animation_list():
+			var clip: Animation = baked.get_animation(state)
+			clip.loop_mode = Animation.LOOP_LINEAR if _loops(state) \
+				else Animation.LOOP_NONE
+		_anim_player.add_animation_library(LIB_NAME, baked)
+		return
+
 	var lib: AnimationLibrary = AnimationLibrary.new()
 	for entry in anim_set.iter_clips():
 		var state_name: StringName = entry[0]
@@ -118,16 +182,30 @@ func _install_animation_library() -> void:
 		if anim == null:
 			push_warning("CharacterVisual: anim %s introuvable dans le .glb" % state_name)
 			continue
-		# Loop policy : locomotion bouclée par défaut.
-		if anim_set.loop_locomotion and state_name in [&"idle", &"walk", &"run", &"shoot_walk_forward", &"shoot_walk_back", &"shoot_run"]:
-			anim.loop_mode = Animation.LOOP_LINEAR
-		else:
-			anim.loop_mode = Animation.LOOP_NONE
+		anim.loop_mode = Animation.LOOP_LINEAR if _loops(state_name) \
+			else Animation.LOOP_NONE
 		lib.add_animation(StringName(state_name), anim)
 	# Vire toute lib existante puis ajoute la nôtre.
 	for ln in _anim_player.get_animation_library_list():
 		_anim_player.remove_animation_library(ln)
 	_anim_player.add_animation_library(LIB_NAME, lib)
+
+
+## Cet état boucle-t-il ?
+##
+## La locomotion et les postures d'attente bouclent ; tout le reste est joué
+## une fois. Une esquive ou un relèvement qui boucle donne un personnage pris
+## de convulsions — c'est le genre d'erreur qu'on ne voit qu'en jeu.
+func _loops(state: StringName) -> bool:
+	if not anim_set.loop_locomotion:
+		return false
+	return state in [
+		&"idle", &"walk", &"run",
+		&"run_back", &"run_left", &"run_right",
+		&"run_forward_left", &"run_forward_right",
+		&"shoot_idle", &"shoot_walk_forward", &"shoot_walk_back", &"shoot_run",
+		&"downed_idle", &"downed_crawl", &"crouch_idle", &"fall_loop",
+	]
 
 
 ## Charge le .glb d'anim, en extrait la première Animation du premier

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CharacterAnimSet" load_steps=4 format=3 uid="uid://char_anim_conqueror"]
+
+[ext_resource type="Script" uid="uid://cec7kdfb0sj5w" path="res://scripts/core/data/character_anim_set.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/conqueror/conqueror_mesh.glb" id="2_model"]
+[ext_resource type="AnimationLibrary" path="res://assets/characters/conqueror/conqueror_anims.res" id="3_lib"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Conquérant"
+library = ExtResource("3_lib")
+model_scene = ExtResource("2_model")
+scale = 1.0
+y_offset = 0.0
+; Les .glb Meshy regardent +Z, l'avant de Godot est -Z.
+y_rotation_deg = 180.0
+loop_locomotion = true
