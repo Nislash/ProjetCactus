@@ -11,15 +11,16 @@ extends Node
 ## ## Ce qui diffère du niveau 1
 ##
 ## **Un autre verbe.** La Caverne demande de *rassembler* — quatre éclats,
-## quatre serrures, un mot à reconstituer. La Forge demande d'*orienter* :
-## trois miroirs de basalte à faire pivoter pour conduire la lumière de la
-## lune rouge jusqu'au sceau du château. Deux niveaux qui demanderaient la
-## même chose au joueur ne seraient qu'un seul niveau joué deux fois.
+## quatre serrures, un mot à reconstituer. La Forge demande de *traverser* : un
+## sentier caché, un saut au-dessus de la coulée, un levier, un pylône qu'on
+## abat pour se fabriquer un pont. Deux niveaux qui demanderaient la même chose
+## au joueur ne seraient qu'un seul niveau joué deux fois.
 ##
-## **Et la solution est visible.** Le rayon se voit sur toute sa longueur et
-## s'arrête là où il bute : il n'y a rien à deviner, seulement une trajectoire
-## à lire. Personne n'a besoin qu'on lui explique comment se comporte un
-## miroir.
+## **Le puzzle des miroirs a été retiré.** Il faisait double emploi avec le
+## détour du levier — deux énigmes pour une seule porte les rendaient toutes
+## deux facultatives — et la porte qu'il ouvrait ne menait nulle part une fois
+## la tour praticable. Les tours du château restent, comme décor : c'est leur
+## silhouette qui sert, pas leur mécanisme.
 ##
 ## Le danger n'est plus signalé par la couleur — toute la salle est ambre — mais
 ## par le **mouvement** : la lave qui monte pendant le combat, et qui reprend
@@ -45,26 +46,10 @@ const BOSS_SCENE := "res://scenes/boss/boss_golem.tscn"
 
 signal boss_awakened()
 
-## Où poser les trois miroirs, en (X, Z).
-##
-## Le premier est sur la crête, en vue dégagée : c'est lui que la lune touche,
-## et il doit être la première chose qu'on croise en arrivant. Les deux autres
-## descendent vers le château — le rayon suit donc le chemin du joueur, ce qui
-## fait de la trajectoire une carte.
-## Les distances comptent autant que les positions : plus une cible est loin,
-## plus la tolérance angulaire se resserre, et plus le puzzle devient un
-## exercice d'adresse. Les sauts font ici entre vingt et trente mètres.
-const MIRROR_SPOTS: Array[Vector2] = [
-	Vector2(-26.0, 34.0),
-	Vector2(30.0, 22.0),
-	Vector2(22.0, -2.0),
-]
-
 var _world: Node3D
 var _boss: Node3D
 var _castle: ForgeCastle
 var _bridge: ForgeBridge
-var _puzzle: MoonPuzzle
 
 ## LE BELVÉDÈRE, au bout du sentier : l'éperon nord qui surplombe le déversoir.
 ## LE FOND DE LA FOSSE creusée derrière le point d'apparition : le vrai départ.
@@ -128,7 +113,9 @@ func _ready() -> void:
 	_build_lava_hazard()
 	_build_lava_falls()
 	_build_twist_chain()
-	_build_moon_puzzle()
+	_build_braziers(load("res://data/levels/level02_forge_terrain.tres") as CavernTerrainData,
+		CavernTerrainBuilder.make_noise(
+			(load("res://data/levels/level02_forge_terrain.tres") as CavernTerrainData).floor_field))
 	_rebake_navigation()
 
 	if spawn_boss:
@@ -441,6 +428,73 @@ func _build_keep_ramp(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
 	ramp.inner_radius = _castle.keep_width * 0.46 - 3.4
 	ramp.hall_altitude = _castle.get_hall_altitude()
 	_world.add_child(ramp)
+	_build_summit(ramp)
+
+
+## LE SOMMET : une dalle à ressort, et le levier qui l'arme.
+##
+## C'est la fin du parcours et le début du combat. On arrive en haut de la tour,
+## on voit l'arène pour la première fois, on tire le levier, et l'on est projeté
+## dedans. Le joueur ne descend pas vers le boss : il lui tombe dessus.
+func _build_summit(ramp: KeepSpiralRamp) -> void:
+	var summit: Vector3 = ramp.get_summit()
+	var arena: Node3D = _world.get_node_or_null("BossArena/BossSpawn") as Node3D
+	var landing := Vector3(0.0, 6.0, -96.0)
+	if arena != null:
+		# On vise À CÔTÉ du boss, pas dessus : atterrir dans sa hitbox
+		# donnerait un télescopage plutôt qu'une arrivée.
+		landing = arena.global_position + Vector3(0.0, 2.0, 16.0)
+
+	var pad := LaunchPad.new()
+	pad.name = "DalleARessort"
+	pad.target = landing
+	_world.add_child(pad)
+	pad.global_position = summit + Vector3(0.0, 0.4, 0.0)
+
+	var lever := ForgeLever.new()
+	lever.name = "LevierDuSommet"
+	lever.prompt_text = "Armer la dalle"
+	_world.add_child(lever)
+	# Décalé de la dalle : on doit pouvoir l'actionner sans être dessus, sinon
+	# le premier joueur envoie tout le monde.
+	lever.global_position = summit + Vector3(4.6, 0.4, 0.0)
+	lever.pulled.connect(func() -> void: pad.arm())
+
+
+## LES BRASIERS DE L'ARÈNE. Ils s'allument quand un joueur y arrive.
+func _build_braziers(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
+	var arena: Node3D = _world.get_node_or_null("BossArena/BossSpawn") as Node3D
+	if arena == null:
+		return
+	var at := Vector2(arena.global_position.x, arena.global_position.z)
+	var braziers := ArenaBraziers.new()
+	braziers.name = "BrasiersDeLArene"
+	braziers.centre = at
+	braziers.radius = 28.0
+	braziers.count = 10
+	braziers.floor_altitude = CavernTerrainBuilder.ground_at(terrain, at, noise)
+	_world.add_child(braziers)
+
+	# Un détecteur au centre : le premier corps qui entre allume tout.
+	var trigger := Area3D.new()
+	trigger.name = "EntreeDeLArene"
+	trigger.collision_layer = 0
+	trigger.collision_mask = 0xFFFFFFFF
+	var shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = 30.0
+	shape.shape = sphere
+	trigger.add_child(shape)
+	_world.add_child(trigger)
+	trigger.global_position = Vector3(at.x, braziers.floor_altitude + 4.0, at.y)
+	# SEULS LES JOUEURS déclenchent. Le Golem est lui aussi un
+	# `CharacterBody3D`, et il naît AU CENTRE de l'arène : la salle s'allumait
+	# donc toute seule à la première frame du niveau, avant que quiconque n'ait
+	# franchi le seuil. Toute la mise en scène tombait à plat sans que rien ne
+	# le signale.
+	trigger.body_entered.connect(func(body: Node3D) -> void:
+		if body.is_in_group(&"players"):
+			braziers.light_up())
 
 
 func _build_castle() -> void:
@@ -464,43 +518,7 @@ func _build_bridge() -> void:
 	_world.add_child(_bridge)
 
 
-func _build_moon_puzzle() -> void:
-	var terrain: CavernTerrainData = load(
-		"res://data/levels/level02_forge_terrain.tres") as CavernTerrainData
-	if terrain == null:
-		push_warning("ForgeGameplay : terrain introuvable — pas de miroirs.")
-		return
-	var noise: FastNoiseLite = CavernTerrainBuilder.make_noise(terrain.floor_field)
-
-	var mirrors: Array[MoonMirror] = []
-	for i in MIRROR_SPOTS.size():
-		var at: Vector2 = MIRROR_SPOTS[i]
-		var mirror := MoonMirror.new()
-		mirror.name = "Miroir_%d" % i
-		# Chaque miroir démarre à un cran différent — sinon les trois seraient
-		# alignés d'entrée et le puzzle serait résolu avant d'exister.
-		mirror.step = (i * 5) % MoonMirror.STEPS
-		_world.add_child(mirror)
-		mirror.global_position = Vector3(
-			at.x, CavernTerrainBuilder.sample_point(terrain.floor_field, at, noise), at.y)
-		mirrors.append(mirror)
-
-	_puzzle = MoonPuzzle.new()
-	_puzzle.name = "PuzzleLune"
-	_world.add_child(_puzzle)
-
-	var lighting: Node = _world.get_node_or_null("Lighting")
-	# Deux frames de plus : la lune est posée par l'éclairage, et le puzzle a
-	# besoin de son azimut pour savoir d'où vient le rayon.
-	await get_tree().process_frame
-	_puzzle.setup(mirrors, _castle, lighting as ForgeLighting)
-	_puzzle.solved.connect(func() -> void:
-		print("[ForgeGameplay] le sceau a cédé."))
-
-
 func get_castle() -> ForgeCastle:
 	return _castle
 
 
-func get_puzzle() -> MoonPuzzle:
-	return _puzzle

@@ -18,12 +18,16 @@ const OUT_DIR := "user://forge_capture"
 ## Les cadrages. `from` = œil, `look` = cible.
 const SHOTS: Array = [
 	{
-		"name": "01_le_colimacon",
-		"from": Vector3(-40.0, 26.0, -20.0), "look": Vector3(0.0, 22.0, -46.0),
+		"name": "01_la_montee_et_son_parapet",
+		"from": Vector3(-26.0, 22.0, -34.0), "look": Vector3(0.0, 26.0, -46.0),
 	},
 	{
-		"name": "02_le_pylone_dans_la_lave",
-		"from": Vector3(-40.0, 16.0, -6.0), "look": Vector3(-58.0, 3.0, -14.0),
+		"name": "02_le_sommet",
+		"from": Vector3(-24.0, 40.0, -40.0), "look": Vector3(-6.0, 33.0, -48.0),
+	},
+	{
+		"name": "03_arene_et_brasiers",
+		"from": Vector3(0.0, 34.0, -60.0), "look": Vector3(0.0, 6.0, -96.0),
 	},
 ]
 
