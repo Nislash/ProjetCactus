@@ -179,11 +179,21 @@ func _hollow_keep(material: Material) -> void:
 	# Le pan 6 (compté depuis l'est, dans le sens du donjon) regarde le sud :
 	# c'est là qu'est l'embrasure, donc c'est celui qu'on laisse ouvert.
 	var doorway_face: int = 2
+	# LE PAN OUEST EST RACCOURCI : c'est par là que la rampe extérieure entre
+	# dans la tour, tout en haut. Sans cette brèche, l'ascension bute sur un mur
+	# plein et la descente intérieure serait injoignable.
+	var summit_face: int = 4
 
 	for i in faces:
 		if i == doorway_face:
 			continue
 		var a: float = TAU * float(i) / float(faces)
+		var height: float = keep_height
+		var lift: float = 2.5 + keep_height * 0.5
+		if i == summit_face:
+			# On s'arrête six mètres sous la couronne : de quoi passer debout.
+			height = keep_height - 6.0
+			lift = 2.5 + height * 0.5
 		var body := StaticBody3D.new()
 		body.name = "Col_Pan_%d" % i
 		body.collision_layer = CavernTerrainBuilder.WORLD_COLLISION_LAYER
@@ -191,11 +201,11 @@ func _hollow_keep(material: Material) -> void:
 		var box := BoxShape3D.new()
 		# Un peu plus large que la corde d'un pan, pour que deux murs voisins
 		# se recouvrent : sans recouvrement, on se coince dans l'angle.
-		box.size = Vector3(radius * 0.92, keep_height, wall)
+		box.size = Vector3(radius * 0.92, height, wall)
 		shape.shape = box
 		body.add_child(shape)
 		add_child(body)
-		body.position = Vector3(cos(a) * radius, 2.5 + keep_height * 0.5, sin(a) * radius)
+		body.position = Vector3(cos(a) * radius, lift, sin(a) * radius)
 		body.rotation.y = -a
 
 	# LE SOL de la salle. Sans lui on tomberait à travers la terrasse.
@@ -412,6 +422,11 @@ func open_gate() -> void:
 		_gate.position - Vector3(0.0, 11.0, 0.0), 2.4) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_callback(func() -> void: gate_opened.emit())
+
+
+## L'altitude du sol de la salle intérieure — là où la descente débouche.
+func get_hall_altitude() -> float:
+	return get_threshold_altitude() + 1.8
 
 
 ## L'altitude du dessus de la terrasse — le seuil que le pont doit rejoindre.
