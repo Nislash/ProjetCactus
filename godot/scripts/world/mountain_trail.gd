@@ -50,6 +50,9 @@ const MAX_SLOPE_DEGREES: float = 30.0
 ## De combien chaque bloc s'enfonce sous le terrain, au minimum.
 const BURIED_DEPTH: float = 3.0
 
+## De combien le dessus du sentier reste au-dessus du sol réel, au minimum.
+const CLEARANCE: float = 0.6
+
 ## Recalculer les altitudes le long du tracé, au lieu de prendre celles des
 ## points de passage.
 ##
@@ -78,7 +81,7 @@ func _ready() -> void:
 func _ground(at: Vector2) -> float:
 	if _terrain == null:
 		return 0.0
-	return CavernTerrainBuilder.sample_point(_terrain.floor_field, at, _noise)
+	return CavernTerrainBuilder.ground_at(_terrain, at, _noise)
 
 
 func _build() -> void:
@@ -139,6 +142,32 @@ func _reprofile(line: PackedVector3Array) -> void:
 		line[i] = Vector3(line[i].x,
 			lerpf(bottom, top, smoothstep(0.0, 1.0, lengths[i] / total)),
 			line[i].z)
+
+	# PUIS ON REMONTE CE QUI PASSE SOUS LA ROCHE.
+	#
+	# Le profil lissé ne connaît que la distance parcourue ; il ignore ce qu'il
+	# traverse. Au départ, le sentier sortait d'une fosse de six mètres et son
+	# profil, encore plat, restait dans la paroi.
+	#
+	# On relève donc chaque point au-dessus du sol RÉEL, puis on relisse — et on
+	# recommence, parce que relisser fait replonger ce qu'on vient de relever.
+	# Huit passes suffisent : au-delà le tracé ne bouge plus d'un centimètre.
+	for pass_index in 8:
+		for i in line.size():
+			var floor_here: float = _ground(Vector2(line[i].x, line[i].z)) + CLEARANCE
+			if line[i].y < floor_here:
+				line[i] = Vector3(line[i].x, floor_here, line[i].z)
+		# Moyenne glissante, extrémités figées : elles sont posées, l'une au
+		# fond de la fosse et l'autre sur le belvédère.
+		for i in range(1, line.size() - 1):
+			line[i] = Vector3(line[i].x,
+				(line[i - 1].y + line[i].y * 2.0 + line[i + 1].y) * 0.25,
+				line[i].z)
+	# Dernière remontée : le lissage a le dernier mot sinon, et il replonge.
+	for i in line.size():
+		var rock: float = _ground(Vector2(line[i].x, line[i].z)) + CLEARANCE
+		if line[i].y < rock:
+			line[i] = Vector3(line[i].x, rock, line[i].z)
 
 
 func _catmull(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:

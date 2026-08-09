@@ -247,6 +247,18 @@ func _build_floor() -> CavernHeightfieldSpec:
 	# là, elle ne va nulle part. Une rivière a une source et une chute, donc un
 	# sens de lecture — et elle sépare le cirque du château, ce qui donne au
 	# pont sa raison d'être.
+	# LA FOSSE DU GUET, derrière le point d'apparition.
+	#
+	# Elle existe pour créer un BORD, et c'est le seul primitif qui en produise
+	# un : un plateau à fondu doux se gravit de partout et ne fait jamais de
+	# falaise — essayé, mesuré, la butte se contentait de rejoindre le rempart.
+	# Un bassin, lui, creuse avec des parois franches.
+	#
+	# On la découvre en marchant vers l'arrière, dos au château. On voit le
+	# trou, on saute dedans, et le sentier part de là. Rien ne l'annonce depuis
+	# le point d'apparition — c'est un creux, pas une masse.
+	basins.append(_basin("Fosse du Guet", Vector2(-24.0, 66.0), Vector2(7.0, 11.0), 5.0, 0.55, 3.0, 0.45))
+
 	basins.append(_basin("Lit des Douves", Vector2(0.0, -14.0), Vector2(66.0, 17.0), 2.2, 0.6, 26.0, 0.40))
 	spec.basins = basins
 	return spec

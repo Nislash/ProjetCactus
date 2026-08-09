@@ -872,6 +872,24 @@ func _test_the_detour_opens_the_tower() -> int:
 	var region: NavigationRegion3D = _world.get_node_or_null("Navigation") as NavigationRegion3D
 	var map: RID = region.get_navigation_map()
 
+	# 3bis. AUCUN TRONÇON N'EST ENFOUI DANS LA ROCHE.
+	#
+	# C'est le contrôle qui manquait, et il a coûté une session entière. Le
+	# sentier avait été bâti sur `sample_point`, qui ne rend que le PLANCHER :
+	# à ciel ouvert, hors des chambres, le sol monte de trente-huit mètres de
+	# plus. Le chemin passait donc à l'intérieur du rempart — parfaitement
+	# visible à la caméra libre, et parfaitement inatteignable en jeu.
+	#
+	# Rien ne le signalait : les deux fonctions rendent le même chiffre partout
+	# où il y a une chambre, c'est-à-dire partout où l'on joue d'habitude.
+	for i in line.size():
+		var rock: float = CavernTerrainBuilder.ground_at(_terrain,
+			Vector2(line[i].x, line[i].z), _noise)
+		if line[i].y < rock - 0.5:
+			print("[FAIL] sentier : le point %d est %.1f m SOUS la roche (%s)"
+				% [i, rock - line[i].y, line[i]])
+			return 1
+
 	# 4. LE SENTIER DÉBOUCHE SUR LE BELVÉDÈRE. Il doit finir DESSUS, pas à côté
 	#    — un sentier qui s'arrête trois mètres avant est un cul-de-sac.
 	var last: Vector3 = line[line.size() - 1]

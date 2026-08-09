@@ -67,6 +67,24 @@ var _bridge: ForgeBridge
 var _puzzle: MoonPuzzle
 
 ## LE BELVÉDÈRE, au bout du sentier : l'éperon nord qui surplombe le déversoir.
+## LE FOND DE LA FOSSE creusée derrière le point d'apparition : le vrai départ.
+## Le fond de la fosse, au NORD de celle-ci.
+##
+## Au nord et pas au centre : le sentier sort par le sud, et le placer au fond
+## lui laisse seize mètres pour remonter les cinq mètres de paroi. Posé au
+## milieu, il n'en avait que huit et grimpait à 35° — ce n'est plus une pente
+## douce, c'est un mur.
+## Le fond de la fosse, à son extrémité NORD.
+##
+## Au nord et pas au centre : le sentier sort par le sud, et le placer au fond
+## lui laisse quatorze mètres pour remonter les cinq mètres de paroi. Posé au
+## milieu, il n'en avait que huit et grimpait à 35° — ce n'est plus une pente
+## douce, c'est un mur.
+##
+## Z = 74 et pas 79 : le domaine s'arrête à 78, et la fosse débordait dans le
+## vide — son bord nord tombait hors de la carte.
+const PIT_FLOOR := Vector2(-24.0, 72.0)
+
 const BELVEDERE := Vector2(-58.0, -4.0)
 const LEDGE_ALTITUDE: float = 29.0
 
@@ -269,27 +287,60 @@ func _build_twist_chain() -> void:
 ## LE SENTIER. Il part DERRIÈRE le point d'apparition, sur la gauche, et monte
 ## la montagne ouest en lacets jusqu'au haut de la cascade.
 func _build_mountain_trail(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
-	var start := Vector2(-18.0, 72.0)
+	# LA PLATEFORME DU DÉPART, au fond de la fosse creusée derrière le point
+	# d'apparition. On tombe dedans, on ne s'y promène pas : ses parois font
+	# six mètres et demi, et le sentier est la seule sortie.
+	var pit_floor: float = CavernTerrainBuilder.ground_at(terrain, PIT_FLOOR, noise)
+	var landing := ForgeLedge.new()
+	landing.name = "PlateformeDuDepart"
+	landing.centre = PIT_FLOOR
+	landing.altitude = pit_floor + 0.6
+	landing.half_extent = Vector2(5.0, 5.0)
+	_world.add_child(landing)
+
+	# UNE BRAISE AU FOND. La fosse est un trou noir vue du bord : sans elle on
+	# ne distingue pas s'il y a un sol cinq mètres plus bas ou vingt.
+	#
+	# Faible et sans ombre — juste assez pour qu'on devine une surface. Une
+	# lampe franche ferait signal, et l'intérêt de ce départ est qu'il ne se
+	# signale pas.
+	var ember := OmniLight3D.new()
+	ember.name = "BraiseDeLaFosse"
+	ember.light_color = Color(1.000, 0.478, 0.184)
+	ember.light_energy = 1.6
+	ember.omni_range = 16.0
+	ember.shadow_enabled = false
+	_world.add_child(ember)
+	ember.global_position = Vector3(PIT_FLOOR.x, pit_floor + 2.4, PIT_FLOOR.y)
+
 	var trail := MountainTrail.new()
 	trail.name = "SentierDeLaMontagne"
+	# LE COULOIR EST CONTRAINT PAR LA ROCHE, pas choisi pour sa beauté.
+	#
+	# Le rempart ouest monte à 47 m et sa face est verticale — 80° mesurés.
+	# Chaque point de passage a été relevé sur le SOL RÉEL avant d'être posé :
+	# la version précédente utilisait les altitudes du plancher seul, qui
+	# ignorent le rempart, et le sentier s'était retrouvé enfoui dans la
+	# falaise. Visible à la caméra, inatteignable à pied.
 	trail.waypoints = [
-		# LES DEUX PREMIERS POINTS RASENT LE SOL, et le premier lui est même
-		# légèrement enfoncé. Un sentier qui démarre en pente franche depuis un
-		# terrain plat crée une arête à sa naissance, et c'est exactement là que
-		# la navigation se coupait : le chemin existait, on n'y accédait pas.
-		Vector3(start.x, CavernTerrainBuilder.sample_point(terrain.floor_field, start, noise) - 0.4,
-			start.y),
-		Vector3(-25.0, CavernTerrainBuilder.sample_point(terrain.floor_field,
-			Vector2(-25.0, 71.0), noise) + 0.2, 71.0),
-		Vector3(-34.0, 12.0, 68.0),
-		Vector3(-46.0, 15.5, 58.0),
-		Vector3(-32.0, 19.0, 47.0),
-		Vector3(-48.0, 22.5, 35.0),
-		Vector3(-58.0, 26.0, 20.0),
-		# ET LE DERNIER PALIER ARRIVE À PLAT, à l'altitude du belvédère : une
-		# rampe qui débouche en pente sur une dalle horizontale refait la même
-		# arête qu'au départ, à l'autre bout.
-		Vector3(BELVEDERE.x, LEDGE_ALTITUDE, BELVEDERE.y + 12.0),
+		Vector3(PIT_FLOOR.x, pit_floor + 0.6, PIT_FLOOR.y),
+		Vector3(-24.0, 8.0, 58.0),
+		Vector3(-22.0, 12.0, 50.0),
+		Vector3(-19.0, 15.0, 48.0),
+		# LE PINCEMENT. Le rempart avance jusqu'à X = -16 à cette latitude :
+		# le sentier doit s'écarter vers l'est, sinon il rentre dans la roche.
+		# Relevé, pas deviné — c'est en croyant la voie libre qu'on l'y avait
+		# enfoui la première fois.
+		Vector3(-13.0, 18.0, 42.0),
+		Vector3(-20.0, 21.0, 36.0),
+		Vector3(-31.0, 23.0, 30.0),
+		Vector3(-39.0, 25.0, 24.0),
+		Vector3(-46.0, 26.5, 16.0),
+		Vector3(-52.0, 28.0, 6.0),
+		# Arrivée À PLAT sur le belvédère : une rampe qui débouche en pente sur
+		# une dalle horizontale crée une arête, et c'est là que la navigation
+		# se coupait dans les versions précédentes.
+		Vector3(BELVEDERE.x, LEDGE_ALTITUDE, BELVEDERE.y + 8.0),
 		Vector3(BELVEDERE.x, LEDGE_ALTITUDE, BELVEDERE.y),
 	]
 	_world.add_child(trail)
@@ -358,7 +409,7 @@ func _build_keep_ramp(terrain: CavernTerrainData, noise: FastNoiseLite) -> void:
 	ramp.bottom_altitude = _castle.get_threshold_altitude()
 	ramp.top_altitude = _castle.get_threshold_altitude() + _castle.keep_height * 0.92
 	ramp.descent_target = Vector3(0.0,
-		CavernTerrainBuilder.sample_point(terrain.floor_field, Vector2(0.0, -66.0), noise) + 1.0,
+		CavernTerrainBuilder.ground_at(terrain, Vector2(0.0, -66.0), noise) + 1.0,
 		-66.0)
 	_world.add_child(ramp)
 

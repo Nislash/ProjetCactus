@@ -103,6 +103,16 @@ headroom = 9.0
 
 [sub_resource type="Resource" id="Resource_0fww4"]
 script = ExtResource("2_tl2nx")
+label = "Fosse du Guet"
+center = Vector2(-24, 66)
+radii = Vector2(7, 11)
+depth = 5.0
+rim_height = 0.55
+flat_bottom = 0.45
+rim_width = 15.741937767375774
+
+[sub_resource type="Resource" id="Resource_7xc55"]
+script = ExtResource("2_tl2nx")
 label = "Lit des Douves"
 center = Vector2(0, -14)
 radii = Vector2(66, 17)
@@ -111,7 +121,7 @@ rim_height = 0.6
 flat_bottom = 0.4
 rim_width = 1.8452734574213663
 
-[sub_resource type="Resource" id="Resource_7xc55"]
+[sub_resource type="Resource" id="Resource_7o2q6"]
 script = ExtResource("3_lh7c1")
 label = "Berge haute"
 center = Vector2(0, -14)
@@ -120,7 +130,7 @@ is_ellipse = true
 altitude = 8.0
 falloff = 16.0
 
-[sub_resource type="Resource" id="Resource_7o2q6"]
+[sub_resource type="Resource" id="Resource_m6xhl"]
 script = ExtResource("3_lh7c1")
 label = "Berge basse"
 center = Vector2(0, -14)
@@ -129,7 +139,7 @@ is_ellipse = true
 altitude = 3.5
 falloff = 30.0
 
-[sub_resource type="Resource" id="Resource_m6xhl"]
+[sub_resource type="Resource" id="Resource_8q83x"]
 script = ExtResource("3_lh7c1")
 label = "Seuil Nord"
 center = Vector2(-6, 66)
@@ -138,7 +148,7 @@ is_ellipse = true
 altitude = 8.6
 falloff = 14.0
 
-[sub_resource type="Resource" id="Resource_8q83x"]
+[sub_resource type="Resource" id="Resource_6ewc3"]
 script = ExtResource("3_lh7c1")
 label = "Seuil Est"
 center = Vector2(64, -12)
@@ -147,7 +157,7 @@ is_ellipse = true
 altitude = 8.6
 falloff = 14.0
 
-[sub_resource type="Resource" id="Resource_6ewc3"]
+[sub_resource type="Resource" id="Resource_8fxhg"]
 script = ExtResource("3_lh7c1")
 label = "Souffleries"
 center = Vector2(-60, -42)
@@ -156,7 +166,7 @@ is_ellipse = true
 altitude = 8.8
 falloff = 14.0
 
-[sub_resource type="Resource" id="Resource_8fxhg"]
+[sub_resource type="Resource" id="Resource_31rig"]
 script = ExtResource("3_lh7c1")
 label = "Sol de l'Arène"
 center = Vector2(0, -96)
@@ -165,7 +175,7 @@ is_ellipse = true
 altitude = 4.0
 falloff = 22.0
 
-[sub_resource type="Resource" id="Resource_31rig"]
+[sub_resource type="Resource" id="Resource_6coql"]
 script = ExtResource("3_lh7c1")
 label = "Tunnel"
 center = Vector2(0, -66)
@@ -174,7 +184,7 @@ is_ellipse = true
 altitude = 5.5
 falloff = 22.0
 
-[sub_resource type="Resource" id="Resource_6coql"]
+[sub_resource type="Resource" id="Resource_asr3i"]
 script = ExtResource("3_lh7c1")
 label = "Chenal Amont"
 center = Vector2(-50, -14)
@@ -183,7 +193,7 @@ is_ellipse = true
 altitude = 0.9
 falloff = 17.0
 
-[sub_resource type="Resource" id="Resource_asr3i"]
+[sub_resource type="Resource" id="Resource_msf7j"]
 script = ExtResource("3_lh7c1")
 label = "Chenal de la Coulée"
 center = Vector2(42, -14)
@@ -192,7 +202,7 @@ is_ellipse = true
 altitude = 0.9
 falloff = 17.0
 
-[sub_resource type="Resource" id="Resource_msf7j"]
+[sub_resource type="Resource" id="Resource_sa7ro"]
 script = ExtResource("3_lh7c1")
 label = "Lèvre de la Chute"
 center = Vector2(76, -14)
@@ -201,7 +211,7 @@ is_ellipse = true
 altitude = -4.0
 falloff = 24.0
 
-[sub_resource type="Resource" id="Resource_sa7ro"]
+[sub_resource type="Resource" id="Resource_m75eq"]
 script = ExtResource("3_lh7c1")
 label = "Corniche des Douves"
 center = Vector2(-4, -3.8)
@@ -209,7 +219,7 @@ half_extent = Vector2(38, 4.2)
 is_ellipse = true
 altitude = 4.05
 
-[sub_resource type="Resource" id="Resource_m75eq"]
+[sub_resource type="Resource" id="Resource_53v1g"]
 script = ExtResource("3_lh7c1")
 label = "Brèche de la Corniche"
 center = Vector2(-62, -5)
@@ -218,19 +228,19 @@ is_ellipse = true
 altitude = 0.5
 falloff = 4.0
 
-[sub_resource type="Resource" id="Resource_53v1g"]
+[sub_resource type="Resource" id="Resource_002sd"]
 script = ExtResource("5_cifn8")
 base_altitude = 9.0
-plateaus = Array[ExtResource("3_lh7c1")]([SubResource("Resource_7xc55"), SubResource("Resource_7o2q6"), SubResource("Resource_m6xhl"), SubResource("Resource_8q83x"), SubResource("Resource_6ewc3"), SubResource("Resource_8fxhg"), SubResource("Resource_31rig"), SubResource("Resource_6coql"), SubResource("Resource_asr3i"), SubResource("Resource_msf7j"), SubResource("Resource_sa7ro"), SubResource("Resource_m75eq")])
-basins = Array[ExtResource("2_tl2nx")]([SubResource("Resource_0fww4")])
+plateaus = Array[ExtResource("3_lh7c1")]([SubResource("Resource_7o2q6"), SubResource("Resource_m6xhl"), SubResource("Resource_8q83x"), SubResource("Resource_6ewc3"), SubResource("Resource_8fxhg"), SubResource("Resource_31rig"), SubResource("Resource_6coql"), SubResource("Resource_asr3i"), SubResource("Resource_msf7j"), SubResource("Resource_sa7ro"), SubResource("Resource_m75eq"), SubResource("Resource_53v1g")])
+basins = Array[ExtResource("2_tl2nx")]([SubResource("Resource_0fww4"), SubResource("Resource_7xc55")])
 noise_amplitude = 0.3
 noise_scale = 11.0
 noise_seed = 20260809
 
-[sub_resource type="Resource" id="Resource_002sd"]
+[sub_resource type="Resource" id="Resource_7fr21"]
 script = ExtResource("5_cifn8")
 
-[sub_resource type="Resource" id="Resource_7fr21"]
+[sub_resource type="Resource" id="Resource_6rdad"]
 script = ExtResource("6_ghxga")
 label = "Douves de lave"
 surface_altitude = 1.9
@@ -245,9 +255,9 @@ bounds_min = Vector2(-92, -142)
 bounds_max = Vector2(92, 78)
 cell_size = 1.25
 chambers = Array[ExtResource("1_klbrc")]([SubResource("Resource_qpqrx"), SubResource("Resource_vvckm"), SubResource("Resource_0ort5"), SubResource("Resource_qoqgs"), SubResource("Resource_lxelb"), SubResource("Resource_47xjm"), SubResource("Resource_tcgnm"), SubResource("Resource_fpc72"), SubResource("Resource_3vy0h"), SubResource("Resource_qx3p0")])
-floor_field = SubResource("Resource_53v1g")
-headroom_field = SubResource("Resource_002sd")
-lake = SubResource("Resource_7fr21")
+floor_field = SubResource("Resource_002sd")
+headroom_field = SubResource("Resource_7fr21")
+lake = SubResource("Resource_6rdad")
 open_sky = true
 open_sky_rim_height = 38.0
 min_headroom = 9.0
