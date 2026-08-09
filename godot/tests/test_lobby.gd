@@ -26,6 +26,7 @@ func _init() -> void:
 	failed += _test_every_offered_level_exists()
 	failed += _test_the_tutorial_button_is_gone()
 	failed += _test_the_title_font_is_there()
+	failed += _test_the_lobby_recovers_after_a_game_over()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -112,4 +113,45 @@ func _test_the_title_font_is_there() -> int:
 		print("[FAIL] titre : police absente (%s)" % TITLE_FONT)
 		return 1
 	print("[OK] the_title_font_is_there")
+	return 0
+
+
+## ON PEUT REJOUER APRÈS UN GAME OVER.
+##
+## Signalé en jeu : « l'écran après un game over renvoie vers un lobby
+## incomplet ne permettant pas de rejouer ».
+##
+## Les manettes restent enregistrées d'une run à l'autre — c'est voulu, personne
+## ne veut refaire l'appel après chaque mort. Mais le lobby forçait la phase
+## JOIN à son `_ready` et n'attendait plus que le signal `player_joined` pour en
+## sortir ; ce signal ne pouvait plus venir, puisque les joueurs étaient déjà
+## là. Slots vides, bouton « Lancer » invisible, aucune sortie.
+##
+## On éprouve la SOURCE et non l'écran : que le contrôleur lise l'état des
+## joueurs au lieu de l'attendre, et que l'écran de mort clôture la run.
+func _test_the_lobby_recovers_after_a_game_over() -> int:
+	var source: String = FileAccess.get_file_as_string(
+		"res://scripts/core/lobby_controller.gd")
+	if not source.contains("_adopt_existing_players"):
+		print("[FAIL] lobby : il ne récupère pas les joueurs déjà inscrits")
+		return 1
+	# La phase de départ doit DÉPENDRE des joueurs présents. Un `_set_phase`
+	# inconditionnel en JOIN est précisément le défaut qu'on corrige.
+	var adopt: String = source.substr(source.find("func _adopt_existing_players"))
+	adopt = adopt.substr(0, 700)
+	if not adopt.contains("Phase.MENU"):
+		print("[FAIL] lobby : la phase ne dépend pas des joueurs présents")
+		return 1
+	if not adopt.contains("set_joined"):
+		print("[FAIL] lobby : les slots des joueurs déjà là restent vides")
+		return 1
+
+	# Et l'écran de mort doit clore la run : rien ne persiste entre deux runs.
+	var over: String = FileAccess.get_file_as_string(
+		"res://scripts/core/game_over_screen.gd")
+	if not over.contains("RunState.reset"):
+		print("[FAIL] game over : la run précédente survit à l'écran de mort")
+		return 1
+
+	print("[OK] the_lobby_recovers_after_a_game_over")
 	return 0
