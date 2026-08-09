@@ -122,8 +122,7 @@ func _eject(body: Node3D) -> void:
 	var landing := Vector2(clampf(at.x, _lake.center.x - _lake.radii.x + 4.0,
 		_lake.center.x + _lake.radii.x - 4.0), bank_y)
 
-	var altitude: float = CavernTerrainBuilder.sample_point(
-		_terrain.floor_field, landing, _noise) + 1.2
+	var altitude: float = CavernTerrainBuilder.ground_at(_terrain, landing, _noise) + 1.2
 	body.global_position = Vector3(landing.x, altitude, landing.y)
 	var character: CharacterBody3D = body as CharacterBody3D
 	if character != null:

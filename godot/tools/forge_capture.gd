@@ -18,17 +18,21 @@ const OUT_DIR := "user://forge_capture"
 ## Les cadrages. `from` = œil, `look` = cible.
 const SHOTS: Array = [
 	{
-		"name": "01_vue_aerienne_du_sentier",
-		"from": Vector3(30.0, 96.0, 70.0), "look": Vector3(-46.0, 16.0, 16.0),
+		"name": "01_depuis_le_spawn",
+		"from": Vector3(-8.0, 11.0, 62.0), "look": Vector3(-26.0, 8.0, 70.0),
 	},
 	{
-		"name": "02_le_saut_et_le_levier",
-		"from": Vector3(-30.0, 44.0, 6.0), "look": Vector3(-58.0, 26.0, -22.0),
+		"name": "02_le_bord_et_la_fosse",
+		"from": Vector3(-13.0, 13.0, 74.0), "look": Vector3(-26.0, 3.0, 68.0),
+	},
+	{
+		"name": "03_le_sentier_vu_de_haut",
+		"from": Vector3(10.0, 62.0, 60.0), "look": Vector3(-40.0, 16.0, 24.0),
 	},
 ]
 
 ## Tirer le levier avant de capturer, pour voir la rampe déployée.
-@export var pull_lever: bool = true
+@export var pull_lever: bool = false
 
 ## Frames d'attente avant la première capture : le terrain, le château et le
 ## pont se bâtissent chacun sur plusieurs frames.

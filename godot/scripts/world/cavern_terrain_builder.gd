@@ -266,6 +266,26 @@ static func sample_point(spec: CavernHeightfieldSpec, p: Vector2, noise: FastNoi
 ## Même masque dans les deux cas, donc même silhouette : un niveau ouvert et
 ## un niveau fermé bâtis sur les mêmes chambres ont exactement le même contour
 ## jouable. Seul change ce qui le borne.
+## LE SOL RÉEL en un point : plancher PLUS rempart.
+##
+## [method sample_point] ne rend que le plancher, et c'est une source d'erreur
+## permanente : à ciel ouvert, hors des chambres, le sol monte de
+## `open_sky_rim_height` — trente-huit mètres ici. Tout ce qui se pose sur le
+## terrain doit donc interroger CETTE fonction, pas l'autre.
+##
+## Payé une fois : le sentier de montagne du niveau 2 a été bâti sur les
+## altitudes du plancher et s'est retrouvé enfoui dans la falaise, visible mais
+## inatteignable. Rien ne le signalait, puisque les deux fonctions rendent le
+## même chiffre partout où il y a une chambre — c'est-à-dire partout où l'on
+## joue d'habitude.
+static func ground_at(terrain: CavernTerrainData, p: Vector2,
+		noise: FastNoiseLite) -> float:
+	var floor_height: float = sample_point(terrain.floor_field, p, noise)
+	if not terrain.open_sky:
+		return floor_height
+	return floor_height + (1.0 - chamber_mask(terrain, p)) * terrain.open_sky_rim_height
+
+
 static func compose_ground(terrain: CavernTerrainData,
 		floor_heights: PackedFloat32Array) -> PackedFloat32Array:
 	if not terrain.open_sky:
