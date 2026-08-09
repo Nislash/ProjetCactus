@@ -53,6 +53,9 @@ const BURIED_DEPTH: float = 3.0
 ## De combien le dessus du sentier reste au-dessus du sol réel, au minimum.
 const CLEARANCE: float = 0.6
 
+## Jusqu'où une épaule va chercher la paroi, en mètres.
+const SHOULDER_REACH: float = 7.0
+
 ## Recalculer les altitudes le long du tracé, au lieu de prendre celles des
 ## points de passage.
 ##
@@ -217,6 +220,65 @@ func _block(material: Material, from_point: Vector3, to_point: Vector3,
 	# reste donc exactement sur la ligne du sentier, quelle que soit la pente.
 	piece.translate_object_local(Vector3(0.0, -depth * 0.5, 0.0))
 	_collider(mesh.size, piece.global_position, piece.rotation, index)
+	_shoulders(material, from_point, to_point, index)
+
+
+## LES ÉPAULES, de part et d'autre du tronçon.
+##
+## ## Le défaut qu'elles corrigent
+##
+## Signalé en jeu : « bloqué en bas de la rampe, impossible de bouger ». Le
+## sentier court dans une tranchée sur une partie de son tracé. Son bord est
+## vertical, la paroi de roche aussi, et entre les deux subsistait une fente
+## d'un demi-mètre — trop étroite pour s'en extraire, assez large pour y tomber.
+## Trois de ces poches relevées sur le tracé.
+##
+## Élargir le sentier ne les supprime pas : mesuré à 5, 8 puis 11 m de large, on
+## passait de trois poches à quatre puis une. La fente se déplace, elle ne
+## disparaît pas — c'est la RENCONTRE de deux verticales qui la crée.
+##
+## ## Ce qu'elles font
+##
+## Une épaule comble l'espace entre le bord du sentier et la paroi, au niveau du
+## tablier. Elle n'est posée QUE s'il y a une paroi à combler : du côté ouvert,
+## là où le sentier surplombe le vide, on doit pouvoir tomber librement — c'est
+## le prix de la hauteur, et le masquer serait mentir sur le danger.
+func _shoulders(material: Material, from_point: Vector3, to_point: Vector3,
+		index: int) -> void:
+	var span: Vector3 = to_point - from_point
+	var centre: Vector3 = (from_point + to_point) * 0.5
+	var side := Vector3(-span.z, 0.0, span.x).normalized()
+	var heading: float = atan2(span.x, span.z)
+
+	for direction in [-1.0, 1.0]:
+		var reach: float = 0.0
+		var step: float = 1.0
+		while step <= SHOULDER_REACH:
+			var probe: Vector3 = centre + side * direction * (width * 0.5 + step)
+			if _ground(Vector2(probe.x, probe.z)) > centre.y + 0.8:
+				reach = step
+				break
+			step += 1.0
+		if reach <= 0.0:
+			continue
+
+		var fill := MeshInstance3D.new()
+		fill.name = "Epaule_%d_%s" % [index, "g" if direction < 0.0 else "d"]
+		var mesh := BoxMesh.new()
+		var thickness: float = maxf(centre.y - _ground(Vector2(centre.x, centre.z)), 0.0) \
+			+ BURIED_DEPTH
+		# Elle déborde d'un mètre au-delà de la paroi trouvée : s'arrêter pile
+		# dessus recréerait la fente qu'on vient de combler.
+		mesh.size = Vector3(reach + 1.0, thickness, span.length() + 1.2)
+		fill.mesh = mesh
+		fill.material_override = material
+		add_child(fill)
+		fill.global_position = centre \
+			+ side * direction * (width * 0.5 + (reach + 1.0) * 0.5) \
+			- Vector3(0.0, thickness * 0.5, 0.0)
+		fill.rotation.y = heading
+		_collider(mesh.size, fill.global_position, fill.rotation,
+			index + 5000 + (0 if direction < 0.0 else 1000))
 
 
 func _collider(size: Vector3, at: Vector3, rotation: Vector3, index: int) -> void:
