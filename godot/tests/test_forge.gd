@@ -54,7 +54,6 @@ func _run() -> void:
 	failed += _test_spawns_are_on_the_rim()
 	failed += _test_the_sky_is_open()
 	failed += _test_the_castle_closes_the_pit()
-	failed += _test_the_moon_puzzle_is_solvable()
 	failed += _test_the_boss_waits_behind_the_gate()
 	failed += _test_the_castle_can_be_reached()
 	failed += _test_the_stone_is_textured()
@@ -62,7 +61,8 @@ func _run() -> void:
 	failed += await _test_the_lava_kills()
 	failed += _test_you_can_go_around_and_under_the_bridge()
 	failed += await _test_the_detour_opens_the_tower()
-	failed += await _test_the_gate_opens_onto_a_room()
+	failed += _test_the_gate_opens_onto_a_room()
+	failed += await _test_the_summit_launches_into_the_arena()
 
 	if failed > 0:
 		print("\n[TESTS] %d test(s) échoué(s)" % failed)
@@ -352,71 +352,16 @@ func _test_the_castle_closes_the_pit() -> int:
 		print("[FAIL] château : sommet à %.1f m, la crête est à %.1f m — invisible en arrivant"
 			% [top, rim])
 		return 1
-	# Et sa porte doit être scellée au départ.
-	if castle.call("is_open"):
-		print("[FAIL] château : la porte est déjà ouverte")
+	# Sa porte n'est plus scellée : le puzzle des miroirs qui la fermait a été
+	# retiré. Ce qu'on vérifie désormais, c'est qu'elle EXISTE — une forteresse
+	# sans embrasure redeviendrait le bloc plein qu'on a corrigé.
+	if castle.get_node_or_null("Embrasure") == null:
+		print("[FAIL] château : aucune embrasure")
 		return 1
 	print("[OK] the_castle_closes_the_pit (tours à %.0f m, crête à %.0f m)" % [top, rim])
 	return 0
 
 
-## LE PUZZLE DOIT ÊTRE SOLUBLE. Un puzzle de réflexion mal placé n'échoue pas
-## bruyamment : il reste simplement insoluble, et le joueur tourne des miroirs
-## pendant vingt minutes en croyant qu'il n'a pas compris.
-##
-## On l'essaie par la force : toutes les combinaisons de crans, jusqu'à en
-## trouver une qui ouvre la porte. Trois miroirs à douze crans font 1728
-## essais — négligeable pour une machine, impossible pour un joueur, et c'est
-## bien la preuve qu'on cherche : qu'AU MOINS une solution existe.
-func _test_the_moon_puzzle_is_solvable() -> int:
-	var puzzle: Node = _world.get_node_or_null("PuzzleLune")
-	if puzzle == null:
-		print("[FAIL] puzzle : absent")
-		return 1
-	var mirrors: Array = puzzle.call("get_mirrors")
-	if mirrors.size() < 3:
-		print("[FAIL] puzzle : %d miroirs au lieu de 3" % mirrors.size())
-		return 1
-
-	# Il ne doit PAS être résolu d'entrée : une énigme déjà faite n'en est pas
-	# une.
-	if bool(puzzle.call("is_solved")):
-		print("[FAIL] puzzle : résolu dès le départ")
-		return 1
-
-	var steps: int = MoonMirror.STEPS
-	var found: Array[int] = []
-	for a in steps:
-		for b in steps:
-			for c in steps:
-				mirrors[0].step = a
-				mirrors[1].step = b
-				mirrors[2].step = c
-				for m in mirrors:
-					m._apply_step()
-				puzzle.call("_recompute")
-				if bool(puzzle.call("is_solved")):
-					found = [a, b, c]
-					break
-			if not found.is_empty():
-				break
-		if not found.is_empty():
-			break
-
-	if found.is_empty():
-		print("[FAIL] puzzle : AUCUNE combinaison n'ouvre la porte — insoluble")
-		return 1
-	print("[OK] the_moon_puzzle_is_solvable (crans %s)" % [found])
-	return 0
-
-
-## LE BOSS NE DOIT PAS S'ÉVEILLER DEPUIS LE CIRQUE.
-##
-## Il se tenait au bord du bassin, à vingt-deux mètres du centre, avec une zone
-## d'éveil de trente : il attaquait donc pendant qu'on descendait encore, et le
-## puzzle perdait tout son sens puisqu'on se battait avant de l'avoir résolu.
-##
-## On vérifie les deux causes séparément — sa distance, et le rayon de sa zone.
 func _test_the_boss_waits_behind_the_gate() -> int:
 	var boss: Node3D = _world.get_node_or_null("BossGolem") as Node3D
 	if boss == null:
@@ -1055,20 +1000,84 @@ func _test_the_gate_opens_onto_a_room() -> int:
 		print("[FAIL] salle : aucun sol — on tomberait au travers")
 		return 1
 
-	# ET LE SCEAU S'EFFACE. C'est sa collision qui compte : un battant devenu
-	# transparent mais toujours solide serait le même défaut sous un autre nom.
-	_castle.open_gate()
-	var started: int = Time.get_ticks_msec()
-	while Time.get_ticks_msec() - started < 8000:
-		await process_frame
-		var blocking: bool = false
-		for child in _castle.get_children():
-			var body: StaticBody3D = child as StaticBody3D
-			if body != null and body.name.begins_with("Col_Sceau"):
-				blocking = true
-		if not blocking:
-			print("[OK] the_gate_opens_onto_a_room (%d pans, un ouvert, sceau effacé)" % walls)
-			return 0
+	# ET RIEN NE BOUCHE L'EMBRASURE. Le sceau a été retiré avec le puzzle des
+	# miroirs ; s'il en restait un collider, la porte serait un mur peint.
+	for child in _castle.get_children():
+		var body: StaticBody3D = child as StaticBody3D
+		if body != null and body.name.begins_with("Col_Sceau"):
+			print("[FAIL] porte : un sceau bouche encore l'embrasure")
+			return 1
 
-	print("[FAIL] sceau : sa collision est toujours là après l'ouverture")
-	return 1
+	print("[OK] the_gate_opens_onto_a_room (%d pans, un ouvert, embrasure libre)" % walls)
+	return 0
+
+
+## LE SOMMET PROJETTE DANS L'ARÈNE.
+##
+## Trois choses qui ne se voient qu'en jouant, et qu'on ne peut donc pas se
+## permettre de laisser au hasard : la dalle doit être DÉSARMÉE tant que le
+## levier n'a pas été tiré — sinon le premier joueur qui monte envoie tout le
+## monde —, la trajectoire doit atterrir dans l'arène et non dans la falaise, et
+## les brasiers ne doivent pas être allumés d'avance.
+func _test_the_summit_launches_into_the_arena() -> int:
+	var pad: LaunchPad = _world.get_node_or_null("DalleARessort") as LaunchPad
+	var lever: ForgeLever = _world.get_node_or_null("LevierDuSommet") as ForgeLever
+	var braziers: ArenaBraziers = _world.get_node_or_null("BrasiersDeLArene") as ArenaBraziers
+	var ramp: KeepSpiralRamp = _world.get_node_or_null("RampeDuDonjon") as KeepSpiralRamp
+	if pad == null or lever == null or braziers == null or ramp == null:
+		print("[FAIL] sommet : pièce manquante (dalle/levier/brasiers/rampe)")
+		return 1
+
+	# La dalle est AU sommet de la rampe, pas quelque part à côté.
+	var summit: Vector3 = ramp.get_summit()
+	if pad.global_position.distance_to(summit) > 3.0:
+		print("[FAIL] dalle : à %.1f m du sommet de la rampe"
+			% pad.global_position.distance_to(summit))
+		return 1
+	# Et le levier est à portée de main sans être dessus.
+	var reach: float = lever.global_position.distance_to(pad.global_position)
+	if reach < pad.pad_radius or reach > 9.0:
+		print("[FAIL] levier du sommet : à %.1f m de la dalle" % reach)
+		return 1
+
+	if pad.is_armed():
+		print("[FAIL] dalle : armée avant qu'on ait tiré le levier")
+		return 1
+	if braziers.is_lit():
+		print("[FAIL] brasiers : déjà allumés avant l'arrivée")
+		return 1
+
+	# LA CIBLE EST DANS L'ARÈNE. Une trajectoire qui finit dans la falaise
+	# tuerait le joueur au moment exact où le niveau lui promet le contraire.
+	var arena: Node3D = _world.get_node_or_null("BossArena/BossSpawn") as Node3D
+	var miss: float = Vector2(pad.target.x - arena.global_position.x,
+		pad.target.z - arena.global_position.z).length()
+	if miss > 28.0:
+		print("[FAIL] dalle : elle vise à %.0f m du centre de l'arène" % miss)
+		return 1
+	var rock: float = CavernTerrainBuilder.ground_at(_terrain,
+		Vector2(pad.target.x, pad.target.z), _noise)
+	if pad.target.y < rock:
+		print("[FAIL] dalle : elle vise %.1f m SOUS le sol de l'arène" % (rock - pad.target.y))
+		return 1
+
+	# Le levier arme, et rien d'autre.
+	if not lever.try_interact(null):
+		print("[FAIL] levier du sommet : il ne répond pas")
+		return 1
+	var started: int = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - started < 4000 and not pad.is_armed():
+		await process_frame
+	if not pad.is_armed():
+		print("[FAIL] dalle : le levier ne l'a pas armée")
+		return 1
+
+	# Les brasiers s'allument sur commande, et une seule fois.
+	braziers.light_up()
+	if not braziers.is_lit():
+		print("[FAIL] brasiers : ils ne s'allument pas")
+		return 1
+
+	print("[OK] the_summit_launches_into_the_arena (dalle au sommet, cible à %.0f m du boss, %d brasiers)"
+		% [miss, braziers.count])
+	return 0

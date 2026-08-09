@@ -182,7 +182,7 @@ func _hollow_keep(material: Material) -> void:
 	# LE PAN OUEST EST RACCOURCI : c'est par là que la rampe extérieure entre
 	# dans la tour, tout en haut. Sans cette brèche, l'ascension bute sur un mur
 	# plein et la descente intérieure serait injoignable.
-	var summit_face: int = 4
+	var summit_face: int = 0
 
 	for i in faces:
 		if i == doorway_face:
@@ -331,59 +331,23 @@ func _build_doorway(material: Material) -> void:
 	# reprochait à la version précédente.
 
 
-## LA PORTE, scellée par une coulée figée.
+## LA PORTE EST OUVERTE, et il n'y a plus de sceau.
 ##
-## Elle est émissive : c'est le seul élément chaud d'une forteresse noire, donc
-## le seul point d'accroche du regard. On sait où aller sans qu'on nous le
-## dise.
+## Elle était scellée par une coulée figée que le puzzle des miroirs faisait
+## fondre. Ce puzzle a été retiré : il faisait double emploi avec le détour du
+## levier, et la porte qu'il ouvrait ne menait nulle part une fois la tour
+## praticable.
+##
+## Il reste l'embrasure et le brasier de la salle. Une porte franchissable est
+## plus honnête qu'un verrou dont on a perdu la clé.
 func _build_gate() -> void:
 	_gate = Node3D.new()
 	_gate.name = "Porte"
 	_gate.position = Vector3(0.0, 2.5, keep_width * 0.52)
 	add_child(_gate)
 
-	var panel := MeshInstance3D.new()
-	panel.name = "Sceau"
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(7.0, 10.0, 1.2)
-	panel.mesh = mesh
-	_gate_material = StandardMaterial3D.new()
-	_gate_material.albedo_color = SEAL.darkened(0.55)
-	_gate_material.emission_enabled = true
-	_gate_material.emission = SEAL
-	# 0,9 et pas 2,2 : à 2,2, le sceau saturait en blanc et son halo effaçait la
-	# moitié du cadre — y compris la maçonnerie qu'il est censé mettre en
-	# valeur. Un point d'accroche qui aveugle n'accroche plus rien.
-	_gate_material.emission_energy_multiplier = 0.9
-	_gate_material.roughness = 0.35
-	panel.material_override = _gate_material
-	panel.position = Vector3(0.0, 5.0, 0.0)
-	_gate.add_child(panel)
-	_add_collider(panel, mesh.size, _gate.position + panel.position)
-
-	# LA CIBLE OPTIQUE. Un collider sur la couche des miroirs, plus large que
-	# le battant : c'est lui que le rayon de lune doit toucher.
-	#
-	# Il est distinct du collider physique parce qu'ils ne servent pas à la
-	# même chose — l'un arrête les joueurs, l'autre reçoit la lumière — et
-	# parce que le premier disparaît quand la porte s'ouvre.
-	#
-	# Beaucoup plus HAUT que le battant : les miroirs portent leur plan optique
-	# à quatorze mètres, et une cible à hauteur de porte serait survolée.
-	var optic := StaticBody3D.new()
-	optic.name = "CibleOptique"
-	optic.collision_layer = MoonMirror.OPTICS_LAYER
-	optic.collision_mask = 0
-	var optic_shape := CollisionShape3D.new()
-	var plate := BoxShape3D.new()
-	plate.size = Vector3(11.0, 22.0, 0.6)
-	optic_shape.shape = plate
-	optic.add_child(optic_shape)
-	optic.position = Vector3(0.0, 5.0, 0.4)
-	_gate.add_child(optic)
-
 	var glow := OmniLight3D.new()
-	glow.name = "LueurDuSceau"
+	glow.name = "LueurDuSeuil"
 	glow.light_color = SEAL
 	glow.light_energy = 1.5
 	glow.omni_range = 22.0
@@ -392,41 +356,22 @@ func _build_gate() -> void:
 	_gate.add_child(glow)
 
 
-## Le sceau cède. Appelé par le puzzle des miroirs.
-##
-## La coulée refroidit d'abord — elle passe de l'orange au noir — PUIS la
-## porte s'ouvre. L'ordre compte : c'est la lumière lunaire qui fige la lave,
-## et non la porte qui décide de s'ouvrir.
+## Conservé pour l'interface : plus rien à ouvrir, la porte l'est déjà.
 func open_gate() -> void:
 	if _open:
 		return
 	_open = true
-
-	var tween: Tween = create_tween()
-	if _gate_material != null:
-		tween.tween_property(_gate_material, "emission_energy_multiplier", 0.05, 1.6)
-		tween.parallel().tween_property(_gate_material, "albedo_color",
-			Color(0.035, 0.030, 0.034), 1.6)
-	var glow: OmniLight3D = _gate.get_node_or_null("LueurDuSceau") as OmniLight3D
-	if glow != null:
-		tween.parallel().tween_property(glow, "light_energy", 0.0, 1.6)
-
-	# La collision part AVANT la fin de l'animation : un joueur collé au
-	# battant ne doit pas rester coincé contre un mur devenu invisible.
-	tween.chain().tween_callback(func() -> void:
-		for child in get_children():
-			var body: StaticBody3D = child as StaticBody3D
-			if body != null and body.name.begins_with("Col_Sceau"):
-				body.queue_free())
-	tween.tween_property(_gate, "position",
-		_gate.position - Vector3(0.0, 11.0, 0.0), 2.4) \
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	tween.tween_callback(func() -> void: gate_opened.emit())
+	gate_opened.emit()
 
 
-## L'altitude du sol de la salle intérieure — là où la descente débouche.
-func get_hall_altitude() -> float:
-	return get_threshold_altitude() + 1.8
+func is_open() -> bool:
+	return true
+
+
+func get_gate_target() -> Vector3:
+	if _gate == null:
+		return global_position
+	return _gate.global_position + Vector3(0.0, 5.0, 0.0)
 
 
 ## L'altitude du dessus de la terrasse — le seuil que le pont doit rejoindre.
@@ -435,9 +380,7 @@ func get_hall_altitude() -> float:
 ## finissent toujours par diverger, et l'écart se voit comme une marche.
 ##
 ## Calculée À LA DEMANDE si la forteresse n'est pas encore bâtie. Elle se bâtit
-## une frame après son `_ready`, et le pont a besoin de ce chiffre AVANT — le
-## faire dépendre de l'ordre des frames serait précisément le genre de couplage
-## qui casse en silence le jour où l'un des deux gagne une frame d'attente.
+## une frame après son `_ready`, et le pont a besoin de ce chiffre AVANT.
 func get_threshold_altitude() -> float:
 	if _terrace_top > 0.0:
 		return _terrace_top
@@ -453,15 +396,9 @@ func get_threshold_edge_z() -> float:
 	return footprint_center.y + keep_width * 1.7 * 0.5
 
 
-func is_open() -> bool:
-	return _open
-
-
-## La position du sceau en repère monde — c'est la cible du rayon de lune.
-func get_gate_target() -> Vector3:
-	if _gate == null:
-		return global_position
-	return _gate.global_position + Vector3(0.0, 5.0, 0.0)
+## L'altitude du sol de la salle intérieure — là où la descente débouche.
+func get_hall_altitude() -> float:
+	return get_threshold_altitude() + 1.8
 
 
 func _add_collider(source: MeshInstance3D, size: Vector3, at: Vector3,

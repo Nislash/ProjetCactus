@@ -40,9 +40,19 @@ signal deployed()
 ## chemin, pas une place.
 @export var ramp_width: float = 3.4
 
-## Nombre de segments par tour. 24 donne des marches de 15° — invisibles à
-## l'œil sur un rayon de douze mètres, et lisses pour le navmesh.
-@export var segments_per_turn: int = 24
+## Nombre de segments par tour.
+##
+## Passé de 24 à 56. À 24, chaque tronçon est une CORDE de 15° : sur un rayon de
+## quatorze mètres, sa corde s'écarte de l'arc de vingt-quatre centimètres au
+## milieu. Deux tronçons voisins forment donc une arête rentrante à chaque
+## joint, et l'on butait dessus — signalé en jeu, « les pavés ne sont pas
+## lisses, il faut prendre l'extérieur ».
+##
+## À 40, l'écart tombe à quatre centimètres — sous le seuil où un
+## `CharacterBody3D` accroche — pour deux fois moins de boîtes que 56, qui n'en
+## gagnait que deux de plus. La rampe pesait 788 nœuds à elle seule, sur un jeu
+## qui rend quatre vues simultanées.
+@export var segments_per_turn: int = 40
 
 ## Rayon de la spirale intérieure. Contre la paroi, en laissant le centre libre.
 @export var inner_radius: float = 6.8
@@ -51,6 +61,14 @@ signal deployed()
 @export var hall_altitude: float = 0.0
 
 const STONE_PATH := "res://assets/level02/materials/forge_masonry.tres"
+
+## Le parapet extérieur : assez haut pour couper la vue debout, assez bas pour
+## laisser voir le ciel.
+const PARAPET_HEIGHT: float = 2.4
+const PARAPET_THICKNESS: float = 0.9
+
+## Durée totale du déploiement, en secondes.
+const REVEAL_SECONDS: float = 2.5
 const EDGE := Color(1.000, 0.478, 0.184)
 
 var _pieces: Array[Node3D] = []
@@ -80,16 +98,32 @@ func _build() -> void:
 	# LA MONTÉE. Deux tours complets, ce qui donne une pente douce sur un rayon
 	# de douze mètres : un seul tour ferait 22°, trois n'apporteraient qu'une
 	# ascension plus longue sans rien changer à la lecture.
-	var turns: float = 2.0
+	# DEUX TOURS ET DEMI, et non deux.
+	#
+	# Signalé en jeu : « en haut on s'arrête à une plateforme sur le côté ». La
+	# rampe finissait à mi-hauteur de la couronne, sur un palier qui n'était pas
+	# le sommet. Un demi-tour de plus l'amène au niveau de la crête, et l'arrivée
+	# se fait toujours par le flanc — ce qui était le bon parti pris.
+	var turns: float = 2.5
 	var steps: int = int(float(segments_per_turn) * turns)
 	var radius: float = keep_radius + ramp_width * 0.5
 	for i in steps:
 		var t0: float = float(i) / float(steps)
 		var t1: float = float(i + 1) / float(steps)
-		_span(stone,
-			_helix(radius, t0 * turns, lerpf(bottom_altitude, top_altitude, t0)),
-			_helix(radius, t1 * turns, lerpf(bottom_altitude, top_altitude, t1)),
-			"Rampe_%d" % i)
+		var from_point: Vector3 = _helix(radius, t0 * turns,
+			lerpf(bottom_altitude, top_altitude, t0))
+		var to_point: Vector3 = _helix(radius, t1 * turns,
+			lerpf(bottom_altitude, top_altitude, t1))
+		_span(stone, from_point, to_point, "Rampe_%d" % i)
+		# Un parapet sur deux, deux fois plus long : le mur est continu à l'œil
+		# et coûte moitié moins. Sa corde s'écarte de neuf centimètres de l'arc,
+		# ce qui ne se voit pas sur un muret.
+		if i % 2 == 0 and i + 2 <= steps:
+			_parapet(stone, from_point,
+				_helix(radius, minf(t0 + 2.0 / float(steps), 1.0) * turns,
+					lerpf(bottom_altitude, top_altitude,
+						minf(t0 + 2.0 / float(steps), 1.0))),
+				i)
 
 	# LE PALIER du sommet : on doit pouvoir s'arrêter et regarder avant de
 	# redescendre. Sans lui, l'ascension débouche sur une pente qui repart, et
@@ -129,6 +163,38 @@ func _helix(radius: float, turn: float, altitude: float) -> Vector3:
 		+ Vector3(0.0, altitude - keep_centre.y, 0.0)
 
 
+## LE PARAPET, côté extérieur de la rampe.
+##
+## Signalé en jeu : « on voit le boss derrière ». En montant, le regard passait
+## par-dessus le vide et l'arène apparaissait avant qu'on y arrive — la
+## révélation était gâchée quatre-vingts mètres avant d'avoir lieu.
+##
+## Un muret courbe qui suit la spirale, assez haut pour couper la vue en
+## marchant, assez bas pour qu'on voie le ciel : on sait qu'on monte, on ne sait
+## pas vers quoi.
+##
+## Il est du côté EXTÉRIEUR seulement. À l'intérieur c'est la tour, qui bouche
+## déjà — un muret de plus n'y ferait qu'un couloir.
+func _parapet(material: Material, from_point: Vector3, to_point: Vector3,
+		index: int) -> void:
+	var span: Vector3 = to_point - from_point
+	var centre: Vector3 = (from_point + to_point) * 0.5
+	var outward := Vector3(centre.x - keep_centre.x, 0.0, centre.z - keep_centre.z).normalized()
+
+	var wall := MeshInstance3D.new()
+	wall.name = "Parapet_%d" % index
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(PARAPET_THICKNESS, PARAPET_HEIGHT, span.length() + 0.6)
+	wall.mesh = mesh
+	wall.material_override = material
+	add_child(wall)
+	wall.global_position = centre + outward * (ramp_width * 0.5 + PARAPET_THICKNESS * 0.5) \
+		+ Vector3(0.0, PARAPET_HEIGHT * 0.5 - 0.2, 0.0)
+	wall.rotation.y = atan2(span.x, span.z)
+	_pieces.append(wall)
+	_collider(mesh.size, wall.global_position, wall.rotation, "Parapet_%d" % index)
+
+
 ## Un tronçon de bande entre deux points, incliné selon sa propre pente.
 func _span(material: Material, from_point: Vector3, to_point: Vector3,
 		piece_name: String) -> void:
@@ -141,7 +207,9 @@ func _span(material: Material, from_point: Vector3, to_point: Vector3,
 	var mesh := BoxMesh.new()
 	# Un peu plus long que l'écart : les tronçons se chevauchent, sinon on voit
 	# le ciel entre eux dès que la pente change.
-	mesh.size = Vector3(ramp_width, 0.45, span.length() + 0.5)
+	# Le chevauchement passe de 0,5 à 1,2 m : à 56 tronçons par tour ils sont
+	# courts, et un recouvrement trop faible laissait réapparaître un joint.
+	mesh.size = Vector3(ramp_width, 0.45, span.length() + 1.2)
 	piece.mesh = mesh
 	piece.material_override = material
 	add_child(piece)
@@ -191,6 +259,17 @@ func deploy() -> void:
 	if _deploying:
 		return
 	_deploying = true
+	# LA DURÉE EST FIXE, pas le pas.
+	#
+	# Le décalage valait trois centièmes par pièce ; en passant de 24 à 56
+	# tronçons par tour, le déploiement est passé de deux secondes à dix. Une
+	# mise en scène ne se règle pas au nombre de boîtes qu'on a sous la main :
+	# on découpe deux secondes et demie entre ce qu'il y a à montrer.
+	var reveals: int = 0
+	for piece in _pieces:
+		if piece is MeshInstance3D:
+			reveals += 1
+	var step: float = REVEAL_SECONDS / maxf(float(reveals), 1.0)
 	var delay: float = 0.0
 	for piece in _pieces:
 		var target: Node3D = piece
@@ -204,7 +283,7 @@ func deploy() -> void:
 		# leur maillage. Les compter doublait la durée du déploiement sans rien
 		# ajouter à ce qu'on voit.
 		if piece is MeshInstance3D:
-			delay += 0.03
+			delay += step
 	get_tree().create_timer(delay + 0.2).timeout.connect(func() -> void:
 		_rebake()
 		_deployed = true
@@ -247,7 +326,7 @@ const SUMMIT_TURNS: float = 2.0
 ## interroger la navigation revient à demander si l'on peut marcher dans la
 ## pierre.
 func get_summit() -> Vector3:
-	return _helix(keep_radius + ramp_width * 0.5, 2.0, top_altitude)
+	return _helix(keep_radius + ramp_width * 0.5, 2.5, top_altitude)
 
 
 func is_deployed() -> bool:
