@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c01bekvo5tv5b"]
+
+[ext_resource type="Script" uid="uid://dbbv4fwt4o0wx" path="res://tools/pause_menu_preview.gd" id="1_kkmsb"]
+
+[node name="PauseMenuPreview" type="Node" unique_id=388443355]
+script = ExtResource("1_kkmsb")
