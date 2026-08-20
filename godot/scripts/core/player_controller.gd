@@ -118,6 +118,10 @@ func _ready() -> void:
 	# Permet aux ennemis (et autres systèmes) de retrouver les joueurs via
 	# get_tree().get_nodes_in_group("players").
 	add_to_group("players")
+	# La sensibilité réglée au menu de pause vaut pour les runs suivants, pas
+	# seulement pour la partie en cours — sinon il faudrait la refaire à chaque
+	# lancement.
+	look_sensitivity = GameSettings.look_sensitivity()
 	_adopt_selected_character()
 	# Au start, aucune arme equipee — le joueur doit ramasser un WeaponPickup.
 	_set_weapon_visible(_weapon_hitscan, false)

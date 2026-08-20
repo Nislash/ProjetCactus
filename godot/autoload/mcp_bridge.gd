@@ -45,6 +45,11 @@ func _ready() -> void:
 		return
 	_runtime = script.new()
 	_runtime.name = "MCPRuntime"
+	# L'outillage doit survivre à `get_tree().paused` : depuis le menu de
+	# pause, l'arbre est gelé, et un runtime en mode PAUSABLE cesse de scruter
+	# sa socket — captures d'écran et inspection de l'arbre tombent en panne
+	# exactement quand on veut regarder l'écran de pause.
+	_runtime.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_runtime)
 
 
